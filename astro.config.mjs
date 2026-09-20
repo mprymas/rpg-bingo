@@ -14,6 +14,8 @@ export default defineConfig({
     plugins: [tailwindcss()],
   },
   adapter: cloudflare(),
+  // Opt out of Astro Sessions so the Cloudflare adapter does not provision a KV "SESSION" namespace.
+  session: false,
   env: {
     schema: {
       SUPABASE_URL: envField.string({ context: "server", access: "secret", optional: true }),

@@ -151,7 +151,7 @@ Route protection is handled in `src/middleware.ts`. Add paths to the `PROTECTED_
 
 ## Deployment
 
-This project deploys to [Cloudflare Workers](https://workers.cloudflare.com/).
+This project deploys to [Cloudflare Workers](https://workers.cloudflare.com/) as the Worker named `rpg-bingo` (see `wrangler.jsonc`). Production deploys happen automatically from CI on every push to `master` (see [CI](#ci)); the manual path below is for the first deploy or emergencies.
 
 1. Build the project:
 
@@ -159,13 +159,22 @@ This project deploys to [Cloudflare Workers](https://workers.cloudflare.com/).
 npm run build
 ```
 
-2. Deploy with Wrangler:
+2. Check the bundle without deploying (safe to run anytime):
 
 ```bash
-npx wrangler deploy
+npx wrangler deploy --dry-run --outdir "$TMPDIR/rpg-bingo-bundle"
+npx wrangler check startup
 ```
 
-Set `SUPABASE_URL` and `SUPABASE_KEY` as secrets in your Cloudflare dashboard or via `npx wrangler secret put`.
+3. Deploy with Wrangler:
+
+```bash
+npx wrangler deploy --message "reason"
+```
+
+Production secrets `SUPABASE_URL` and `SUPABASE_KEY` live in Workers Secrets: `npx wrangler secret put <NAME>` (or `npx wrangler secret bulk .env`). Every `secret put` immediately publishes a new version, so run it only from a clean `master`. Rollback: `npx wrangler rollback` (code only — it does not revert secrets or Supabase migrations). Logs: `npx wrangler tail --format pretty`.
+
+Platform research and operational notes: `context/foundation/infrastructure.md`.
 
 ## Smoke test
 
@@ -182,10 +191,11 @@ It needs a reachable Supabase instance (local or cloud) with email confirmation 
 
 ## CI
 
-GitHub Actions runs two jobs on every push and PR to `master`:
+GitHub Actions runs three jobs (`.github/workflows/ci.yml`):
 
-- **ci** — lint, `astro check` and build. Configure `SUPABASE_URL` and `SUPABASE_KEY` as repository secrets for the build step.
+- **ci** — lint, `astro check` and build, on every push and PR to `master`. Configure `SUPABASE_URL` and `SUPABASE_KEY` as repository secrets for the build step.
 - **smoke** — starts a local Supabase via the Supabase CLI, builds, serves the production preview on the Cloudflare runtime and runs `npm run smoke` against it. No secrets required.
+- **deploy** — only on `push` to `master`, after `ci` and `smoke` pass: builds and runs `wrangler deploy` via `cloudflare/wrangler-action@v4`. Requires repository secrets `CLOUDFLARE_API_TOKEN` (API token from the "Edit Cloudflare Workers" template, scoped to the account) and `CLOUDFLARE_ACCOUNT_ID`. Do not enable Cloudflare Workers Builds (git integration) for this repo — it would deploy the same branch twice.
 
 ## License
 
