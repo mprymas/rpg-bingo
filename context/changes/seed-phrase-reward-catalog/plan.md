@@ -230,10 +230,10 @@ Catalogs are small (tens of rows). No indexes beyond PK/unique are required for 
 
 #### Automated
 
-- [x] 3.1 `git status` / diff shows no modifications under `src/`
-- [x] 3.2 Hosted DB still has phrases ≥ 26 and rewards ≥ 3 after Phase 1–2 apply
+- [x] 3.1 `git status` / diff shows no modifications under `src/` — 50db66e
+- [x] 3.2 Hosted DB still has phrases ≥ 26 and rewards ≥ 3 after Phase 1–2 apply — 50db66e
 
 #### Manual
 
-- [x] 3.3 Notes in `change.md` are clear enough for a future apply without re-deriving the process
-- [x] 3.4 Optional: anon REST or SQL client `SELECT` returns seeded rows from hosted
+- [x] 3.3 Notes in `change.md` are clear enough for a future apply without re-deriving the process — 50db66e
+- [x] 3.4 Optional: anon REST or SQL client `SELECT` returns seeded rows from hosted — 50db66e
