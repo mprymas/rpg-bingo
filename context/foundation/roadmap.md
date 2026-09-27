@@ -47,7 +47,7 @@ Mistrz Gry chce przy stole meta-wyzwania i lekką rywalizację zamiast uznaniowy
 | ID   | Change ID                                            | Outcome (user can …)                                                                    | Prerequisites | PRD refs                                  | Status   |
 | ---- | ---------------------------------------------------- | --------------------------------------------------------------------------------------- | ------------- | ----------------------------------------- | -------- |
 | F-01 | seed-phrase-reward-catalog | (foundation) seedowane hasła predefiniowane i katalog nagród gotowe do losowania        | —             | FR-005, FR-016 (MVP seed), Business Logic | done |
-| S-01 | gm-create-session-board                              | zalogowany MG tworzy sesję, generuje planszę i dostaje krótki kod                       | F-01          | US-01, FR-001, FR-004, FR-005, FR-006     | in-progress |
+| S-01 | gm-create-session-board                              | zalogowany MG tworzy sesję, generuje planszę i dostaje krótki kod                       | F-01          | US-01, FR-001, FR-004, FR-005, FR-006     | done |
 | S-02 | player-join-shared-board                             | gracz dołącza kodem i nickiem (bez konta) i widzi wspólną planszę z nagrodami na polach | S-01          | US-01, FR-002, FR-008, FR-010             | proposed |
 | S-03 | player-claim-field-reward                            | gracz oznacza wolne pole, widzi nagrodę; inni widzą zajęte pole po odświeżeniu          | S-02          | US-01, FR-009, FR-011                     | proposed |
 | S-04 | gm-undo-field-claim                                  | MG cofa błędne oznaczenie; pole wraca i nagroda jest unieważniona                       | S-03          | FR-012                                    | proposed |
@@ -117,7 +117,7 @@ Foundations below assume these are present and do NOT re-scaffold them.
 - **Unknowns:**
   - Co gdy haseł < liczby pól na planszy większej niż 5×5? — Owner: użytkownik. Block: no. (PRD Open Q2; przy domyślnym 5×5 seed ≥ 25 wystarcza.)
 - **Risk:** Pierwszy vertical slice wprowadza trwałość sesji/planszy; bez niego nie ma dołączenia gracza ani north star.
-- **Status:** in-progress
+- **Status:** done
 
 
 
@@ -220,3 +220,4 @@ Foundations below assume these are present and do NOT re-scaffold them.
 ## Done
 
 - **F-01: (foundation) seedowane hasła predefiniowane i katalog nagród są dostępne do losowania planszy.** — Archived 2026-09-27 → `context/archive/2026-09-27-seed-phrase-reward-catalog/`. Lesson: —.
+- **S-01: zalogowany MG tworzy sesję bingo (rozmiar, własne hasła, nagrody i ich liczba), generuje planszę i otrzymuje krótki kod sesji.** — Archived 2026-09-27 → `context/archive/2026-09-27-gm-create-session-board/`. Lesson: —.
