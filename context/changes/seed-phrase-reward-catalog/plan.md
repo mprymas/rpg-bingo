@@ -206,25 +206,25 @@ Catalogs are small (tens of rows). No indexes beyond PK/unique are required for 
 
 #### Automated
 
-- [x] 1.1 Migration SQL applies on the hosted project without error (SQL editor or `db push`)
-- [x] 1.2 Tables `public.phrases` and `public.rewards` exist with the columns and unique constraints above
-- [x] 1.3 Anon key can `SELECT` from both tables; anon key cannot `INSERT` into either table
+- [x] 1.1 Migration SQL applies on the hosted project without error (SQL editor or `db push`) — a58b05f
+- [x] 1.2 Tables `public.phrases` and `public.rewards` exist with the columns and unique constraints above — a58b05f
+- [x] 1.3 Anon key can `SELECT` from both tables; anon key cannot `INSERT` into either table — a58b05f
 
 #### Manual
 
-- [x] 1.4 Spot-check policy names/roles in the Supabase Dashboard (Authentication/SQL → policies) after apply
+- [x] 1.4 Spot-check policy names/roles in the Supabase Dashboard (Authentication/SQL → policies) after apply — a58b05f
 
 ### Phase 2: Seed content
 
 #### Automated
 
-- [ ] 2.1 After hosted seed apply, `SELECT count(*) FROM phrases` ≥ 26
-- [ ] 2.2 After hosted seed apply, `SELECT count(*) FROM rewards` ≥ 3
-- [ ] 2.3 `phrases.text` and `rewards.slug` have no duplicates
+- [x] 2.1 After hosted seed apply, `SELECT count(*) FROM phrases` ≥ 26
+- [x] 2.2 After hosted seed apply, `SELECT count(*) FROM rewards` ≥ 3
+- [x] 2.3 `phrases.text` and `rewards.slug` have no duplicates
 
 #### Manual
 
-- [ ] 2.4 Human reviews phrase tone and reward labels/descriptions for table-fit; edits allowed in the same PR before the hosted seed run
+- [x] 2.4 Human reviews phrase tone and reward labels/descriptions for table-fit; edits allowed in the same PR before the hosted seed run
 
 ### Phase 3: Verify + apply notes
 
