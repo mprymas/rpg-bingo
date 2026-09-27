@@ -445,11 +445,11 @@ Make the whole app Polish, extend the smoke test to the create flow, and record 
 
 #### Automated
 
-- [x] 4.1 `npm run build` then `npm run smoke` against `npm run preview` passes with the new steps (locally against hosted or in CI)
-- [x] 4.2 `npm run lint` and `npx astro check` pass; `src/layouts/Layout.astro` contains `lang="pl"`
-- [x] 4.3 `rg -n "Sign in|Sign up|Sign out|Create account|Check your email|10x Astro Starter|Not signed in" src/` returns no matches
+- [x] 4.1 `npm run build` then `npm run smoke` against `npm run preview` passes with the new steps (locally against hosted or in CI) — 4a90dae
+- [x] 4.2 `npm run lint` and `npx astro check` pass; `src/layouts/Layout.astro` contains `lang="pl"` — 4a90dae
+- [x] 4.3 `rg -n "Sign in|Sign up|Sign out|Create account|Check your email|10x Astro Starter|Not signed in" src/` returns no matches — 4a90dae
 
 #### Manual
 
-- [x] 4.4 Walk signup → confirm-email → signin → dashboard → nowa sesja → session page → signout; every screen is Polish and the only English text that can appear is a Supabase-originated error
-- [x] 4.5 `change.md` Notes are sufficient to re-apply the schema and regenerate types without reading this plan
+- [x] 4.4 Walk signup → confirm-email → signin → dashboard → nowa sesja → session page → signout; every screen is Polish and the only English text that can appear is a Supabase-originated error — 4a90dae
+- [x] 4.5 `change.md` Notes are sufficient to re-apply the schema and regenerate types without reading this plan — 4a90dae
