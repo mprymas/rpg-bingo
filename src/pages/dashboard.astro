@@ -8,7 +8,12 @@ if (!supabase) {
   return new Response("Brak konfiguracji", { status: 500 });
 }
 
-const sessions = await listSessionsForGm(supabase, Astro.locals.user!.id);
+const user = Astro.locals.user;
+if (!user) {
+  return Astro.redirect("/auth/signin");
+}
+
+const sessions = await listSessionsForGm(supabase, user.id);
 
 function statusLabel(status: string) {
   return status === "active" ? "Aktywna" : "Zamknięta";

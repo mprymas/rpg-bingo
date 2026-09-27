@@ -16,7 +16,12 @@ if (!supabase) {
   return new Response("Brak konfiguracji", { status: 500 });
 }
 
-const session = await getSessionWithCells(supabase, id, Astro.locals.user!.id);
+const user = Astro.locals.user;
+if (!user) {
+  return Astro.redirect("/auth/signin");
+}
+
+const session = await getSessionWithCells(supabase, id, user.id);
 if (!session) {
   return new Response("Nie znaleziono sesji", { status: 404 });
 }
