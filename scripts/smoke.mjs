@@ -5,6 +5,9 @@ const BASE_URL = process.env.BASE_URL ?? "http://localhost:4321";
 const email = `smoke-${Date.now()}@example.com`;
 const password = "Smoke-Test-Passw0rd!";
 const jar = new Map();
+const SESSION_CODE_RE = /^[ABCDEFGHJKLMNPQRSTUVWXYZ23456789]{6}$/;
+
+let createdSessionId = "";
 
 function cookieHeader() {
   return [...jar.entries()].map(([k, v]) => `${k}=${v}`).join("; ");
@@ -20,24 +23,59 @@ function storeCookies(response) {
   }
 }
 
-async function request(path, { method = "GET", form } = {}) {
+async function request(path, { method = "GET", form, json } = {}) {
+  const headers = {
+    Cookie: cookieHeader(),
+    Origin: BASE_URL,
+  };
+  let body;
+  if (form) {
+    headers["Content-Type"] = "application/x-www-form-urlencoded";
+    body = new URLSearchParams(form).toString();
+  } else if (json !== undefined) {
+    headers["Content-Type"] = "application/json";
+    body = JSON.stringify(json);
+  }
+
   const response = await fetch(BASE_URL + path, {
     method,
     redirect: "manual",
-    headers: {
-      Cookie: cookieHeader(),
-      Origin: BASE_URL,
-      ...(form ? { "Content-Type": "application/x-www-form-urlencoded" } : {}),
-    },
-    body: form ? new URLSearchParams(form).toString() : undefined,
+    headers,
+    body,
   });
   storeCookies(response);
-  return { status: response.status, location: response.headers.get("location") ?? "" };
+
+  const contentType = response.headers.get("content-type") ?? "";
+  const text = await response.text();
+  let parsedBody = text;
+  if (contentType.includes("application/json") && text) {
+    try {
+      parsedBody = JSON.parse(text);
+    } catch {
+      parsedBody = text;
+    }
+  }
+
+  return {
+    status: response.status,
+    location: response.headers.get("location") ?? "",
+    body: parsedBody,
+  };
 }
 
 const steps = [
   ["home renders", () => request("/"), { status: 200 }],
   ["dashboard redirects anonymous user", () => request("/dashboard"), { status: 302, location: "/auth/signin" }],
+  [
+    "POST /api/sessions rejects anonymous",
+    () =>
+      request("/api/sessions", {
+        method: "POST",
+        json: { size: 5, customPhrases: [], rewards: [] },
+      }),
+    { status: 401 },
+  ],
+  ["GET /sessions/new redirects anonymous", () => request("/sessions/new"), { status: 302, location: "/auth/signin" }],
   [
     "signup creates account",
     () => request("/api/auth/signup", { method: "POST", form: { email, password } }),
@@ -54,20 +92,52 @@ const steps = [
     { status: 302, location: "/" },
   ],
   ["dashboard renders for signed-in user", () => request("/dashboard"), { status: 200 }],
+  ["GET /sessions/new for signed-in user", () => request("/sessions/new"), { status: 200 }],
+  [
+    "POST /api/sessions creates session",
+    async () => {
+      const actual = await request("/api/sessions", {
+        method: "POST",
+        json: {
+          size: 5,
+          customPhrases: [{ text: "Hasło ze smoke", guaranteed: true }],
+          rewards: [],
+        },
+      });
+      if (actual.status === 201 && actual.body?.id) {
+        createdSessionId = actual.body.id;
+      }
+      return actual;
+    },
+    {
+      status: 201,
+      check: (body) => typeof body?.code === "string" && SESSION_CODE_RE.test(body.code),
+    },
+  ],
+  ["GET /sessions/:id for owner", () => request(`/sessions/${createdSessionId}`), { status: 200 }],
   ["signout clears session", () => request("/api/auth/signout", { method: "POST" }), { status: 302, location: "/" }],
+  [
+    "GET /sessions/:id redirects after signout",
+    () => request(`/sessions/${createdSessionId}`),
+    { status: 302, location: "/auth/signin" },
+  ],
   ["dashboard redirects after signout", () => request("/dashboard"), { status: 302, location: "/auth/signin" }],
 ];
 
 let failed = 0;
 for (const [name, run, expected] of steps) {
   const actual = await run();
-  const ok =
-    actual.status === expected.status &&
-    (expected.location === undefined || actual.location.startsWith(expected.location));
+  const statusOk = actual.status === expected.status;
+  const locationOk = expected.location === undefined || actual.location.startsWith(expected.location);
+  const checkOk = expected.check === undefined || expected.check(actual.body);
+  const ok = statusOk && locationOk && checkOk;
   console.log(`${ok ? "PASS" : "FAIL"}  ${name}  -> ${actual.status} ${actual.location}`);
   if (!ok) {
     failed++;
     console.log(`      expected ${expected.status} ${expected.location ?? ""}`);
+    if (expected.check && !checkOk) {
+      console.log(`      check(body) failed: ${JSON.stringify(actual.body)}`);
+    }
   }
 }
 

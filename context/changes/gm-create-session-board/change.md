@@ -13,3 +13,17 @@ archived_at: null
 - Migration: `20260927143000_sessions_and_board_cells.sql` applied via human-approved `npx supabase db push` (never reset).
 - Types: `npx supabase gen types typescript --linked --schema public` → `src/db/database.types.ts` (eslint-ignored as generated).
 - RLS/anon checks: SELECT returns `[]`; INSERT rejected with `42501`.
+
+### Schema apply & types (hosted)
+
+- Apply migrations with human-approved `npx supabase db push` against the linked project. **Never** `supabase db reset` on hosted (wipe risk).
+- After every migration: `npx supabase gen types typescript --linked --schema public > src/db/database.types.ts`.
+- Anon RLS sanity: unauthenticated SELECT on `sessions` / `board_cells` → `[]`; INSERT → Postgres `42501`.
+
+### Smoke (create flow)
+
+- `scripts/smoke.mjs` covers: anonymous `POST /api/sessions` → 401; anonymous `GET /sessions/new` → 302 `/auth/signin`; signed-in create → 201 with 6-char code charset; owner `GET /sessions/:id` → 200; after sign-out → 302 `/auth/signin`.
+
+### Decision summary
+
+- Single `sessions` entity (no separate board table); join code 6 chars from alphabet without ambiguous glyphs; guaranteed phrases via checkbox; board sizes 3–5; default seed includes Inspiracja ×3; session lifecycle via `status` only; UI Polish everywhere.

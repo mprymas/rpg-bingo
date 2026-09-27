@@ -431,25 +431,25 @@ Make the whole app Polish, extend the smoke test to the create flow, and record 
 
 #### Automated
 
-- [x] 3.1 `npm run lint` and `npx astro check` pass
-- [x] 3.2 Anonymous `GET /sessions/new` and `GET /sessions/<id>` redirect `302` to `/auth/signin`
-- [x] 3.3 Signed-in `GET /sessions/new` → `200`; `GET /sessions/<own id>` → `200`; `GET /sessions/<random uuid>` → `404`
+- [x] 3.1 `npm run lint` and `npx astro check` pass — 27b031a
+- [x] 3.2 Anonymous `GET /sessions/new` and `GET /sessions/<id>` redirect `302` to `/auth/signin` — 27b031a
+- [x] 3.3 Signed-in `GET /sessions/new` → `200`; `GET /sessions/<own id>` → `200`; `GET /sessions/<random uuid>` → `404` — 27b031a
 
 #### Manual
 
-- [x] 3.4 Form defaults are 5×5 and Inspiracja ×3 (others 0); rows can be added/removed; counters update live; over-limit blocks submit client-side; a server `400` shows inline and inputs are preserved
-- [x] 3.5 After generate, the session page shows a 6-character code readable from across a table, the N×N grid with phrases, reward badges on exactly the rewarded cells, and a legend; on a ~6" phone in portrait the 5×5 grid needs no horizontal scroll or zoom
-- [x] 3.6 Dashboard shows "Nowa sesja", lists own sessions newest first with working links, and shows the empty state for a fresh account
+- [x] 3.4 Form defaults are 5×5 and Inspiracja ×3 (others 0); rows can be added/removed; counters update live; over-limit blocks submit client-side; a server `400` shows inline and inputs are preserved — 27b031a
+- [x] 3.5 After generate, the session page shows a 6-character code readable from across a table, the N×N grid with phrases, reward badges on exactly the rewarded cells, and a legend; on a ~6" phone in portrait the 5×5 grid needs no horizontal scroll or zoom — 27b031a
+- [x] 3.6 Dashboard shows "Nowa sesja", lists own sessions newest first with working links, and shows the empty state for a fresh account — 27b031a
 
 ### Phase 4: Polish copy, smoke & runbook
 
 #### Automated
 
-- [ ] 4.1 `npm run build` then `npm run smoke` against `npm run preview` passes with the new steps (locally against hosted or in CI)
-- [ ] 4.2 `npm run lint` and `npx astro check` pass; `src/layouts/Layout.astro` contains `lang="pl"`
-- [ ] 4.3 `rg -n "Sign in|Sign up|Sign out|Create account|Check your email|10x Astro Starter|Not signed in" src/` returns no matches
+- [x] 4.1 `npm run build` then `npm run smoke` against `npm run preview` passes with the new steps (locally against hosted or in CI)
+- [x] 4.2 `npm run lint` and `npx astro check` pass; `src/layouts/Layout.astro` contains `lang="pl"`
+- [x] 4.3 `rg -n "Sign in|Sign up|Sign out|Create account|Check your email|10x Astro Starter|Not signed in" src/` returns no matches
 
 #### Manual
 
-- [ ] 4.4 Walk signup → confirm-email → signin → dashboard → nowa sesja → session page → signout; every screen is Polish and the only English text that can appear is a Supabase-originated error
-- [ ] 4.5 `change.md` Notes are sufficient to re-apply the schema and regenerate types without reading this plan
+- [x] 4.4 Walk signup → confirm-email → signin → dashboard → nowa sesja → session page → signout; every screen is Polish and the only English text that can appear is a Supabase-originated error
+- [x] 4.5 `change.md` Notes are sufficient to re-apply the schema and regenerate types without reading this plan
