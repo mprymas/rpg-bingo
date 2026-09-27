@@ -218,22 +218,22 @@ Catalogs are small (tens of rows). No indexes beyond PK/unique are required for 
 
 #### Automated
 
-- [x] 2.1 After hosted seed apply, `SELECT count(*) FROM phrases` ≥ 26
-- [x] 2.2 After hosted seed apply, `SELECT count(*) FROM rewards` ≥ 3
-- [x] 2.3 `phrases.text` and `rewards.slug` have no duplicates
+- [x] 2.1 After hosted seed apply, `SELECT count(*) FROM phrases` ≥ 26 — 1e32d12
+- [x] 2.2 After hosted seed apply, `SELECT count(*) FROM rewards` ≥ 3 — 1e32d12
+- [x] 2.3 `phrases.text` and `rewards.slug` have no duplicates — 1e32d12
 
 #### Manual
 
-- [x] 2.4 Human reviews phrase tone and reward labels/descriptions for table-fit; edits allowed in the same PR before the hosted seed run
+- [x] 2.4 Human reviews phrase tone and reward labels/descriptions for table-fit; edits allowed in the same PR before the hosted seed run — 1e32d12
 
 ### Phase 3: Verify + apply notes
 
 #### Automated
 
-- [ ] 3.1 `git status` / diff shows no modifications under `src/`
-- [ ] 3.2 Hosted DB still has phrases ≥ 26 and rewards ≥ 3 after Phase 1–2 apply
+- [x] 3.1 `git status` / diff shows no modifications under `src/`
+- [x] 3.2 Hosted DB still has phrases ≥ 26 and rewards ≥ 3 after Phase 1–2 apply
 
 #### Manual
 
-- [ ] 3.3 Notes in `change.md` are clear enough for a future apply without re-deriving the process
-- [ ] 3.4 Optional: anon REST or SQL client `SELECT` returns seeded rows from hosted
+- [x] 3.3 Notes in `change.md` are clear enough for a future apply without re-deriving the process
+- [x] 3.4 Optional: anon REST or SQL client `SELECT` returns seeded rows from hosted
