@@ -1,10 +1,10 @@
 ---
 change_id: seed-phrase-reward-catalog
 title: Seed phrase reward catalog
-status: impl_reviewed
+status: archived
 created: 2026-09-27
 updated: 2026-09-27
-archived_at: null
+archived_at: 2026-09-27T13:28:05Z
 ---
 
 ## Notes
