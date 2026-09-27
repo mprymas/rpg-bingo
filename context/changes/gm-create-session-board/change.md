@@ -1,7 +1,7 @@
 ---
 change_id: gm-create-session-board
 title: Gm create session board
-status: implemented
+status: impl_reviewed
 created: 2026-09-27
 updated: 2026-09-27
 archived_at: null
@@ -27,3 +27,7 @@ archived_at: null
 ### Decision summary
 
 - Single `sessions` entity (no separate board table); join code 6 chars from alphabet without ambiguous glyphs; guaranteed phrases via checkbox; board sizes 3–5; default seed includes Inspiracja ×3; session lifecycle via `status` only; UI Polish everywhere.
+
+### Known gaps (MVP)
+
+- RLS on `board_cells` INSERT is ownership-only; `position` has no upper bound vs `sessions.size`. The app path (`generateBoard` + service) is the intended writer. An authenticated client could still insert odd cells on own sessions via PostgREST until a later CHECK/trigger lands.

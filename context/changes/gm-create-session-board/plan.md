@@ -403,14 +403,14 @@ Make the whole app Polish, extend the smoke test to the create flow, and record 
 #### Automated
 
 - [x] 1.1 Human-approved `npx supabase db push` applies the migration on the hosted project without error (never `db reset`) — fa7ae03
-- [x] 1.2 SQL check on hosted: `public.sessions`, `public.board_cells` exist with the columns, CHECKs, UNIQUEs and FKs above, RLS enabled, exactly the four policies listed, and `public.create_session_with_cells` exists with EXECUTE granted only to `authenticated` — fa7ae03
-- [x] 1.3 Anon key: `SELECT` on `sessions`/`board_cells` returns 0 rows, `INSERT` is rejected (42501), and calling the RPC is rejected — fa7ae03
+- [x] 1.2 SQL check on hosted: `public.sessions`, `public.board_cells` exist with the columns, CHECKs, UNIQUEs and FKs above, RLS enabled, exactly the four owner policies listed (no RPC — adapted; inserts via supabase-js) — fa7ae03
+- [x] 1.3 Anon key: `SELECT` on `sessions`/`board_cells` returns 0 rows; `INSERT` is rejected (42501) — fa7ae03
 - [x] 1.4 `src/db/database.types.ts` generated from hosted, `src/types.ts` compiles, `src/lib/supabase.ts` is typed, and `npx astro check` passes — fa7ae03
 - [x] 1.5 `zod` is in `package.json` dependencies; `npm run lint` passes — fa7ae03
 
 #### Manual
 
-- [x] 1.6 Human reviews the migration SQL (RLS predicates, CHECK regex/alphabet, GRANT/REVOKE on the function) before approving the push — fa7ae03
+- [x] 1.6 Human reviews the migration SQL (RLS predicates, CHECK regex/alphabet; no RPC per adaptation) before approving the push — fa7ae03
 
 ### Phase 2: Generation domain & API
 

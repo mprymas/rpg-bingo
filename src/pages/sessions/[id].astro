@@ -16,7 +16,7 @@ if (!supabase) {
   return new Response("Brak konfiguracji", { status: 500 });
 }
 
-const session = await getSessionWithCells(supabase, id);
+const session = await getSessionWithCells(supabase, id, Astro.locals.user!.id);
 if (!session) {
   return new Response("Nie znaleziono sesji", { status: 404 });
 }
@@ -38,6 +38,8 @@ for (const cell of session.cells) {
   }
 }
 const legend = [...rewardCounts.values()];
+const expectedCells = session.size * session.size;
+const boardComplete = session.cells.length === expectedCells;
 ---
 
 <Layout title={`Sesja ${session.code}`}>
@@ -61,19 +63,28 @@ const legend = [...rewardCounts.values()];
         </div>
       </div>
 
-      <BoardGrid size={session.size} cells={session.cells} />
+      {boardComplete ? (
+        <>
+          <BoardGrid size={session.size} cells={session.cells} />
 
-      {legend.length > 0 && (
-        <div>
-          <h2 class="mb-3 text-sm font-medium text-blue-100/80">Legenda nagród</h2>
-          <ul class="flex flex-wrap gap-2">
-            {legend.map((item) => (
-              <li class="rounded-lg border border-white/15 bg-white/5 px-3 py-1.5 text-sm text-blue-100/90">
-                {item.label}: {item.count}
-              </li>
-            ))}
-          </ul>
-        </div>
+          {legend.length > 0 && (
+            <div>
+              <h2 class="mb-3 text-sm font-medium text-blue-100/80">Legenda nagród</h2>
+              <ul class="flex flex-wrap gap-2">
+                {legend.map((item) => (
+                  <li class="rounded-lg border border-white/15 bg-white/5 px-3 py-1.5 text-sm text-blue-100/90">
+                    {item.label}: {item.count}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+        </>
+      ) : (
+        <p class="rounded-lg border border-dashed border-amber-400/40 bg-amber-500/10 px-4 py-6 text-center text-amber-100/90">
+          Nie udało się wczytać planszy (oczekiwano {expectedCells} pól, jest {session.cells.length}). Utwórz sesję
+          ponownie.
+        </p>
       )}
     </div>
   </div>

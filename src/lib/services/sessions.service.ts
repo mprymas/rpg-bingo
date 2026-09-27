@@ -92,14 +92,22 @@ export async function createSession(
   throw new SessionServiceError("CODE_COLLISION");
 }
 
-export async function listSessionsForGm(supabase: AppSupabaseClient): Promise<Session[]> {
-  const { data, error } = await supabase.from("sessions").select("*").order("created_at", { ascending: false });
+export async function listSessionsForGm(supabase: AppSupabaseClient, gmId: string): Promise<Session[]> {
+  const { data, error } = await supabase
+    .from("sessions")
+    .select("*")
+    .eq("gm_id", gmId)
+    .order("created_at", { ascending: false });
 
   if (error) throw error;
   return data;
 }
 
-export async function getSessionWithCells(supabase: AppSupabaseClient, id: string): Promise<SessionWithCells | null> {
+export async function getSessionWithCells(
+  supabase: AppSupabaseClient,
+  id: string,
+  gmId: string,
+): Promise<SessionWithCells | null> {
   const { data, error } = await supabase
     .from("sessions")
     .select(
@@ -112,6 +120,7 @@ export async function getSessionWithCells(supabase: AppSupabaseClient, id: strin
     `,
     )
     .eq("id", id)
+    .eq("gm_id", gmId)
     .maybeSingle();
 
   if (error) throw error;
