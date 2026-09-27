@@ -1,5 +1,5 @@
--- One-shot catalog seed for hosted F-01 apply (do not db reset).
--- Plain INSERT assumes empty phrases/rewards tables.
+-- Catalog seed for hosted F-01 apply (do not db reset).
+-- Safe to re-run: phrases skip duplicates; rewards upsert label/description by slug.
 
 INSERT INTO public.phrases (text) VALUES
   ('Wespnij się na wysoki mur'),
@@ -33,7 +33,8 @@ INSERT INTO public.phrases (text) VALUES
   ('Pokonaj przeciwnika w pojedynku 1 na 1'),
   ('Pchnij przeciwnika w niebezpieczeństwo'),
   ('Wypij więcej alkoholu niż ktokolwiek inny'),
-  ('Użyj improwizowanej broni');
+  ('Użyj improwizowanej broni')
+ON CONFLICT (text) DO NOTHING;
 
 INSERT INTO public.rewards (slug, label, description) VALUES
   (
@@ -65,4 +66,7 @@ INSERT INTO public.rewards (slug, label, description) VALUES
     'experience',
     'Doświadczenie',
     'Dodatkowe punkty doświadczenia dla zdobywcy pola.'
-  );
+  )
+ON CONFLICT (slug) DO UPDATE SET
+  label = EXCLUDED.label,
+  description = EXCLUDED.description;

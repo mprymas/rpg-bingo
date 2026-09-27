@@ -1,7 +1,7 @@
 ---
 change_id: seed-phrase-reward-catalog
 title: Seed phrase reward catalog
-status: implemented
+status: impl_reviewed
 created: 2026-09-27
 updated: 2026-09-27
 archived_at: null
@@ -28,15 +28,15 @@ archived_at: null
 
    Applied file: `supabase/migrations/20260927134220_phrases_and_rewards.sql`.
 
-2. **Run seed once** against the linked hosted DB:
+2. **Run seed** against the linked hosted DB:
 
    ```bash
    npx supabase db query --linked -f supabase/seed.sql
    ```
 
-   Do not re-run plain INSERT seed on a non-empty catalog — unique constraints on `phrases.text` / `rewards.slug` will fail. Content edits after the initial seed should use targeted `UPDATE` (or a new migration), not a second full seed.
+   Re-runs are safe: `phrases` use `ON CONFLICT (text) DO NOTHING`; `rewards` upsert `label`/`description` on `slug`. Still never `db reset` on hosted.
 
-3. **Typo fixes** (after initial seed) were applied as hosted `UPDATE`s: zwierzę, improwizowanej, Wprowadzenie.
+3. **Typo fixes** (after initial seed) were applied as hosted `UPDATE`s: zwierzę, improwizowanej, Wprowadzenie. Later content edits can re-run `seed.sql` (rewards) or use targeted `UPDATE` (phrases already present are skipped).
 
 ### Count / uniqueness checks used
 
