@@ -67,6 +67,9 @@ const astroConfig = defineConfig({
     "astro/no-set-html-directive": "error",
     "astro/no-unused-css-selector": "warn",
     "astro/prefer-class-list-directive": "warn",
+    // astro-eslint-parser builds an incomplete AST for frontmatter early returns;
+    // this rule asserts a parent and crashes the whole lint run.
+    "@typescript-eslint/no-misused-promises": "off",
   },
 });
 

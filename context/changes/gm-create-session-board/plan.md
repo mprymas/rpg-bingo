@@ -416,30 +416,30 @@ Make the whole app Polish, extend the smoke test to the create flow, and record 
 
 #### Automated
 
-- [x] 2.1 `npm run lint` and `npx astro check` pass
-- [x] 2.2 Signed-in `POST /api/sessions` with `{ "size": 5, "customPhrases": [], "rewards": [] }` returns `201 { id, code }` where `code` matches `^[ABCDEFGHJKLMNPQRSTUVWXYZ23456789]{6}$`, and hosted SQL shows 25 `board_cells` for that session with distinct phrases and positions `0–24`
-- [x] 2.3 Signed-in `POST /api/sessions` with `rewards: [{ inspiration id, count: 3 }]` yields exactly 3 cells with that `reward_id` and 22 with `NULL`
-- [x] 2.4 Anonymous `POST /api/sessions` returns `401` JSON
-- [x] 2.5 Invalid commands return `400` with a Polish message: `size: 6`; 26 guaranteed customs on 5×5; `Σ count = 26`; unknown `rewardId`
+- [x] 2.1 `npm run lint` and `npx astro check` pass — 8f1ae80
+- [x] 2.2 Signed-in `POST /api/sessions` with `{ "size": 5, "customPhrases": [], "rewards": [] }` returns `201 { id, code }` where `code` matches `^[ABCDEFGHJKLMNPQRSTUVWXYZ23456789]{6}$`, and hosted SQL shows 25 `board_cells` for that session with distinct phrases and positions `0–24` — 8f1ae80
+- [x] 2.3 Signed-in `POST /api/sessions` with `rewards: [{ inspiration id, count: 3 }]` yields exactly 3 cells with that `reward_id` and 22 with `NULL` — 8f1ae80
+- [x] 2.4 Anonymous `POST /api/sessions` returns `401` JSON — 8f1ae80
+- [x] 2.5 Invalid commands return `400` with a Polish message: `size: 6`; 26 guaranteed customs on 5×5; `Σ count = 26`; unknown `rewardId` — 8f1ae80
 
 #### Manual
 
-- [x] 2.6 Create with 3 custom phrases (2 guaranteed, one of them equal to a predefined phrase in different case/whitespace): both guaranteed appear on the board, the matching phrase appears exactly once, the non-guaranteed one may or may not appear
-- [x] 2.7 Code review of `board-generator.ts` confirms the `POOL_TOO_SMALL` branch and message (unreachable with the current 32-phrase catalog at ≤ 5×5)
+- [x] 2.6 Create with 3 custom phrases (2 guaranteed, one of them equal to a predefined phrase in different case/whitespace): both guaranteed appear on the board, the matching phrase appears exactly once, the non-guaranteed one may or may not appear — 8f1ae80
+- [x] 2.7 Code review of `board-generator.ts` confirms the `POOL_TOO_SMALL` branch and message (unreachable with the current 32-phrase catalog at ≤ 5×5) — 8f1ae80
 
 ### Phase 3: MG UI
 
 #### Automated
 
-- [ ] 3.1 `npm run lint` and `npx astro check` pass
-- [ ] 3.2 Anonymous `GET /sessions/new` and `GET /sessions/<id>` redirect `302` to `/auth/signin`
-- [ ] 3.3 Signed-in `GET /sessions/new` → `200`; `GET /sessions/<own id>` → `200`; `GET /sessions/<random uuid>` → `404`
+- [x] 3.1 `npm run lint` and `npx astro check` pass
+- [x] 3.2 Anonymous `GET /sessions/new` and `GET /sessions/<id>` redirect `302` to `/auth/signin`
+- [x] 3.3 Signed-in `GET /sessions/new` → `200`; `GET /sessions/<own id>` → `200`; `GET /sessions/<random uuid>` → `404`
 
 #### Manual
 
-- [ ] 3.4 Form defaults are 5×5 and Inspiracja ×3 (others 0); rows can be added/removed; counters update live; over-limit blocks submit client-side; a server `400` shows inline and inputs are preserved
-- [ ] 3.5 After generate, the session page shows a 6-character code readable from across a table, the N×N grid with phrases, reward badges on exactly the rewarded cells, and a legend; on a ~6" phone in portrait the 5×5 grid needs no horizontal scroll or zoom
-- [ ] 3.6 Dashboard shows "Nowa sesja", lists own sessions newest first with working links, and shows the empty state for a fresh account
+- [x] 3.4 Form defaults are 5×5 and Inspiracja ×3 (others 0); rows can be added/removed; counters update live; over-limit blocks submit client-side; a server `400` shows inline and inputs are preserved
+- [x] 3.5 After generate, the session page shows a 6-character code readable from across a table, the N×N grid with phrases, reward badges on exactly the rewarded cells, and a legend; on a ~6" phone in portrait the 5×5 grid needs no horizontal scroll or zoom
+- [x] 3.6 Dashboard shows "Nowa sesja", lists own sessions newest first with working links, and shows the empty state for a fresh account
 
 ### Phase 4: Polish copy, smoke & runbook
 

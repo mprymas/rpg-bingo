@@ -1,0 +1,80 @@
+---
+import Layout from "@/layouts/Layout.astro";
+import BoardGrid from "@/components/sessions/BoardGrid.astro";
+import { createClient } from "@/lib/supabase";
+import { getSessionWithCells } from "@/lib/services/sessions.service";
+
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+const id = Astro.params.id ?? "";
+
+if (!UUID_RE.test(id)) {
+  return new Response("Nie znaleziono sesji", { status: 404 });
+}
+
+const supabase = createClient(Astro.request.headers, Astro.cookies);
+if (!supabase) {
+  return new Response("Brak konfiguracji", { status: 500 });
+}
+
+const session = await getSessionWithCells(supabase, id);
+if (!session) {
+  return new Response("Nie znaleziono sesji", { status: 404 });
+}
+
+const statusLabel = session.status === "active" ? "Aktywna" : "Zamknięta";
+const createdLabel = new Date(session.created_at).toLocaleString("pl-PL", {
+  dateStyle: "medium",
+  timeStyle: "short",
+});
+
+const rewardCounts = new Map<string, { label: string; count: number }>();
+for (const cell of session.cells) {
+  if (!cell.reward) continue;
+  const existing = rewardCounts.get(cell.reward.slug);
+  if (existing) {
+    existing.count += 1;
+  } else {
+    rewardCounts.set(cell.reward.slug, { label: cell.reward.label, count: 1 });
+  }
+}
+const legend = [...rewardCounts.values()];
+---
+
+<Layout title={`Sesja ${session.code}`}>
+  <div class="bg-cosmic min-h-screen p-4 sm:p-8">
+    <div class="mx-auto w-full max-w-2xl space-y-8 rounded-2xl border border-white/10 bg-white/10 p-6 text-white backdrop-blur-xl sm:p-8">
+      <div class="flex flex-col gap-4">
+        <a href="/dashboard" class="self-start text-sm text-purple-300 hover:underline">
+          Wróć do panelu
+        </a>
+        <p class="text-center font-mono text-4xl tracking-[0.35em] text-white sm:text-5xl" aria-label="Kod sesji">
+          {session.code}
+        </p>
+        <div class="flex flex-wrap items-center justify-center gap-3 text-sm text-blue-100/70">
+          <span>
+            {session.size}×{session.size}
+          </span>
+          <span class="rounded-full border border-emerald-400/40 bg-emerald-500/20 px-2.5 py-0.5 text-emerald-200">
+            {statusLabel}
+          </span>
+          <span>{createdLabel}</span>
+        </div>
+      </div>
+
+      <BoardGrid size={session.size} cells={session.cells} />
+
+      {legend.length > 0 && (
+        <div>
+          <h2 class="mb-3 text-sm font-medium text-blue-100/80">Legenda nagród</h2>
+          <ul class="flex flex-wrap gap-2">
+            {legend.map((item) => (
+              <li class="rounded-lg border border-white/15 bg-white/5 px-3 py-1.5 text-sm text-blue-100/90">
+                {item.label}: {item.count}
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+    </div>
+  </div>
+</Layout>

@@ -1,0 +1,30 @@
+---
+import { cn } from "@/lib/utils";
+import type { SessionWithCells } from "@/types";
+
+interface Props {
+  size: number;
+  cells: SessionWithCells["cells"];
+}
+
+const { size, cells } = Astro.props;
+
+const GRID_COLS: Record<number, string> = {
+  3: "grid-cols-3",
+  4: "grid-cols-4",
+  5: "grid-cols-5",
+};
+---
+
+<div class:list={cn("mx-auto grid max-w-md gap-1", GRID_COLS[size])}>
+  {cells.map((cell) => (
+    <div class="flex min-h-14 flex-col justify-between rounded-md border border-white/15 bg-white/10 p-1.5 sm:min-h-16 sm:p-2">
+      <p class="text-[10px] leading-tight break-words text-white sm:text-xs">{cell.phrase}</p>
+      {cell.reward && (
+        <span class="mt-1 inline-block self-start rounded bg-purple-500/40 px-1 py-0.5 text-[9px] leading-none text-purple-100 sm:text-[10px]">
+          {cell.reward.label}
+        </span>
+      )}
+    </div>
+  ))}
+</div>

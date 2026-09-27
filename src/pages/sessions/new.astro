@@ -1,0 +1,35 @@
+---
+import Layout from "@/layouts/Layout.astro";
+import NewSessionForm from "@/components/sessions/NewSessionForm";
+import { createClient } from "@/lib/supabase";
+
+const supabase = createClient(Astro.request.headers, Astro.cookies);
+if (!supabase) {
+  return new Response("Brak konfiguracji", { status: 500 });
+}
+
+const { data: rewards, error } = await supabase
+  .from("rewards")
+  .select("id, slug, label, description")
+  .order("created_at", { ascending: true });
+
+if (error) {
+  return new Response("Nie udało się wczytać nagród", { status: 500 });
+}
+---
+
+<Layout title="Nowa sesja">
+  <div class="bg-cosmic min-h-screen p-4 sm:p-8">
+    <div class="mx-auto w-full max-w-2xl rounded-2xl border border-white/10 bg-white/10 p-6 text-white backdrop-blur-xl sm:p-8">
+      <div class="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <h1 class="bg-gradient-to-r from-blue-200 to-purple-200 bg-clip-text text-3xl font-bold text-transparent">
+          Nowa sesja
+        </h1>
+        <a href="/dashboard" class="text-sm text-purple-300 hover:underline">
+          Wróć do panelu
+        </a>
+      </div>
+      <NewSessionForm rewards={rewards} client:load />
+    </div>
+  </div>
+</Layout>
