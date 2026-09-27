@@ -402,30 +402,30 @@ Make the whole app Polish, extend the smoke test to the create flow, and record 
 
 #### Automated
 
-- [x] 1.1 Human-approved `npx supabase db push` applies the migration on the hosted project without error (never `db reset`)
-- [x] 1.2 SQL check on hosted: `public.sessions`, `public.board_cells` exist with the columns, CHECKs, UNIQUEs and FKs above, RLS enabled, exactly the four policies listed, and `public.create_session_with_cells` exists with EXECUTE granted only to `authenticated`
-- [x] 1.3 Anon key: `SELECT` on `sessions`/`board_cells` returns 0 rows, `INSERT` is rejected (42501), and calling the RPC is rejected
-- [x] 1.4 `src/db/database.types.ts` generated from hosted, `src/types.ts` compiles, `src/lib/supabase.ts` is typed, and `npx astro check` passes
-- [x] 1.5 `zod` is in `package.json` dependencies; `npm run lint` passes
+- [x] 1.1 Human-approved `npx supabase db push` applies the migration on the hosted project without error (never `db reset`) — fa7ae03
+- [x] 1.2 SQL check on hosted: `public.sessions`, `public.board_cells` exist with the columns, CHECKs, UNIQUEs and FKs above, RLS enabled, exactly the four policies listed, and `public.create_session_with_cells` exists with EXECUTE granted only to `authenticated` — fa7ae03
+- [x] 1.3 Anon key: `SELECT` on `sessions`/`board_cells` returns 0 rows, `INSERT` is rejected (42501), and calling the RPC is rejected — fa7ae03
+- [x] 1.4 `src/db/database.types.ts` generated from hosted, `src/types.ts` compiles, `src/lib/supabase.ts` is typed, and `npx astro check` passes — fa7ae03
+- [x] 1.5 `zod` is in `package.json` dependencies; `npm run lint` passes — fa7ae03
 
 #### Manual
 
-- [x] 1.6 Human reviews the migration SQL (RLS predicates, CHECK regex/alphabet, GRANT/REVOKE on the function) before approving the push
+- [x] 1.6 Human reviews the migration SQL (RLS predicates, CHECK regex/alphabet, GRANT/REVOKE on the function) before approving the push — fa7ae03
 
 ### Phase 2: Generation domain & API
 
 #### Automated
 
-- [ ] 2.1 `npm run lint` and `npx astro check` pass
-- [ ] 2.2 Signed-in `POST /api/sessions` with `{ "size": 5, "customPhrases": [], "rewards": [] }` returns `201 { id, code }` where `code` matches `^[ABCDEFGHJKLMNPQRSTUVWXYZ23456789]{6}$`, and hosted SQL shows 25 `board_cells` for that session with distinct phrases and positions `0–24`
-- [ ] 2.3 Signed-in `POST /api/sessions` with `rewards: [{ inspiration id, count: 3 }]` yields exactly 3 cells with that `reward_id` and 22 with `NULL`
-- [ ] 2.4 Anonymous `POST /api/sessions` returns `401` JSON
-- [ ] 2.5 Invalid commands return `400` with a Polish message: `size: 6`; 26 guaranteed customs on 5×5; `Σ count = 26`; unknown `rewardId`
+- [x] 2.1 `npm run lint` and `npx astro check` pass
+- [x] 2.2 Signed-in `POST /api/sessions` with `{ "size": 5, "customPhrases": [], "rewards": [] }` returns `201 { id, code }` where `code` matches `^[ABCDEFGHJKLMNPQRSTUVWXYZ23456789]{6}$`, and hosted SQL shows 25 `board_cells` for that session with distinct phrases and positions `0–24`
+- [x] 2.3 Signed-in `POST /api/sessions` with `rewards: [{ inspiration id, count: 3 }]` yields exactly 3 cells with that `reward_id` and 22 with `NULL`
+- [x] 2.4 Anonymous `POST /api/sessions` returns `401` JSON
+- [x] 2.5 Invalid commands return `400` with a Polish message: `size: 6`; 26 guaranteed customs on 5×5; `Σ count = 26`; unknown `rewardId`
 
 #### Manual
 
-- [ ] 2.6 Create with 3 custom phrases (2 guaranteed, one of them equal to a predefined phrase in different case/whitespace): both guaranteed appear on the board, the matching phrase appears exactly once, the non-guaranteed one may or may not appear
-- [ ] 2.7 Code review of `board-generator.ts` confirms the `POOL_TOO_SMALL` branch and message (unreachable with the current 32-phrase catalog at ≤ 5×5)
+- [x] 2.6 Create with 3 custom phrases (2 guaranteed, one of them equal to a predefined phrase in different case/whitespace): both guaranteed appear on the board, the matching phrase appears exactly once, the non-guaranteed one may or may not appear
+- [x] 2.7 Code review of `board-generator.ts` confirms the `POOL_TOO_SMALL` branch and message (unreachable with the current 32-phrase catalog at ≤ 5×5)
 
 ### Phase 3: MG UI
 

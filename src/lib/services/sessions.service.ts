@@ -1,0 +1,131 @@
+import type { SupabaseClient } from "@supabase/supabase-js";
+import type { Database } from "@/db/database.types";
+import { generateBoard } from "@/lib/services/board-generator";
+import { generateSessionCode } from "@/lib/services/session-code";
+import type { CreateSessionCommand, CreateSessionResponse, Session, SessionWithCells } from "@/types";
+
+type AppSupabaseClient = SupabaseClient<Database>;
+
+export type SessionServiceErrorCode = "UNKNOWN_REWARD" | "CODE_COLLISION";
+
+export class SessionServiceError extends Error {
+  readonly code: SessionServiceErrorCode;
+
+  constructor(code: SessionServiceErrorCode) {
+    super(code);
+    this.name = "SessionServiceError";
+    this.code = code;
+  }
+}
+
+const MAX_CODE_ATTEMPTS = 5;
+
+export async function createSession(
+  supabase: AppSupabaseClient,
+  command: CreateSessionCommand,
+): Promise<CreateSessionResponse> {
+  const {
+    data: { user },
+    error: userError,
+  } = await supabase.auth.getUser();
+  if (userError || !user) {
+    throw userError ?? new Error("Authenticated user required");
+  }
+
+  const [{ data: phrases, error: phrasesError }, { data: rewards, error: rewardsError }] = await Promise.all([
+    supabase.from("phrases").select("text"),
+    supabase.from("rewards").select("id"),
+  ]);
+
+  if (phrasesError) throw phrasesError;
+  if (rewardsError) throw rewardsError;
+
+  const rewardIds = new Set(rewards.map((r) => r.id));
+  for (const { rewardId } of command.rewards) {
+    if (!rewardIds.has(rewardId)) {
+      throw new SessionServiceError("UNKNOWN_REWARD");
+    }
+  }
+
+  const generatedCells = generateBoard({
+    size: command.size,
+    predefined: phrases.map((p) => p.text),
+    customPhrases: command.customPhrases,
+    rewards: command.rewards,
+  });
+
+  for (let attempt = 0; attempt < MAX_CODE_ATTEMPTS; attempt++) {
+    const code = generateSessionCode();
+
+    const { data: session, error: sessionError } = await supabase
+      .from("sessions")
+      .insert({
+        code,
+        size: command.size,
+        gm_id: user.id,
+      })
+      .select("id, code")
+      .single();
+
+    if (sessionError) {
+      if (sessionError.code === "23505") {
+        continue;
+      }
+      throw sessionError;
+    }
+
+    const cellRows = generatedCells.map((cell) => ({
+      session_id: session.id,
+      position: cell.position,
+      phrase: cell.phrase,
+      reward_id: cell.rewardId,
+    }));
+
+    const { error: cellsError } = await supabase.from("board_cells").insert(cellRows);
+    if (cellsError) {
+      throw cellsError;
+    }
+
+    return { id: session.id, code: session.code };
+  }
+
+  throw new SessionServiceError("CODE_COLLISION");
+}
+
+export async function listSessionsForGm(supabase: AppSupabaseClient): Promise<Session[]> {
+  const { data, error } = await supabase.from("sessions").select("*").order("created_at", { ascending: false });
+
+  if (error) throw error;
+  return data;
+}
+
+export async function getSessionWithCells(supabase: AppSupabaseClient, id: string): Promise<SessionWithCells | null> {
+  const { data, error } = await supabase
+    .from("sessions")
+    .select(
+      `
+      *,
+      cells:board_cells (
+        *,
+        reward:rewards ( slug, label )
+      )
+    `,
+    )
+    .eq("id", id)
+    .maybeSingle();
+
+  if (error) throw error;
+  if (!data) return null;
+
+  const cells = [...data.cells].sort((a, b) => a.position - b.position);
+
+  return {
+    id: data.id,
+    gm_id: data.gm_id,
+    code: data.code,
+    size: data.size,
+    status: data.status,
+    created_at: data.created_at,
+    cells,
+  };
+}
