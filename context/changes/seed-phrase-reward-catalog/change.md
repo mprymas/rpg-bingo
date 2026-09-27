@@ -1,7 +1,7 @@
 ---
 change_id: seed-phrase-reward-catalog
 title: Seed phrase reward catalog
-status: planned
+status: implementing
 created: 2026-09-27
 updated: 2026-09-27
 archived_at: null

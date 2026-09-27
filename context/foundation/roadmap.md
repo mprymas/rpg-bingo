@@ -46,7 +46,7 @@ Mistrz Gry chce przy stole meta-wyzwania i lekką rywalizację zamiast uznaniowy
 
 | ID   | Change ID                                            | Outcome (user can …)                                                                    | Prerequisites | PRD refs                                  | Status   |
 | ---- | ---------------------------------------------------- | --------------------------------------------------------------------------------------- | ------------- | ----------------------------------------- | -------- |
-| F-01 | seed-phrase-reward-catalog | (foundation) seedowane hasła predefiniowane i katalog nagród gotowe do losowania        | —             | FR-005, FR-016 (MVP seed), Business Logic | planning |
+| F-01 | seed-phrase-reward-catalog | (foundation) seedowane hasła predefiniowane i katalog nagród gotowe do losowania        | —             | FR-005, FR-016 (MVP seed), Business Logic | in-progress |
 | S-01 | gm-create-session-board                              | zalogowany MG tworzy sesję, generuje planszę i dostaje krótki kod                       | F-01          | US-01, FR-001, FR-004, FR-005, FR-006     | proposed |
 | S-02 | player-join-shared-board                             | gracz dołącza kodem i nickiem (bez konta) i widzi wspólną planszę z nagrodami na polach | S-01          | US-01, FR-002, FR-008, FR-010             | proposed |
 | S-03 | player-claim-field-reward                            | gracz oznacza wolne pole, widzi nagrodę; inni widzą zajęte pole po odświeżeniu          | S-02          | US-01, FR-009, FR-011                     | proposed |
@@ -98,7 +98,7 @@ Foundations below assume these are present and do NOT re-scaffold them.
 - **Blockers:** —
 - **Unknowns:** —
 - **Risk:** Bez seeda S-01 nie ma z czego losować planszy; to najmniejszy kontrakt danych przed pierwszą ścieżką MG (schema sesji/planszy wchodzi dopiero w S-01).
-- **Status:** planning
+- **Status:** in-progress
 
 
 

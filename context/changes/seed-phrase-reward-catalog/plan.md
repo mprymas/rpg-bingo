@@ -206,13 +206,13 @@ Catalogs are small (tens of rows). No indexes beyond PK/unique are required for 
 
 #### Automated
 
-- [ ] 1.1 Migration SQL applies on the hosted project without error (SQL editor or `db push`)
-- [ ] 1.2 Tables `public.phrases` and `public.rewards` exist with the columns and unique constraints above
-- [ ] 1.3 Anon key can `SELECT` from both tables; anon key cannot `INSERT` into either table
+- [x] 1.1 Migration SQL applies on the hosted project without error (SQL editor or `db push`)
+- [x] 1.2 Tables `public.phrases` and `public.rewards` exist with the columns and unique constraints above
+- [x] 1.3 Anon key can `SELECT` from both tables; anon key cannot `INSERT` into either table
 
 #### Manual
 
-- [ ] 1.4 Spot-check policy names/roles in the Supabase Dashboard (Authentication/SQL → policies) after apply
+- [x] 1.4 Spot-check policy names/roles in the Supabase Dashboard (Authentication/SQL → policies) after apply
 
 ### Phase 2: Seed content
 
