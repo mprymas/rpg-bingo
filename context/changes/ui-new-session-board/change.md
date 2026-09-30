@@ -1,7 +1,7 @@
 ---
 change_id: ui-new-session-board
 title: Audyt i poprawa widoku tworzenia planszy bingo
-status: implementing
+status: implemented
 created: 2026-09-30
 updated: 2026-09-30
 archived_at: null

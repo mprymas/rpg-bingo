@@ -300,10 +300,10 @@ No DB migrations. Token deposit is global; expect visual shift on shared Button/
 
 #### Automated
 
-- [x] 4.1 PROD/preview blocks kitchen-sink (404 or equivalent)
-- [x] 4.2 `npm run lint` and `npx astro check` pass
+- [x] 4.1 PROD/preview blocks kitchen-sink (404 or equivalent) — 1ff38f0
+- [x] 4.2 `npm run lint` and `npx astro check` pass — 1ff38f0
 
 #### Manual
 
-- [x] 4.3 DEV kitchen-sink shows default, hover/focus, disabled, error, empty, loading
-- [x] 4.4 Desktop + one mobile-width screenshots captured for review
+- [x] 4.3 DEV kitchen-sink shows default, hover/focus, disabled, error, empty, loading — 1ff38f0
+- [x] 4.4 Desktop + one mobile-width screenshots captured for review — 1ff38f0
