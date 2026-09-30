@@ -141,7 +141,7 @@ export default function NewSessionForm({ rewards, demoState }: Props) {
                   placeholder="Wpisz hasło…"
                   maxLength={120}
                   autoFocus={showFocusRing}
-                  className={cn("sm:flex-1", showFocusRing && "border-ring ring-ring/50 ring-[3px]")}
+                  className={cn("sm:flex-1", showFocusRing && "border-ring ring-ring/50 ring-2")}
                 />
                 <div className="flex shrink-0 items-center gap-2">
                   <Checkbox

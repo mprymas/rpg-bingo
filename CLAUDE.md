@@ -7,7 +7,8 @@ This file provides guidance to AI Agent when working with code in this repositor
 - `npm run dev` — start dev server (Cloudflare workerd runtime)
 - `npm run build` — production build (SSR via `@astrojs/cloudflare`)
 - `npm run preview` — preview production build
-- `npm run lint` — ESLint with type-checked rules
+- `npm run lint` — ESLint with type-checked rules, then `scripts/check-ui-literals.mjs` (no palette/hex/arbitrary px|rem / `bg-cosmic` in tokenized views)
+- `npm run lint:ui-literals` — hardcoded-value scan only (scoped list in the script)
 - `npm run lint:fix` — auto-fix lint issues
 - `npm run format` — Prettier (includes prettier-plugin-astro + prettier-plugin-tailwindcss)
 - `npm run smoke` — dependency-free auth-flow smoke test (`scripts/smoke.mjs`) against a running server, `BASE_URL` env (default `http://localhost:4321`). Run after dependency upgrades; CI runs it against the production preview with a local Supabase.
@@ -35,12 +36,20 @@ Full server-side rendering (`output: "server"` in astro.config.mjs). All pages a
 - **Path alias**: `@/*` maps to `./src/*` (tsconfig paths).
 - **Astro components** for static content/layout; **React components** only when interactivity is needed.
 - **Tailwind class merging**: use the `cn()` helper from `@/lib/utils` (clsx + tailwind-merge) for conditional/merged class names. Do not concatenate class strings manually.
-- **shadcn/ui**: components live in `src/components/ui/`, "new-york" style variant. Install new ones with `npx shadcn@latest add [name]`.
 - **API routes**: use uppercase `GET`, `POST` exports; validate input with zod.
 - **Supabase migrations**: `supabase/migrations/` using naming format `YYYYMMDDHHmmss_short_description.sql`. Always enable RLS on new tables with granular per-operation, per-role policies.
 - **React**: no Next.js directives ("use client" etc.). Extract hooks to `src/components/hooks/`.
 - **Services/helpers** go in `src/lib/` (or `src/lib/services/` for extracted business logic).
 - **Shared types** (entities, DTOs) go in `src/types.ts`.
+
+### UI / design tokens
+
+Vintage Paper dark theme via the existing shadcn contract (dark-only: `<html class="dark">`). Do not fork a second palette or run `shadcn init`.
+
+- **Tokens**: values in `src/styles/global.css` (`:root` / `.dark`); published through `@theme inline`. Prefer role classes (`bg-background`, `text-foreground`, `border-border`, `bg-primary`, `text-destructive`, `ring-ring`, …).
+- **Components**: `src/components/ui/` (new-york). Check that directory before creating a primitive; add missing ones with `npx shadcn@latest add [name]`.
+- **No literals in views**: no hex/rgb/oklch, no Tailwind palette classes (`bg-purple-*`, `text-blue-*`, …), no arbitrary values (`p-[13px]`) in pages/islands — put values in tokens and use role classes. Do not extend `bg-cosmic` to new screens (legacy wrappers on deferred pages only). Enforced on cleaned views by `npm run lint:ui-literals` (wired into `npm run lint`); extend `SCOPED_FILES` in `scripts/check-ui-literals.mjs` when another view is tokenized.
+- **Kitchen sink** (dev only, PROD 404): `/sessions/new/kitchen-sink` — visual gate for create-session states.
 
 ### Environment
 
