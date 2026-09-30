@@ -273,28 +273,28 @@ No DB migrations. Token deposit is global; expect visual shift on shared Button/
 
 #### Automated
 
-- [x] 2.1 Input, Label, Checkbox, RadioGroup exist under `src/components/ui/` and `npx astro check` passes
-- [x] 2.2 `npm run lint` passes
+- [x] 2.1 Input, Label, Checkbox, RadioGroup exist under `src/components/ui/` and `npx astro check` passes — a2120f1
+- [x] 2.2 `npm run lint` passes — a2120f1
 
 #### Manual
 
-- [x] 2.3 Primitives import/render without runtime errors
+- [x] 2.3 Primitives import/render without runtime errors — a2120f1
 
 ### Phase 3: Create-session view + C4/C5
 
 #### Automated
 
-- [ ] 3.1 `npm run lint` passes
-- [ ] 3.2 `npx astro check` passes
-- [ ] 3.3 `npm run build` passes
+- [x] 3.1 `npm run lint` passes
+- [x] 3.2 `npx astro check` passes
+- [x] 3.3 `npm run build` passes
 
 #### Manual
 
-- [ ] 3.4 `/sessions/new` uses Vintage Paper dark tokens/primitives (no cosmic purple glass)
-- [ ] 3.5 Create flow, counters, and over-limit disable still work
-- [ ] 3.6 Catalog error path renders inside Layout with Polish error
-- [ ] 3.7 Empty catalog shows Polish copy; submit remains allowed
-- [ ] 3.8 Focus rings follow `--ring`
+- [x] 3.4 `/sessions/new` uses Vintage Paper dark tokens/primitives (no cosmic purple glass)
+- [x] 3.5 Create flow, counters, and over-limit disable still work
+- [x] 3.6 Catalog error path renders inside Layout with Polish error
+- [x] 3.7 Empty catalog shows Polish copy; submit remains allowed
+- [x] 3.8 Focus rings follow `--ring`
 
 ### Phase 4: Kitchen-sink + visual gate
 

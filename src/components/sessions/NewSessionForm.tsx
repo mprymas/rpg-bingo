@@ -1,6 +1,10 @@
 import React, { useState } from "react";
 import { Plus, Trash2, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { ServerError } from "@/components/auth/ServerError";
 import { useCreateSession } from "@/components/hooks/useCreateSession";
 import { cn } from "@/lib/utils";
@@ -16,9 +20,6 @@ interface CustomPhraseRow {
 interface Props {
   rewards: RewardOption[];
 }
-
-const inputClass =
-  "w-full rounded-lg border border-white/20 bg-white/10 px-3 py-2 text-white placeholder-white/40 transition-colors focus:outline-none focus:ring-2 focus:ring-purple-400";
 
 function defaultRewardCounts(rewards: RewardOption[]): Record<string, number> {
   const counts: Record<string, number> = {};
@@ -72,137 +73,132 @@ export default function NewSessionForm({ rewards }: Props) {
   return (
     <form onSubmit={handleSubmit} className="space-y-8" noValidate>
       <fieldset className="space-y-3">
-        <legend className="text-sm font-medium text-blue-100/80">Rozmiar planszy</legend>
-        <div className="flex flex-wrap gap-2">
-          {BOARD_SIZES.map((option) => (
-            <label
-              key={option}
-              className={cn(
-                "cursor-pointer rounded-lg border px-4 py-2 text-sm transition-colors",
-                size === option
-                  ? "border-purple-400/60 bg-purple-600/40 text-white"
-                  : "border-white/20 bg-white/5 text-blue-100/80 hover:bg-white/10",
-              )}
-            >
-              <input
-                type="radio"
-                name="size"
-                value={option}
-                checked={size === option}
-                onChange={() => {
-                  setSize(option);
-                }}
-                className="sr-only"
-              />
-              {option}×{option}
-            </label>
-          ))}
-        </div>
+        <legend className="text-muted-foreground text-sm font-medium">Rozmiar planszy</legend>
+        <RadioGroup
+          value={String(size)}
+          onValueChange={(value) => {
+            setSize(Number(value) as BoardSize);
+          }}
+          className="flex flex-wrap gap-3"
+        >
+          {BOARD_SIZES.map((option) => {
+            const id = `size-${option}`;
+            return (
+              <div key={option} className="flex items-center gap-2">
+                <RadioGroupItem value={String(option)} id={id} />
+                <Label htmlFor={id} className="text-foreground cursor-pointer font-normal">
+                  {option}×{option}
+                </Label>
+              </div>
+            );
+          })}
+        </RadioGroup>
       </fieldset>
 
       <fieldset className="space-y-3">
-        <legend className="text-sm font-medium text-blue-100/80">Własne hasła</legend>
+        <legend className="text-muted-foreground text-sm font-medium">Własne hasła</legend>
         <div className="space-y-3">
-          {customPhrases.map((row, index) => (
-            <div
-              key={index}
-              className="flex flex-col gap-2 rounded-lg border border-white/10 bg-white/5 p-3 sm:flex-row sm:items-center"
-            >
-              <input
-                type="text"
-                value={row.text}
-                onChange={(e) => {
-                  updatePhrase(index, { text: e.target.value });
-                }}
-                placeholder="Wpisz hasło…"
-                maxLength={120}
-                className={cn(inputClass, "sm:flex-1")}
-              />
-              <label className="flex shrink-0 items-center gap-2 text-sm text-blue-100/80">
-                <input
-                  type="checkbox"
-                  checked={row.guaranteed}
-                  onChange={(e) => {
-                    updatePhrase(index, { guaranteed: e.target.checked });
-                  }}
-                  className="size-4 rounded border-white/20 bg-white/10 text-purple-500 focus:ring-purple-400"
-                />
-                Gwarantowane na planszy
-              </label>
-              <Button
-                type="button"
-                variant="ghost"
-                size="icon"
-                onClick={() => {
-                  removePhrase(index);
-                }}
-                aria-label="Usuń hasło"
-                className="shrink-0 text-blue-100/60 hover:bg-white/10 hover:text-white"
+          {customPhrases.map((row, index) => {
+            const guaranteedId = `guaranteed-${index}`;
+            return (
+              <div
+                key={index}
+                className="border-border bg-background flex flex-col gap-2 rounded-lg border p-3 sm:flex-row sm:items-center"
               >
-                <Trash2 className="size-4" />
-              </Button>
-            </div>
-          ))}
+                <Input
+                  type="text"
+                  value={row.text}
+                  onChange={(e) => {
+                    updatePhrase(index, { text: e.target.value });
+                  }}
+                  placeholder="Wpisz hasło…"
+                  maxLength={120}
+                  className="sm:flex-1"
+                />
+                <div className="flex shrink-0 items-center gap-2">
+                  <Checkbox
+                    id={guaranteedId}
+                    checked={row.guaranteed}
+                    onCheckedChange={(checked) => {
+                      updatePhrase(index, { guaranteed: checked === true });
+                    }}
+                  />
+                  <Label htmlFor={guaranteedId} className="text-muted-foreground cursor-pointer font-normal">
+                    Gwarantowane na planszy
+                  </Label>
+                </div>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => {
+                    removePhrase(index);
+                  }}
+                  aria-label="Usuń hasło"
+                  className="text-muted-foreground shrink-0"
+                >
+                  <Trash2 className="size-4" />
+                </Button>
+              </div>
+            );
+          })}
         </div>
-        <Button
-          type="button"
-          variant="outline"
-          onClick={addPhrase}
-          className="border-white/20 bg-white/5 text-white hover:bg-white/10"
-        >
+        <Button type="button" variant="outline" onClick={addPhrase}>
           <Plus className="size-4" />
           Dodaj hasło
         </Button>
-        <p className={cn("text-sm", guaranteedCount > maxCells ? "text-red-300" : "text-blue-100/60")}>
+        <p className={cn("text-sm", guaranteedCount > maxCells ? "text-destructive" : "text-muted-foreground")}>
           Gwarantowane: {guaranteedCount} / {maxCells}
         </p>
       </fieldset>
 
       <fieldset className="space-y-3">
-        <legend className="text-sm font-medium text-blue-100/80">Nagrody</legend>
-        <div className="space-y-3">
-          {rewards.map((reward) => (
-            <div
-              key={reward.id}
-              className="flex flex-col gap-2 rounded-lg border border-white/10 bg-white/5 p-3 sm:flex-row sm:items-center sm:justify-between"
-            >
-              <div className="min-w-0 flex-1">
-                <p className="font-medium text-white">{reward.label}</p>
-                <p className="text-sm text-blue-100/60">{reward.description}</p>
+        <legend className="text-muted-foreground text-sm font-medium">Nagrody</legend>
+        {rewards.length === 0 ? (
+          <p className="text-muted-foreground text-sm">
+            Brak nagród w katalogu. Możesz wygenerować planszę bez nagród.
+          </p>
+        ) : (
+          <div className="space-y-3">
+            {rewards.map((reward) => (
+              <div
+                key={reward.id}
+                className="border-border bg-background flex flex-col gap-2 rounded-lg border p-3 sm:flex-row sm:items-center sm:justify-between"
+              >
+                <div className="min-w-0 flex-1">
+                  <p className="text-foreground font-medium">{reward.label}</p>
+                  <p className="text-muted-foreground text-sm">{reward.description}</p>
+                </div>
+                <Input
+                  type="number"
+                  min={0}
+                  max={maxCells}
+                  value={rewardCounts[reward.id] ?? 0}
+                  onChange={(e) => {
+                    const value = Number.parseInt(e.target.value, 10);
+                    setRewardCounts((prev) => ({
+                      ...prev,
+                      [reward.id]: Number.isNaN(value) ? 0 : Math.max(0, Math.min(maxCells, value)),
+                    }));
+                  }}
+                  className="w-20 text-center sm:shrink-0"
+                  aria-label={`Liczba nagród: ${reward.label}`}
+                />
               </div>
-              <input
-                type="number"
-                min={0}
-                max={maxCells}
-                value={rewardCounts[reward.id] ?? 0}
-                onChange={(e) => {
-                  const value = Number.parseInt(e.target.value, 10);
-                  setRewardCounts((prev) => ({
-                    ...prev,
-                    [reward.id]: Number.isNaN(value) ? 0 : Math.max(0, Math.min(maxCells, value)),
-                  }));
-                }}
-                className={cn(inputClass, "w-20 text-center sm:shrink-0")}
-                aria-label={`Liczba nagród: ${reward.label}`}
-              />
-            </div>
-          ))}
-        </div>
-        <p className={cn("text-sm", rewardTotal > maxCells ? "text-red-300" : "text-blue-100/60")}>
+            ))}
+          </div>
+        )}
+        <p className={cn("text-sm", rewardTotal > maxCells ? "text-destructive" : "text-muted-foreground")}>
           Nagrody: {rewardTotal} / {maxCells}
         </p>
       </fieldset>
 
       <ServerError message={error} />
 
-      <Button
-        type="submit"
-        disabled={pending || overLimit}
-        className="w-full rounded-lg bg-purple-600 px-4 py-2 font-medium text-white transition-colors hover:bg-purple-500"
-      >
+      <Button type="submit" disabled={pending || overLimit} className="w-full">
         {pending ? (
           <span className="flex items-center gap-2">
-            <span className="size-4 animate-spin rounded-full border-2 border-white/30 border-t-white" />
+            <span className="border-primary-foreground/30 border-t-primary-foreground size-4 animate-spin rounded-full border-2" />
             Generowanie…
           </span>
         ) : (
