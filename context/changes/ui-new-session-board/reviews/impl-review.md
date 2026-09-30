@@ -77,4 +77,4 @@
 - **Location**: src/components/sessions/NewSessionForm.tsx:174
 - **Detail**: “Dodaj hasło” has no client cap; API schema allows `customPhrases.max(50)`. Empty rows can grow the DOM before submit. Pre-existing behavior pattern; not introduced as a product-rule change, but restyle left the gap.
 - **Fix**: Disable “Dodaj hasło” when `customPhrases.length >= 50` to match the API schema.
-- **Decision**: PENDING
+- **Decision**: FIXED (disable Dodaj hasło when customPhrases.length >= 50)

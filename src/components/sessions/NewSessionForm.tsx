@@ -171,7 +171,12 @@ export default function NewSessionForm({ rewards, demoState }: Props) {
             );
           })}
         </div>
-        <Button type="button" variant="outline" onClick={addPhrase}>
+        <Button
+          type="button"
+          variant="outline"
+          onClick={addPhrase}
+          disabled={customPhrases.length >= 50}
+        >
           <Plus className="size-4" />
           Dodaj hasło
         </Button>
