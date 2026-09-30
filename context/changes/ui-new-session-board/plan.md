@@ -284,26 +284,26 @@ No DB migrations. Token deposit is global; expect visual shift on shared Button/
 
 #### Automated
 
-- [x] 3.1 `npm run lint` passes
-- [x] 3.2 `npx astro check` passes
-- [x] 3.3 `npm run build` passes
+- [x] 3.1 `npm run lint` passes — 8d65b95
+- [x] 3.2 `npx astro check` passes — 8d65b95
+- [x] 3.3 `npm run build` passes — 8d65b95
 
 #### Manual
 
-- [x] 3.4 `/sessions/new` uses Vintage Paper dark tokens/primitives (no cosmic purple glass)
-- [x] 3.5 Create flow, counters, and over-limit disable still work
-- [x] 3.6 Catalog error path renders inside Layout with Polish error
-- [x] 3.7 Empty catalog shows Polish copy; submit remains allowed
-- [x] 3.8 Focus rings follow `--ring`
+- [x] 3.4 `/sessions/new` uses Vintage Paper dark tokens/primitives (no cosmic purple glass) — 8d65b95
+- [x] 3.5 Create flow, counters, and over-limit disable still work — 8d65b95
+- [x] 3.6 Catalog error path renders inside Layout with Polish error — 8d65b95
+- [x] 3.7 Empty catalog shows Polish copy; submit remains allowed — 8d65b95
+- [x] 3.8 Focus rings follow `--ring` — 8d65b95
 
 ### Phase 4: Kitchen-sink + visual gate
 
 #### Automated
 
-- [ ] 4.1 PROD/preview blocks kitchen-sink (404 or equivalent)
-- [ ] 4.2 `npm run lint` and `npx astro check` pass
+- [x] 4.1 PROD/preview blocks kitchen-sink (404 or equivalent)
+- [x] 4.2 `npm run lint` and `npx astro check` pass
 
 #### Manual
 
-- [ ] 4.3 DEV kitchen-sink shows default, hover/focus, disabled, error, empty, loading
-- [ ] 4.4 Desktop + one mobile-width screenshots captured for review
+- [x] 4.3 DEV kitchen-sink shows default, hover/focus, disabled, error, empty, loading
+- [x] 4.4 Desktop + one mobile-width screenshots captured for review

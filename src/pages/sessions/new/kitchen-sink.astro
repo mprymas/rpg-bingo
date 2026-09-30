@@ -1,0 +1,99 @@
+---
+import Layout from "@/layouts/Layout.astro";
+import NewSessionForm from "@/components/sessions/NewSessionForm";
+
+if (import.meta.env.PROD) {
+  return new Response("Not Found", { status: 404 });
+}
+
+const fixtureRewards = [
+  {
+    id: "demo-inspiration",
+    slug: "inspiration",
+    label: "Inspiracja",
+    description: "Przyznanie inspiracji dla zdobywcy pola.",
+  },
+  {
+    id: "demo-xp",
+    slug: "xp",
+    label: "PD",
+    description: "Punkty doświadczenia na koniec sesji.",
+  },
+];
+
+const sections = [
+  {
+    id: "default",
+    title: "default",
+    description: "Stan domyślny — 5×5, Inspiracja ×3.",
+    demoState: "default" as const,
+    rewards: fixtureRewards,
+  },
+  {
+    id: "focus",
+    title: "hover / focus",
+    description: "Pierwsze pole hasła z widocznym pierścieniem focus (ring).",
+    demoState: "focus" as const,
+    rewards: fixtureRewards,
+  },
+  {
+    id: "disabled",
+    title: "disabled",
+    description: "Over-limit — przycisk Generuj wyłączony, licznik nagród powyżej limitu.",
+    demoState: "disabled" as const,
+    rewards: fixtureRewards,
+  },
+  {
+    id: "error",
+    title: "error",
+    description: "ServerError po nieudanej próbie utworzenia sesji.",
+    demoState: "error" as const,
+    rewards: fixtureRewards,
+  },
+  {
+    id: "empty",
+    title: "empty",
+    description: "Pusty katalog nagród — komunikat i Generuj nadal aktywny.",
+    demoState: "empty" as const,
+    rewards: [] as typeof fixtureRewards,
+  },
+  {
+    id: "loading",
+    title: "loading",
+    description: "Pending — spinner i „Generowanie…”.",
+    demoState: "loading" as const,
+    rewards: fixtureRewards,
+  },
+];
+---
+
+<Layout title="Kitchen sink — Nowa sesja">
+  <div class="bg-background min-h-screen p-4 sm:p-8">
+    <div class="mx-auto w-full max-w-2xl space-y-10">
+      <header class="space-y-2">
+        <p class="text-muted-foreground text-sm">Dev only · /sessions/new/kitchen-sink</p>
+        <h1 class="text-foreground text-3xl font-bold">Kitchen sink — Nowa sesja</h1>
+        <p class="text-muted-foreground text-sm">
+          Galeria stanów UI formularza tworzenia sesji. Submit nie wywołuje API.
+        </p>
+        <a href="/sessions/new" class="text-primary text-sm hover:underline">
+          Wróć do prawdziwego formularza
+        </a>
+      </header>
+
+      {sections.map((section) => (
+        <section id={section.id} class="space-y-4" aria-labelledby={`heading-${section.id}`}>
+          <div class="space-y-1">
+            <h2 id={`heading-${section.id}`} class="text-foreground text-xl font-semibold">
+              {section.title}
+            </h2>
+            <p class="text-muted-foreground text-sm">{section.description}</p>
+          </div>
+          <div class="border-border bg-card text-foreground rounded-2xl border p-6 sm:p-8">
+            <NewSessionForm rewards={section.rewards} demoState={section.demoState} client:load />
+          </div>
+        </section>
+      ))}
+    </div>
+  </div>
+</Layout>

@@ -12,6 +12,8 @@ import { BOARD_SIZES, type BoardSize, type Reward } from "@/types";
 
 type RewardOption = Pick<Reward, "id" | "slug" | "label" | "description">;
 
+export type NewSessionDemoState = "default" | "focus" | "disabled" | "error" | "empty" | "loading";
+
 interface CustomPhraseRow {
   text: string;
   guaranteed: boolean;
@@ -19,26 +21,50 @@ interface CustomPhraseRow {
 
 interface Props {
   rewards: RewardOption[];
+  /** Kitchen-sink only — omit on the production create page. */
+  demoState?: NewSessionDemoState;
 }
 
-function defaultRewardCounts(rewards: RewardOption[]): Record<string, number> {
+function defaultRewardCounts(rewards: RewardOption[], demoState?: NewSessionDemoState): Record<string, number> {
   const counts: Record<string, number> = {};
   for (const reward of rewards) {
     counts[reward.id] = reward.slug === "inspiration" ? 3 : 0;
   }
+  if (demoState === "disabled" && rewards.length > 0) {
+    counts[rewards[0].id] = 99;
+  }
   return counts;
 }
 
-export default function NewSessionForm({ rewards }: Props) {
+function initialPhrases(demoState?: NewSessionDemoState): CustomPhraseRow[] {
+  if (demoState === "focus") {
+    return [{ text: "Hasło z focusem", guaranteed: false }];
+  }
+  if (demoState === "disabled") {
+    return [
+      { text: "Hasło gwarantowane 1", guaranteed: true },
+      { text: "Hasło gwarantowane 2", guaranteed: true },
+    ];
+  }
+  return [{ text: "", guaranteed: false }];
+}
+
+export default function NewSessionForm({ rewards, demoState }: Props) {
   const [size, setSize] = useState<BoardSize>(5);
-  const [customPhrases, setCustomPhrases] = useState<CustomPhraseRow[]>([{ text: "", guaranteed: false }]);
-  const [rewardCounts, setRewardCounts] = useState<Record<string, number>>(() => defaultRewardCounts(rewards));
+  const [customPhrases, setCustomPhrases] = useState<CustomPhraseRow[]>(() => initialPhrases(demoState));
+  const [rewardCounts, setRewardCounts] = useState<Record<string, number>>(() =>
+    defaultRewardCounts(rewards, demoState),
+  );
   const { pending, error, createSession } = useCreateSession();
 
   const maxCells = size * size;
   const guaranteedCount = customPhrases.filter((row) => row.text.trim() && row.guaranteed).length;
   const rewardTotal = Object.values(rewardCounts).reduce((sum, count) => sum + count, 0);
   const overLimit = guaranteedCount > maxCells || rewardTotal > maxCells;
+
+  const effectivePending = demoState === "loading" ? true : pending;
+  const effectiveOverLimit = demoState === "disabled" ? true : overLimit;
+  const effectiveError = demoState === "error" ? "Nie udało się utworzyć sesji" : error;
 
   function updatePhrase(index: number, patch: Partial<CustomPhraseRow>) {
     setCustomPhrases((rows) => rows.map((row, i) => (i === index ? { ...row, ...patch } : row)));
@@ -54,7 +80,7 @@ export default function NewSessionForm({ rewards }: Props) {
 
   function handleSubmit(e: React.SubmitEvent<HTMLFormElement>) {
     e.preventDefault();
-    if (pending || overLimit) return;
+    if (demoState || effectivePending || effectiveOverLimit) return;
 
     const phrases = customPhrases
       .map((row) => ({ text: row.text.trim(), guaranteed: row.guaranteed }))
@@ -82,7 +108,7 @@ export default function NewSessionForm({ rewards }: Props) {
           className="flex flex-wrap gap-3"
         >
           {BOARD_SIZES.map((option) => {
-            const id = `size-${option}`;
+            const id = demoState ? `size-${demoState}-${option}` : `size-${option}`;
             return (
               <div key={option} className="flex items-center gap-2">
                 <RadioGroupItem value={String(option)} id={id} />
@@ -99,7 +125,8 @@ export default function NewSessionForm({ rewards }: Props) {
         <legend className="text-muted-foreground text-sm font-medium">Własne hasła</legend>
         <div className="space-y-3">
           {customPhrases.map((row, index) => {
-            const guaranteedId = `guaranteed-${index}`;
+            const guaranteedId = demoState ? `guaranteed-${demoState}-${index}` : `guaranteed-${index}`;
+            const showFocusRing = demoState === "focus" && index === 0;
             return (
               <div
                 key={index}
@@ -113,7 +140,8 @@ export default function NewSessionForm({ rewards }: Props) {
                   }}
                   placeholder="Wpisz hasło…"
                   maxLength={120}
-                  className="sm:flex-1"
+                  autoFocus={showFocusRing}
+                  className={cn("sm:flex-1", showFocusRing && "border-ring ring-ring/50 ring-[3px]")}
                 />
                 <div className="flex shrink-0 items-center gap-2">
                   <Checkbox
@@ -193,10 +221,10 @@ export default function NewSessionForm({ rewards }: Props) {
         </p>
       </fieldset>
 
-      <ServerError message={error} />
+      <ServerError message={effectiveError} />
 
-      <Button type="submit" disabled={pending || overLimit} className="w-full">
-        {pending ? (
+      <Button type="submit" disabled={effectivePending || effectiveOverLimit} className="w-full">
+        {effectivePending ? (
           <span className="flex items-center gap-2">
             <span className="border-primary-foreground/30 border-t-primary-foreground size-4 animate-spin rounded-full border-2" />
             Generowanie…
