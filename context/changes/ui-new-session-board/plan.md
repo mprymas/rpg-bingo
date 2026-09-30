@@ -260,25 +260,25 @@ No DB migrations. Token deposit is global; expect visual shift on shared Button/
 
 #### Automated
 
-- [x] 1.1 `npm run lint` passes
-- [x] 1.2 `npx astro check` passes
-- [x] 1.3 `npm run build` passes
+- [x] 1.1 `npm run lint` passes — ba989f5
+- [x] 1.2 `npx astro check` passes — ba989f5
+- [x] 1.3 `npm run build` passes — ba989f5
 
 #### Manual
 
-- [x] 1.4 `html.dark` present and Vintage Paper dark body tokens visible on a Layout page
-- [x] 1.5 Motif sans font applied on body text
+- [x] 1.4 `html.dark` present and Vintage Paper dark body tokens visible on a Layout page — ba989f5
+- [x] 1.5 Motif sans font applied on body text — ba989f5
 
 ### Phase 2: Shared primitives
 
 #### Automated
 
-- [ ] 2.1 Input, Label, Checkbox, RadioGroup exist under `src/components/ui/` and `npx astro check` passes
-- [ ] 2.2 `npm run lint` passes
+- [x] 2.1 Input, Label, Checkbox, RadioGroup exist under `src/components/ui/` and `npx astro check` passes
+- [x] 2.2 `npm run lint` passes
 
 #### Manual
 
-- [ ] 2.3 Primitives import/render without runtime errors
+- [x] 2.3 Primitives import/render without runtime errors
 
 ### Phase 3: Create-session view + C4/C5
 
