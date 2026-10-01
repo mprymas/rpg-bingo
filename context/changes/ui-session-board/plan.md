@@ -269,9 +269,9 @@ No DB migrations. Rollback = revert commit(s). No URL relocate for the live boar
 
 #### Automated
 
-- [x] 3.1 Board files listed in `SCOPED_FILES`; `npm run lint:ui-literals` / `npm run lint` pass on clean tree
-- [x] 3.2 Introducing a banned literal in a scoped board file fails the check
+- [x] 3.1 Board files listed in `SCOPED_FILES`; `npm run lint:ui-literals` / `npm run lint` pass on clean tree — 61df115
+- [x] 3.2 Introducing a banned literal in a scoped board file fails the check — 61df115
 
 #### Manual
 
-- [x] 3.3 CLAUDE.md / AGENTS.md mention tokens, `src/components/ui`, no literals, and `/sessions/board/kitchen-sink`
+- [x] 3.3 CLAUDE.md / AGENTS.md mention tokens, `src/components/ui`, no literals, and `/sessions/board/kitchen-sink` — 61df115
