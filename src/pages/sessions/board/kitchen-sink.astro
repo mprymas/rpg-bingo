@@ -1,0 +1,274 @@
+---
+import Layout from "@/layouts/Layout.astro";
+import BoardGrid from "@/components/sessions/BoardGrid.astro";
+import { Badge } from "@/components/ui/badge";
+import type { SessionWithCells } from "@/types";
+
+if (import.meta.env.PROD) {
+  return new Response("Not Found", { status: 404 });
+}
+
+const rewardInspiration = { slug: "inspiration", label: "Inspiracja" };
+const rewardExperience = { slug: "experience", label: "Doświadczenie" };
+
+const PHRASES = [
+  "Trafienie krytyczne",
+  "Chybienie krytyczne",
+  "Zaskocz przeciwników",
+  "Znajdź ukryte przejście",
+  "Przekonaj kupca do zniżki",
+  "Uratuj sojusznika za pomocą medycyny",
+  "Rozpoznaj magiczne właściwości przedmiotu",
+  "Oswój zwierzę",
+  "Wpadnij w pułapkę",
+];
+
+function makeCells(sessionId: string, count: number): SessionWithCells["cells"] {
+  return Array.from({ length: count }, (_, i) => {
+    const reward = i % 3 === 0 ? rewardInspiration : i % 3 === 1 ? rewardExperience : null;
+    return {
+      id: `${sessionId}-cell-${String(i)}`,
+      phrase: PHRASES[i % PHRASES.length] ?? `Hasło ${String(i + 1)}`,
+      position: i,
+      reward_id: reward ? `demo-${reward.slug}` : null,
+      session_id: sessionId,
+      reward,
+    };
+  });
+}
+
+function statusLabel(status: SessionWithCells["status"]) {
+  return status === "active" ? "Aktywna" : "Zamknięta";
+}
+
+function formatCreated(iso: string) {
+  return new Date(iso).toLocaleString("pl-PL", {
+    dateStyle: "medium",
+    timeStyle: "short",
+  });
+}
+
+function buildLegend(session: SessionWithCells) {
+  const rewardCounts = new Map<string, { label: string; count: number }>();
+  for (const cell of session.cells) {
+    if (!cell.reward) continue;
+    const existing = rewardCounts.get(cell.reward.slug);
+    if (existing) {
+      existing.count += 1;
+    } else {
+      rewardCounts.set(cell.reward.slug, { label: cell.reward.label, count: 1 });
+    }
+  }
+  return [...rewardCounts.values()];
+}
+
+const fixtureComplete: SessionWithCells = {
+  id: "demo-complete",
+  code: "ABC123",
+  size: 3,
+  status: "active",
+  gm_id: "demo-gm",
+  created_at: "2026-09-15T14:30:00.000Z",
+  cells: makeCells("demo-complete", 9),
+};
+
+const fixtureIncomplete: SessionWithCells = {
+  id: "demo-incomplete",
+  code: "INC456",
+  size: 3,
+  status: "active",
+  gm_id: "demo-gm",
+  created_at: "2026-09-15T14:30:00.000Z",
+  cells: makeCells("demo-incomplete", 4),
+};
+
+const fixtureClosed: SessionWithCells = {
+  id: "demo-closed",
+  code: "XYZ789",
+  size: 3,
+  status: "closed",
+  gm_id: "demo-gm",
+  created_at: "2026-08-01T10:00:00.000Z",
+  cells: makeCells("demo-closed", 9),
+};
+
+const loadErrorCopy = "Nie udało się wczytać sesji";
+
+type BoardKind = "complete" | "incomplete" | "closed" | "focus" | "error" | "na";
+
+const sections: {
+  id: string;
+  title: string;
+  description: string;
+  kind: BoardKind;
+  session?: SessionWithCells;
+}[] = [
+  {
+    id: "default",
+    title: "default",
+    description: "Kompletna plansza 3×3 + legenda nagród (Badge).",
+    kind: "complete",
+    session: fixtureComplete,
+  },
+  {
+    id: "incomplete",
+    title: "incomplete",
+    description: "Niekompletna plansza — destructive recreate copy.",
+    kind: "incomplete",
+    session: fixtureIncomplete,
+  },
+  {
+    id: "closed",
+    title: "closed",
+    description: "Zamknięta sesja — ten sam shell/grid, Badge „Zamknięta”.",
+    kind: "closed",
+    session: fixtureClosed,
+  },
+  {
+    id: "focus",
+    title: "hover / focus",
+    description: "Widoczny pierścień focus na linku „Wróć do panelu”.",
+    kind: "focus",
+    session: fixtureComplete,
+  },
+  {
+    id: "error",
+    title: "error",
+    description:
+      "Markup 404 (Nie znaleziono sesji) i 503 (błąd wczytania). Produkcja ustawia HTTP 404/503; tu tylko markup.",
+    kind: "error",
+  },
+  {
+    id: "disabled",
+    title: "disabled",
+    description: "N/A — plansza jest tylko do odczytu; brak wyłączonych kontrolek.",
+    kind: "na",
+  },
+  {
+    id: "loading",
+    title: "loading",
+    description: "N/A — plansza jest blocking SSR; brak client fetch / skeletonu.",
+    kind: "na",
+  },
+];
+---
+
+<Layout title="Kitchen sink — Plansza sesji">
+  <div class="bg-background min-h-screen p-4 sm:p-8">
+    <div class="mx-auto w-full max-w-2xl space-y-10">
+      <header class="space-y-2">
+        <p class="text-muted-foreground text-sm">Dev only · /sessions/board/kitchen-sink</p>
+        <h1 class="text-foreground text-3xl font-bold">Kitchen sink — Plansza sesji</h1>
+        <p class="text-muted-foreground text-sm">
+          Galeria stanów UI planszy bingo. Fixture bez żywych zapytań do bazy.
+        </p>
+        <a href="/dashboard" class="text-primary text-sm hover:underline">
+          Wróć do panelu MG
+        </a>
+      </header>
+
+      {sections.map((section) => {
+        const session = section.session;
+        const expectedCells = session ? session.size * session.size : 0;
+        const legend = session ? buildLegend(session) : [];
+        const focusDemo = section.kind === "focus";
+
+        return (
+          <section id={section.id} class="space-y-4" aria-labelledby={`heading-${section.id}`}>
+            <div class="space-y-1">
+              <h2 id={`heading-${section.id}`} class="text-foreground text-xl font-semibold">
+                {section.title}
+              </h2>
+              <p class="text-muted-foreground text-sm">{section.description}</p>
+            </div>
+
+            {section.kind === "na" ? (
+              <p class="border-border bg-card text-muted-foreground rounded-2xl border border-dashed px-4 py-6 text-sm">
+                {section.description}
+              </p>
+            ) : section.kind === "error" ? (
+              <div class="space-y-4">
+                <div class="rounded-2xl border border-border bg-card p-6 text-foreground sm:p-8">
+                  <p class="text-muted-foreground mb-4 text-xs font-medium uppercase tracking-wide">404 markup</p>
+                  <a
+                    href="/dashboard"
+                    class="mb-6 inline-block self-start text-sm text-primary outline-none hover:underline focus-visible:ring-2 focus-visible:ring-ring"
+                  >
+                    Wróć do panelu
+                  </a>
+                  <p class="text-sm text-muted-foreground">Nie znaleziono sesji</p>
+                </div>
+                <div class="rounded-2xl border border-border bg-card p-6 text-foreground sm:p-8">
+                  <p class="text-muted-foreground mb-4 text-xs font-medium uppercase tracking-wide">503 markup</p>
+                  <a
+                    href="/dashboard"
+                    class="mb-6 inline-block self-start text-sm text-primary outline-none hover:underline focus-visible:ring-2 focus-visible:ring-ring"
+                  >
+                    Wróć do panelu
+                  </a>
+                  <p class="text-sm text-destructive">{loadErrorCopy}</p>
+                </div>
+              </div>
+            ) : (
+              session && (
+                <div class="mx-auto w-full max-w-2xl space-y-8 rounded-2xl border border-border bg-card p-6 text-foreground sm:p-8">
+                  <div class="flex flex-col gap-4">
+                    <a
+                      href="/dashboard"
+                      class:list={[
+                        "self-start text-sm text-primary outline-none hover:underline focus-visible:ring-2 focus-visible:ring-ring",
+                        focusDemo && "ring-2 ring-ring",
+                      ]}
+                      tabindex={focusDemo ? 0 : undefined}
+                    >
+                      Wróć do panelu
+                    </a>
+                    <p
+                      class="text-center font-mono text-4xl tracking-widest text-foreground sm:text-5xl"
+                      aria-label="Kod sesji"
+                    >
+                      {session.code}
+                    </p>
+                    <div class="flex flex-wrap items-center justify-center gap-3 text-sm text-muted-foreground">
+                      <span>
+                        {session.size}×{session.size}
+                      </span>
+                      <Badge variant="secondary">{statusLabel(session.status)}</Badge>
+                      <span>{formatCreated(session.created_at)}</span>
+                    </div>
+                  </div>
+
+                  {section.kind === "incomplete" ? (
+                    <p class="rounded-lg border border-dashed border-border px-4 py-6 text-center text-destructive">
+                      Nie udało się wczytać planszy (oczekiwano {expectedCells} pól, jest {session.cells.length}).
+                      Utwórz sesję ponownie.
+                    </p>
+                  ) : (
+                    <>
+                      <BoardGrid size={session.size} cells={session.cells} />
+
+                      {legend.length > 0 && (
+                        <div>
+                          <h2 class="mb-3 text-sm font-medium text-muted-foreground">Legenda nagród</h2>
+                          <ul class="flex flex-wrap gap-2">
+                            {legend.map((item) => (
+                              <li>
+                                <Badge variant="outline">
+                                  {item.label}: {item.count}
+                                </Badge>
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                      )}
+                    </>
+                  )}
+                </div>
+              )
+            )}
+          </section>
+        );
+      })}
+    </div>
+  </div>
+</Layout>

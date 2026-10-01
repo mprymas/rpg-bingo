@@ -237,33 +237,33 @@ No DB migrations. Rollback = revert commit(s). No URL relocate for the live boar
 
 #### Automated
 
-- [x] 1.1 `npm run lint` passes
-- [x] 1.2 `npx astro check` passes
-- [x] 1.3 `npm run build` passes
-- [x] 1.4 Hardcoded-value scan on `[id].astro` + `BoardGrid.astro` reports 0 hits
+- [x] 1.1 `npm run lint` passes — 4b2eed8
+- [x] 1.2 `npx astro check` passes — 4b2eed8
+- [x] 1.3 `npm run build` passes — 4b2eed8
+- [x] 1.4 Hardcoded-value scan on `[id].astro` + `BoardGrid.astro` reports 0 hits — 4b2eed8
 
 #### Manual
 
-- [x] 1.5 Desktop + mobile: complete board uses role tokens (no cosmic purple glass)
-- [x] 1.6 Status / legend / rewards use Badge; closed vs active differs by label only
-- [x] 1.7 Incomplete board shows destructive recreate copy
-- [x] 1.8 Back link focus ring visible
-- [x] 1.9 Invalid UUID / missing session: Layout + Polish + HTTP 404
-- [x] 1.10 Forced query failure: Layout + Polish + HTTP 503
-- [x] 1.11 Dashboard back-link still works
+- [x] 1.5 Desktop + mobile: complete board uses role tokens (no cosmic purple glass) — 4b2eed8
+- [x] 1.6 Status / legend / rewards use Badge; closed vs active differs by label only — 4b2eed8
+- [x] 1.7 Incomplete board shows destructive recreate copy — 4b2eed8
+- [x] 1.8 Back link focus ring visible — 4b2eed8
+- [x] 1.9 Invalid UUID / missing session: Layout + Polish + HTTP 404 — 4b2eed8
+- [x] 1.10 Forced query failure: Layout + Polish + HTTP 503 — 4b2eed8
+- [x] 1.11 Dashboard back-link still works — 4b2eed8
 
 ### Phase 2: Kitchen-sink + visual gate
 
 #### Automated
 
-- [ ] 2.1 Kitchen-sink exists with PROD 404 gate
-- [ ] 2.2 `npm run lint` and `npx astro check` pass
+- [x] 2.1 Kitchen-sink exists with PROD 404 gate
+- [x] 2.2 `npm run lint` and `npx astro check` pass
 
 #### Manual
 
-- [ ] 2.3 DEV kitchen-sink shows complete, incomplete, closed, focus, error; disabled and loading N/A with reason
-- [ ] 2.4 Desktop + one mobile-width screenshots captured for review
-- [ ] 2.5 Preview/PROD: kitchen-sink not usable as board UI
+- [x] 2.3 DEV kitchen-sink shows complete, incomplete, closed, focus, error; disabled and loading N/A with reason
+- [x] 2.4 Desktop + one mobile-width screenshots captured for review
+- [x] 2.5 Preview/PROD: kitchen-sink not usable as board UI
 
 ### Phase 3: Guard — SCOPED_FILES + agent rules
 
