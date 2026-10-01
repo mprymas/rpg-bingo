@@ -281,23 +281,23 @@ No database migrations. Rollback is reverting the change commits. The relocate k
 
 #### Automated
 
-- [x] 2.1 Kitchen-sink file exists and returns 404 when `import.meta.env.PROD`
-- [x] 2.2 `npm run lint` and `npx astro check` pass
+- [x] 2.1 Kitchen-sink file exists and returns 404 when `import.meta.env.PROD` — 16f84a2
+- [x] 2.2 `npm run lint` and `npx astro check` pass — 16f84a2
 
 #### Manual
 
-- [x] 2.3 In DEV, `/auth/signin/kitchen-sink` shows default, hover/focus, error, and loading/disabled; empty is N/A because the screen is a form
-- [x] 2.4 Desktop and one mobile-width screenshots saved under `context/changes/ui-auth-signin/screenshots/`
-- [x] 2.5 Preview/PROD: kitchen-sink is not usable as the sign-in UI
-- [x] 2.6 A real sign-in submit is checked; if the spinner does not paint before navigation, that live flash is recorded N/A with that reason
+- [x] 2.3 In DEV, `/auth/signin/kitchen-sink` shows default, hover/focus, error, and loading/disabled; empty is N/A because the screen is a form — 16f84a2
+- [x] 2.4 Desktop and one mobile-width screenshots saved under `context/changes/ui-auth-signin/screenshots/` — 16f84a2
+- [x] 2.5 Preview/PROD: kitchen-sink is not usable as the sign-in UI — 16f84a2
+- [x] 2.6 A real sign-in submit is checked; if the spinner does not paint before navigation, that live flash is recorded N/A with that reason — 16f84a2
 
 ### Phase 3: Guard — SCOPED_FILES + agent rules
 
 #### Automated
 
-- [ ] 3.1 The six sign-in files are listed in `SCOPED_FILES`; `npm run lint` passes on the clean tree
-- [ ] 3.2 Introducing a banned literal in a scoped sign-in file fails `npm run lint:ui-literals`
+- [x] 3.1 The six sign-in files are listed in `SCOPED_FILES`; `npm run lint` passes on the clean tree
+- [x] 3.2 Introducing a banned literal in a scoped sign-in file fails `npm run lint:ui-literals`
 
 #### Manual
 
-- [ ] 3.3 `CLAUDE.md` and `AGENTS.md` name the token source, `src/components/ui`, the no-literals rule, and `/auth/signin/kitchen-sink`
+- [x] 3.3 `CLAUDE.md` and `AGENTS.md` name the token source, `src/components/ui`, the no-literals rule, and `/auth/signin/kitchen-sink`
