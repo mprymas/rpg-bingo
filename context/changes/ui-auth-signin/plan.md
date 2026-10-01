@@ -295,9 +295,9 @@ No database migrations. Rollback is reverting the change commits. The relocate k
 
 #### Automated
 
-- [x] 3.1 The six sign-in files are listed in `SCOPED_FILES`; `npm run lint` passes on the clean tree
-- [x] 3.2 Introducing a banned literal in a scoped sign-in file fails `npm run lint:ui-literals`
+- [x] 3.1 The six sign-in files are listed in `SCOPED_FILES`; `npm run lint` passes on the clean tree — b024cfd
+- [x] 3.2 Introducing a banned literal in a scoped sign-in file fails `npm run lint:ui-literals` — b024cfd
 
 #### Manual
 
-- [x] 3.3 `CLAUDE.md` and `AGENTS.md` name the token source, `src/components/ui`, the no-literals rule, and `/auth/signin/kitchen-sink`
+- [x] 3.3 `CLAUDE.md` and `AGENTS.md` name the token source, `src/components/ui`, the no-literals rule, and `/auth/signin/kitchen-sink` — b024cfd
