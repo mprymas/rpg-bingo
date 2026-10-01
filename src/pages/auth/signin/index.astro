@@ -1,0 +1,25 @@
+---
+import Layout from "@/layouts/Layout.astro";
+import SignInForm from "@/components/auth/SignInForm";
+
+if (Astro.locals.user) {
+  return Astro.redirect("/dashboard");
+}
+
+const error = Astro.url.searchParams.get("error");
+---
+
+<Layout title="Zaloguj się">
+  <div class="bg-background flex min-h-screen items-center justify-center p-4">
+    <div class="w-full max-w-sm rounded-2xl border border-border bg-card p-8 text-foreground">
+      <h1 class="mb-6 text-center text-2xl font-bold text-foreground">Zaloguj się</h1>
+      <SignInForm serverError={error} client:load />
+      <p class="mt-4 text-center text-sm text-muted-foreground">
+        Nie masz konta?{" "}
+        <a href="/auth/signup" class="text-primary hover:underline">
+          Załóż konto
+        </a>
+      </p>
+    </div>
+  </div>
+</Layout>
