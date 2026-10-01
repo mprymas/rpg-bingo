@@ -1,96 +1,151 @@
 ---
 import Layout from "@/layouts/Layout.astro";
 import BoardGrid from "@/components/sessions/BoardGrid.astro";
+import { Badge } from "@/components/ui/badge";
 import { createClient } from "@/lib/supabase";
 import { getSessionWithCells } from "@/lib/services/sessions.service";
+import type { SessionWithCells } from "@/types";
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const id = Astro.params.id ?? "";
 
+let session: SessionWithCells | null = null;
+let notFound = false;
+let loadError: string | null = null;
+
 if (!UUID_RE.test(id)) {
-  return new Response("Nie znaleziono sesji", { status: 404 });
+  notFound = true;
+  Astro.response.status = 404;
+} else {
+  const supabase = createClient(Astro.request.headers, Astro.cookies);
+  if (!supabase) {
+    return new Response("Brak konfiguracji", { status: 500 });
+  }
+
+  const user = Astro.locals.user;
+  if (!user) {
+    return Astro.redirect("/auth/signin");
+  }
+
+  try {
+    session = await getSessionWithCells(supabase, id, user.id);
+    if (!session) {
+      notFound = true;
+      Astro.response.status = 404;
+    }
+  } catch {
+    loadError = "Nie udało się wczytać sesji";
+    Astro.response.status = 503;
+  }
 }
 
-const supabase = createClient(Astro.request.headers, Astro.cookies);
-if (!supabase) {
-  return new Response("Brak konfiguracji", { status: 500 });
-}
-
-const user = Astro.locals.user;
-if (!user) {
-  return Astro.redirect("/auth/signin");
-}
-
-const session = await getSessionWithCells(supabase, id, user.id);
-if (!session) {
-  return new Response("Nie znaleziono sesji", { status: 404 });
-}
-
-const statusLabel = session.status === "active" ? "Aktywna" : "Zamknięta";
-const createdLabel = new Date(session.created_at).toLocaleString("pl-PL", {
-  dateStyle: "medium",
-  timeStyle: "short",
-});
+const statusLabel = session ? (session.status === "active" ? "Aktywna" : "Zamknięta") : "";
+const createdLabel = session
+  ? new Date(session.created_at).toLocaleString("pl-PL", {
+      dateStyle: "medium",
+      timeStyle: "short",
+    })
+  : "";
 
 const rewardCounts = new Map<string, { label: string; count: number }>();
-for (const cell of session.cells) {
-  if (!cell.reward) continue;
-  const existing = rewardCounts.get(cell.reward.slug);
-  if (existing) {
-    existing.count += 1;
-  } else {
-    rewardCounts.set(cell.reward.slug, { label: cell.reward.label, count: 1 });
+if (session) {
+  for (const cell of session.cells) {
+    if (!cell.reward) continue;
+    const existing = rewardCounts.get(cell.reward.slug);
+    if (existing) {
+      existing.count += 1;
+    } else {
+      rewardCounts.set(cell.reward.slug, { label: cell.reward.label, count: 1 });
+    }
   }
 }
 const legend = [...rewardCounts.values()];
-const expectedCells = session.size * session.size;
-const boardComplete = session.cells.length === expectedCells;
+const expectedCells = session ? session.size * session.size : 0;
+const boardComplete = session ? session.cells.length === expectedCells : false;
 ---
 
-<Layout title={`Sesja ${session.code}`}>
-  <div class="bg-cosmic min-h-screen p-4 sm:p-8">
-    <div class="mx-auto w-full max-w-2xl space-y-8 rounded-2xl border border-white/10 bg-white/10 p-6 text-white backdrop-blur-xl sm:p-8">
-      <div class="flex flex-col gap-4">
-        <a href="/dashboard" class="self-start text-sm text-purple-300 hover:underline">
+{notFound ? (
+  <Layout title="Sesja">
+    <div class="bg-background min-h-screen p-4 sm:p-8">
+      <div class="mx-auto w-full max-w-2xl rounded-2xl border border-border bg-card p-6 text-foreground sm:p-8">
+        <a
+          href="/dashboard"
+          class="mb-6 inline-block self-start text-sm text-primary outline-none hover:underline focus-visible:ring-2 focus-visible:ring-ring"
+        >
           Wróć do panelu
         </a>
-        <p class="text-center font-mono text-4xl tracking-[0.35em] text-white sm:text-5xl" aria-label="Kod sesji">
-          {session.code}
-        </p>
-        <div class="flex flex-wrap items-center justify-center gap-3 text-sm text-blue-100/70">
-          <span>
-            {session.size}×{session.size}
-          </span>
-          <span class="rounded-full border border-emerald-400/40 bg-emerald-500/20 px-2.5 py-0.5 text-emerald-200">
-            {statusLabel}
-          </span>
-          <span>{createdLabel}</span>
+        <p class="text-sm text-muted-foreground">Nie znaleziono sesji</p>
+      </div>
+    </div>
+  </Layout>
+) : loadError ? (
+  <Layout title="Sesja">
+    <div class="bg-background min-h-screen p-4 sm:p-8">
+      <div class="mx-auto w-full max-w-2xl rounded-2xl border border-border bg-card p-6 text-foreground sm:p-8">
+        <a
+          href="/dashboard"
+          class="mb-6 inline-block self-start text-sm text-primary outline-none hover:underline focus-visible:ring-2 focus-visible:ring-ring"
+        >
+          Wróć do panelu
+        </a>
+        <p class="text-sm text-destructive">{loadError}</p>
+      </div>
+    </div>
+  </Layout>
+) : (
+  session && (
+    <Layout title={`Sesja ${session.code}`}>
+      <div class="bg-background min-h-screen p-4 sm:p-8">
+        <div class="mx-auto w-full max-w-2xl space-y-8 rounded-2xl border border-border bg-card p-6 text-foreground sm:p-8">
+          <div class="flex flex-col gap-4">
+            <a
+              href="/dashboard"
+              class="self-start text-sm text-primary outline-none hover:underline focus-visible:ring-2 focus-visible:ring-ring"
+            >
+              Wróć do panelu
+            </a>
+            <p
+              class="text-center font-mono text-4xl tracking-widest text-foreground sm:text-5xl"
+              aria-label="Kod sesji"
+            >
+              {session.code}
+            </p>
+            <div class="flex flex-wrap items-center justify-center gap-3 text-sm text-muted-foreground">
+              <span>
+                {session.size}×{session.size}
+              </span>
+              <Badge variant="secondary">{statusLabel}</Badge>
+              <span>{createdLabel}</span>
+            </div>
+          </div>
+
+          {boardComplete ? (
+            <>
+              <BoardGrid size={session.size} cells={session.cells} />
+
+              {legend.length > 0 && (
+                <div>
+                  <h2 class="mb-3 text-sm font-medium text-muted-foreground">Legenda nagród</h2>
+                  <ul class="flex flex-wrap gap-2">
+                    {legend.map((item) => (
+                      <li>
+                        <Badge variant="outline">
+                          {item.label}: {item.count}
+                        </Badge>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+            </>
+          ) : (
+            <p class="rounded-lg border border-dashed border-border px-4 py-6 text-center text-destructive">
+              Nie udało się wczytać planszy (oczekiwano {expectedCells} pól, jest {session.cells.length}). Utwórz sesję
+              ponownie.
+            </p>
+          )}
         </div>
       </div>
-
-      {boardComplete ? (
-        <>
-          <BoardGrid size={session.size} cells={session.cells} />
-
-          {legend.length > 0 && (
-            <div>
-              <h2 class="mb-3 text-sm font-medium text-blue-100/80">Legenda nagród</h2>
-              <ul class="flex flex-wrap gap-2">
-                {legend.map((item) => (
-                  <li class="rounded-lg border border-white/15 bg-white/5 px-3 py-1.5 text-sm text-blue-100/90">
-                    {item.label}: {item.count}
-                  </li>
-                ))}
-              </ul>
-            </div>
-          )}
-        </>
-      ) : (
-        <p class="rounded-lg border border-dashed border-amber-400/40 bg-amber-500/10 px-4 py-6 text-center text-amber-100/90">
-          Nie udało się wczytać planszy (oczekiwano {expectedCells} pól, jest {session.cells.length}). Utwórz sesję
-          ponownie.
-        </p>
-      )}
-    </div>
-  </div>
-</Layout>
+    </Layout>
+  )
+)}
