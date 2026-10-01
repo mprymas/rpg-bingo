@@ -1,0 +1,111 @@
+---
+import Layout from "@/layouts/Layout.astro";
+import DashboardPanel from "@/components/dashboard/DashboardPanel.astro";
+import type { Session } from "@/types";
+
+if (import.meta.env.PROD) {
+  return new Response("Not Found", { status: 404 });
+}
+
+const fixtureSessions: Session[] = [
+  {
+    id: "demo-active",
+    code: "ABC123",
+    size: 5,
+    status: "active",
+    gm_id: "demo-gm",
+    created_at: "2026-09-15T14:30:00.000Z",
+  },
+  {
+    id: "demo-closed",
+    code: "XYZ789",
+    size: 3,
+    status: "closed",
+    gm_id: "demo-gm",
+    created_at: "2026-08-01T10:00:00.000Z",
+  },
+];
+
+const listErrorCopy = "Nie udało się wczytać sesji";
+
+const sections = [
+  {
+    id: "default",
+    title: "default",
+    description: "Lista sesji — fixture active + closed.",
+    kind: "default" as const,
+  },
+  {
+    id: "focus",
+    title: "hover / focus",
+    description: "Widoczne pierścienie focus na CTA, pierwszym wierszu i Wyloguj.",
+    kind: "focus" as const,
+  },
+  {
+    id: "empty",
+    title: "empty",
+    description: "Pusta lista — komunikat „Nie masz jeszcze żadnej sesji”.",
+    kind: "empty" as const,
+  },
+  {
+    id: "error",
+    title: "error",
+    description: "Błąd wczytania listy (Layout + text-destructive). Produkcja ustawia HTTP 503; tu tylko markup.",
+    kind: "error" as const,
+  },
+  {
+    id: "disabled",
+    title: "disabled",
+    description: "N/A — brak wyłączonych kontrolek na happy path panelu MG.",
+    kind: "na" as const,
+  },
+  {
+    id: "loading",
+    title: "loading",
+    description: "N/A — lista jest blocking SSR; brak client fetch / skeletonu.",
+    kind: "na" as const,
+  },
+];
+---
+
+<Layout title="Kitchen sink — Panel MG">
+  <div class="bg-background min-h-screen p-4 sm:p-8">
+    <div class="mx-auto w-full max-w-2xl space-y-10">
+      <header class="space-y-2">
+        <p class="text-muted-foreground text-sm">Dev only · /dashboard/kitchen-sink</p>
+        <h1 class="text-foreground text-3xl font-bold">Kitchen sink — Panel MG</h1>
+        <p class="text-muted-foreground text-sm">
+          Galeria stanów UI panelu MG. CTA i Wyloguj nie nawigują / nie wylogowują.
+        </p>
+        <a href="/dashboard" class="text-primary text-sm hover:underline">
+          Wróć do prawdziwego panelu
+        </a>
+      </header>
+
+      {sections.map((section) => (
+        <section id={section.id} class="space-y-4" aria-labelledby={`heading-${section.id}`}>
+          <div class="space-y-1">
+            <h2 id={`heading-${section.id}`} class="text-foreground text-xl font-semibold">
+              {section.title}
+            </h2>
+            <p class="text-muted-foreground text-sm">{section.description}</p>
+          </div>
+
+          {section.kind === "na" ? (
+            <p class="border-border bg-card text-muted-foreground rounded-2xl border border-dashed px-4 py-6 text-sm">
+              {section.description}
+            </p>
+          ) : section.kind === "error" ? (
+            <DashboardPanel listError={listErrorCopy} demo />
+          ) : section.kind === "empty" ? (
+            <DashboardPanel sessions={[]} demo />
+          ) : section.kind === "focus" ? (
+            <DashboardPanel sessions={fixtureSessions} demo focusDemo />
+          ) : (
+            <DashboardPanel sessions={fixtureSessions} demo />
+          )}
+        </section>
+      ))}
+    </div>
+  </div>
+</Layout>

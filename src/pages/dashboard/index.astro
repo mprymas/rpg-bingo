@@ -1,6 +1,6 @@
 ---
 import Layout from "@/layouts/Layout.astro";
-import DashboardActions from "@/components/dashboard/DashboardActions";
+import DashboardPanel from "@/components/dashboard/DashboardPanel.astro";
 import { createClient } from "@/lib/supabase";
 import { listSessionsForGm } from "@/lib/services/sessions.service";
 import type { Session } from "@/types";
@@ -23,65 +23,10 @@ try {
   listError = "Nie udało się wczytać sesji";
   Astro.response.status = 503;
 }
-
-function statusLabel(status: string) {
-  return status === "active" ? "Aktywna" : "Zamknięta";
-}
-
-function formatDate(iso: string) {
-  return new Date(iso).toLocaleString("pl-PL", {
-    dateStyle: "medium",
-    timeStyle: "short",
-  });
-}
 ---
 
-{listError ? (
-  <Layout title="Panel MG">
-    <div class="bg-background min-h-screen p-4 sm:p-8">
-      <div class="mx-auto w-full max-w-2xl rounded-2xl border border-border bg-card p-6 text-foreground sm:p-8">
-        <h1 class="mb-6 text-3xl font-bold text-foreground">Panel MG</h1>
-        <p class="text-sm text-destructive">{listError}</p>
-      </div>
-    </div>
-  </Layout>
-) : (
-  <Layout title="Panel MG">
-    <div class="bg-background min-h-screen p-4 sm:p-8">
-      <div class="mx-auto w-full max-w-2xl space-y-6 rounded-2xl border border-border bg-card p-6 text-foreground sm:p-8">
-        <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-          <h1 class="text-3xl font-bold text-foreground">Panel MG</h1>
-          <DashboardActions kind="new-session" client:load />
-        </div>
-
-        {sessions.length === 0 ? (
-          <p class="rounded-lg border border-dashed border-border px-4 py-8 text-center text-muted-foreground">
-            Nie masz jeszcze żadnej sesji
-          </p>
-        ) : (
-          <ul class="divide-y divide-border overflow-hidden rounded-xl border border-border">
-            {sessions.map((session) => (
-              <li>
-                <a
-                  href={`/sessions/${session.id}`}
-                  class="flex flex-col gap-1 px-4 py-3 outline-none transition-colors hover:bg-accent focus-visible:bg-accent focus-visible:ring-2 focus-visible:ring-ring sm:flex-row sm:items-center sm:justify-between"
-                >
-                  <span class="font-mono text-lg tracking-widest text-foreground">{session.code}</span>
-                  <span class="flex flex-wrap gap-3 text-sm text-muted-foreground">
-                    <span>
-                      {session.size}×{session.size}
-                    </span>
-                    <span>{statusLabel(session.status)}</span>
-                    <span>{formatDate(session.created_at)}</span>
-                  </span>
-                </a>
-              </li>
-            ))}
-          </ul>
-        )}
-
-        <DashboardActions kind="sign-out" client:load />
-      </div>
-    </div>
-  </Layout>
-)}
+<Layout title="Panel MG">
+  <div class="bg-background min-h-screen p-4 sm:p-8">
+    <DashboardPanel sessions={sessions} listError={listError} />
+  </div>
+</Layout>

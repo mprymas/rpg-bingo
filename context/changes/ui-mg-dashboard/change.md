@@ -11,5 +11,5 @@ archived_at: null
 
 Audyt i poprawa widoku dashboardu MG (`/10x-ui`).
 
-- **View:** `/dashboard` — `src/pages/dashboard.astro`
+- **View:** `/dashboard` — `src/pages/dashboard/index.astro`
 - **Motif / token source:** existing Vintage Paper dark theme via shadcn contract already in repo (`src/styles/global.css` `:root` / `.dark` → `@theme inline`); do not fork a second palette or re-run `shadcn init`. Extend the guard from `ui-new-session-board` (CLAUDE.md § UI / design tokens, `scripts/check-ui-literals.mjs` SCOPED_FILES).

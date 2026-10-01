@@ -1,0 +1,73 @@
+---
+import DashboardActions from "@/components/dashboard/DashboardActions";
+import type { Session } from "@/types";
+
+interface Props {
+  sessions?: Session[];
+  listError?: string | null;
+  /** Kitchen-sink: block real CTA navigation / sign-out */
+  demo?: boolean;
+  /** Kitchen-sink: force-visible focus rings on CTA, first row, sign-out */
+  focusDemo?: boolean;
+}
+
+const { sessions = [], listError = null, demo = false, focusDemo = false } = Astro.props;
+
+function statusLabel(status: string) {
+  return status === "active" ? "Aktywna" : "Zamknięta";
+}
+
+function formatDate(iso: string) {
+  return new Date(iso).toLocaleString("pl-PL", {
+    dateStyle: "medium",
+    timeStyle: "short",
+  });
+}
+---
+
+{listError ? (
+  <div class="mx-auto w-full max-w-2xl rounded-2xl border border-border bg-card p-6 text-foreground sm:p-8">
+    <h1 class="mb-6 text-3xl font-bold text-foreground">Panel MG</h1>
+    <p class="text-sm text-destructive">{listError}</p>
+  </div>
+) : (
+  <div class="mx-auto w-full max-w-2xl space-y-6 rounded-2xl border border-border bg-card p-6 text-foreground sm:p-8">
+    <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+      <h1 class="text-3xl font-bold text-foreground">Panel MG</h1>
+      <DashboardActions kind="new-session" demo={demo} demoFocus={focusDemo} client:load />
+    </div>
+
+    {sessions.length === 0 ? (
+      <p class="rounded-lg border border-dashed border-border px-4 py-8 text-center text-muted-foreground">
+        Nie masz jeszcze żadnej sesji
+      </p>
+    ) : (
+      <ul class="divide-y divide-border overflow-hidden rounded-xl border border-border">
+        {sessions.map((session, index) => (
+          <li>
+            <a
+              href={`/sessions/${session.id}`}
+              class:list={[
+                "flex flex-col gap-1 px-4 py-3 outline-none transition-colors hover:bg-accent focus-visible:bg-accent focus-visible:ring-2 focus-visible:ring-ring sm:flex-row sm:items-center sm:justify-between",
+                focusDemo && index === 0 && "bg-accent ring-2 ring-ring",
+              ]}
+              tabindex={focusDemo && index === 0 ? 0 : undefined}
+              onclick={demo ? "event.preventDefault()" : undefined}
+            >
+              <span class="font-mono text-lg tracking-widest text-foreground">{session.code}</span>
+              <span class="flex flex-wrap gap-3 text-sm text-muted-foreground">
+                <span>
+                  {session.size}×{session.size}
+                </span>
+                <span>{statusLabel(session.status)}</span>
+                <span>{formatDate(session.created_at)}</span>
+              </span>
+            </a>
+          </li>
+        ))}
+      </ul>
+    )}
+
+    <DashboardActions kind="sign-out" demo={demo} demoFocus={focusDemo} client:load />
+  </div>
+)}

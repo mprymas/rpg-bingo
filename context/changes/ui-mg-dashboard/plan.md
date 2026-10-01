@@ -234,30 +234,30 @@ No DB migrations. Rollback = revert the change commit(s). Relocate is URL-stable
 
 #### Automated
 
-- [x] 1.1 `npm run lint` passes
-- [x] 1.2 `npx astro check` passes
-- [x] 1.3 `npm run build` passes
-- [x] 1.4 Hardcoded-value scan on dashboard view + actions island reports 0 hits
+- [x] 1.1 `npm run lint` passes — a6d7a03
+- [x] 1.2 `npx astro check` passes — a6d7a03
+- [x] 1.3 `npm run build` passes — a6d7a03
+- [x] 1.4 Hardcoded-value scan on dashboard view + actions island reports 0 hits — a6d7a03
 
 #### Manual
 
-- [x] 1.5 Desktop + mobile: empty and populated list use role tokens (no cosmic purple glass)
-- [x] 1.6 Focus rings visible on CTA, sign-out, and session row links
-- [x] 1.7 Forced list-load failure shows Layout + Polish error at HTTP 503
-- [x] 1.8 Create-session and sign-out still work from the panel
+- [x] 1.5 Desktop + mobile: empty and populated list use role tokens (no cosmic purple glass) — a6d7a03
+- [x] 1.6 Focus rings visible on CTA, sign-out, and session row links — a6d7a03
+- [x] 1.7 Forced list-load failure shows Layout + Polish error at HTTP 503 — a6d7a03
+- [x] 1.8 Create-session and sign-out still work from the panel — a6d7a03
 
 ### Phase 2: Kitchen-sink + visual gate
 
 #### Automated
 
-- [ ] 2.1 Kitchen-sink exists with PROD 404 gate
-- [ ] 2.2 `npm run lint` and `npx astro check` pass
+- [x] 2.1 Kitchen-sink exists with PROD 404 gate
+- [x] 2.2 `npm run lint` and `npx astro check` pass
 
 #### Manual
 
-- [ ] 2.3 DEV kitchen-sink shows default, hover/focus, empty, error; disabled and loading N/A with reason
-- [ ] 2.4 Desktop + one mobile-width screenshots captured for review
-- [ ] 2.5 Preview/PROD: kitchen-sink not usable as a dashboard UI
+- [x] 2.3 DEV kitchen-sink shows default, hover/focus, empty, error; disabled and loading N/A with reason
+- [x] 2.4 Desktop + one mobile-width screenshots captured for review
+- [x] 2.5 Preview/PROD: kitchen-sink not usable as a dashboard UI
 
 ### Phase 3: Guard — SCOPED_FILES + agent rules
 
