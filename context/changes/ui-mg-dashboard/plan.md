@@ -250,22 +250,22 @@ No DB migrations. Rollback = revert the change commit(s). Relocate is URL-stable
 
 #### Automated
 
-- [x] 2.1 Kitchen-sink exists with PROD 404 gate
-- [x] 2.2 `npm run lint` and `npx astro check` pass
+- [x] 2.1 Kitchen-sink exists with PROD 404 gate — c799400
+- [x] 2.2 `npm run lint` and `npx astro check` pass — c799400
 
 #### Manual
 
-- [x] 2.3 DEV kitchen-sink shows default, hover/focus, empty, error; disabled and loading N/A with reason
-- [x] 2.4 Desktop + one mobile-width screenshots captured for review
-- [x] 2.5 Preview/PROD: kitchen-sink not usable as a dashboard UI
+- [x] 2.3 DEV kitchen-sink shows default, hover/focus, empty, error; disabled and loading N/A with reason — c799400
+- [x] 2.4 Desktop + one mobile-width screenshots captured for review — c799400
+- [x] 2.5 Preview/PROD: kitchen-sink not usable as a dashboard UI — c799400
 
 ### Phase 3: Guard — SCOPED_FILES + agent rules
 
 #### Automated
 
-- [ ] 3.1 Dashboard files listed in `SCOPED_FILES`; `npm run lint:ui-literals` / `npm run lint` pass on clean tree
-- [ ] 3.2 Introducing a banned literal in a scoped dashboard file fails the check
+- [x] 3.1 Dashboard files listed in `SCOPED_FILES`; `npm run lint:ui-literals` / `npm run lint` pass on clean tree
+- [x] 3.2 Introducing a banned literal in a scoped dashboard file fails the check
 
 #### Manual
 
-- [ ] 3.3 CLAUDE.md / AGENTS.md mention tokens, `src/components/ui`, no literals, and `/dashboard/kitchen-sink`
+- [x] 3.3 CLAUDE.md / AGENTS.md mention tokens, `src/components/ui`, no literals, and `/dashboard/kitchen-sink`

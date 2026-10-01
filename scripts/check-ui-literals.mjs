@@ -11,6 +11,10 @@ const SCOPED_FILES = [
   "src/pages/sessions/new/kitchen-sink.astro",
   "src/components/sessions/NewSessionForm.tsx",
   "src/components/auth/ServerError.tsx",
+  "src/pages/dashboard/index.astro",
+  "src/pages/dashboard/kitchen-sink.astro",
+  "src/components/dashboard/DashboardActions.tsx",
+  "src/components/dashboard/DashboardPanel.astro",
 ];
 
 const LITERAL_RE =
