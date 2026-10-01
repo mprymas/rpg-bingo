@@ -1,0 +1,81 @@
+---
+import Layout from "@/layouts/Layout.astro";
+import SignInForm from "@/components/auth/SignInForm";
+
+if (import.meta.env.PROD) {
+  return new Response("Not Found", { status: 404 });
+}
+
+const sections = [
+  {
+    id: "default",
+    title: "default",
+    description: "Stan domyślny — puste pola i przycisk Zaloguj się.",
+    kind: "form" as const,
+    demoState: "default" as const,
+  },
+  {
+    id: "focus",
+    title: "hover / focus",
+    description: "Pole e-mail z widocznym pierścieniem focus (ring).",
+    kind: "form" as const,
+    demoState: "focus" as const,
+  },
+  {
+    id: "error",
+    title: "error",
+    description: "Komunikaty pól oraz ServerError.",
+    kind: "form" as const,
+    demoState: "error" as const,
+  },
+  {
+    id: "loading",
+    title: "loading / disabled",
+    description:
+      "Pending — „Logowanie...” i wyłączony submit. Na tym formularzu disabled występuje tylko podczas oczekiwania.",
+    kind: "form" as const,
+    demoState: "loading" as const,
+  },
+  {
+    id: "empty",
+    title: "empty",
+    description: "N/A — ekran jest formularzem, nie kolekcją.",
+    kind: "na" as const,
+  },
+];
+---
+
+<Layout title="Kitchen sink — Zaloguj się">
+  <div class="bg-background min-h-screen p-4 sm:p-8">
+    <div class="mx-auto w-full max-w-2xl space-y-10">
+      <header class="space-y-2">
+        <p class="text-muted-foreground text-sm">Dev only · /auth/signin/kitchen-sink</p>
+        <h1 class="text-foreground text-3xl font-bold">Kitchen sink — Zaloguj się</h1>
+        <p class="text-muted-foreground text-sm">Galeria stanów UI formularza logowania. Submit nie wywołuje API.</p>
+        <a href="/auth/signin" class="text-primary text-sm hover:underline">
+          Wróć do prawdziwego formularza
+        </a>
+      </header>
+
+      {sections.map((section) => (
+        <section id={section.id} class="space-y-4" aria-labelledby={`heading-${section.id}`}>
+          <div class="space-y-1">
+            <h2 id={`heading-${section.id}`} class="text-foreground text-xl font-semibold">
+              {section.title}
+            </h2>
+            <p class="text-muted-foreground text-sm">{section.description}</p>
+          </div>
+          {section.kind === "na" ? (
+            <p class="border-border bg-card text-muted-foreground rounded-2xl border border-dashed px-4 py-6 text-sm">
+              {section.description}
+            </p>
+          ) : (
+            <div class="w-full max-w-sm rounded-2xl border border-border bg-card p-8 text-foreground">
+              <SignInForm demoState={section.demoState} client:load />
+            </div>
+          )}
+        </section>
+      ))}
+    </div>
+  </div>
+</Layout>

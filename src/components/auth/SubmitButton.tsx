@@ -6,10 +6,13 @@ interface SubmitButtonProps {
   pendingText: string;
   icon: ReactNode;
   children: ReactNode;
+  /** Kitchen-sink only — forces the pending label without a real submit. */
+  pending?: boolean;
 }
 
-export function SubmitButton({ pendingText, icon, children }: SubmitButtonProps) {
-  const { pending } = useFormStatus();
+export function SubmitButton({ pendingText, icon, children, pending: pendingOverride }: SubmitButtonProps) {
+  const { pending: formPending } = useFormStatus();
+  const pending = pendingOverride ?? formPending;
 
   return (
     <Button type="submit" disabled={pending} className="w-full">

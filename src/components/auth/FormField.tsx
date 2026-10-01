@@ -16,6 +16,8 @@ interface FormFieldProps {
   hint?: ReactNode;
   icon: ReactNode;
   endContent?: ReactNode;
+  autoFocus?: boolean;
+  className?: string;
 }
 
 export function FormField({
@@ -30,6 +32,8 @@ export function FormField({
   hint,
   icon,
   endContent,
+  autoFocus,
+  className,
 }: FormFieldProps) {
   return (
     <div>
@@ -49,8 +53,9 @@ export function FormField({
             onChange(e.target.value);
           }}
           placeholder={placeholder}
+          autoFocus={autoFocus}
           aria-invalid={error ? true : undefined}
-          className={cn("text-foreground pl-10", endContent && "pr-10")}
+          className={cn("text-foreground pl-10", endContent && "pr-10", className)}
         />
         {endContent}
       </div>

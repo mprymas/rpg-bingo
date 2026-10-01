@@ -265,31 +265,31 @@ No database migrations. Rollback is reverting the change commits. The relocate k
 
 #### Automated
 
-- [x] 1.1 `npm run lint` passes
-- [x] 1.2 `npx astro check` passes
-- [x] 1.3 `npm run build` passes
-- [x] 1.4 Hardcoded-value scan (`LITERAL_RE` from `scripts/check-ui-literals.mjs`) on `src/pages/auth/signin/index.astro`, `src/components/auth/SignInForm.tsx`, `FormField.tsx`, `SubmitButton.tsx`, and `PasswordToggle.tsx` reports 0 hits, and those files contain no `white` or `black` colour utilities
+- [x] 1.1 `npm run lint` passes — c29ee55
+- [x] 1.2 `npx astro check` passes — c29ee55
+- [x] 1.3 `npm run build` passes — c29ee55
+- [x] 1.4 Hardcoded-value scan (`LITERAL_RE` from `scripts/check-ui-literals.mjs`) on `src/pages/auth/signin/index.astro`, `src/components/auth/SignInForm.tsx`, `FormField.tsx`, `SubmitButton.tsx`, and `PasswordToggle.tsx` reports 0 hits, and those files contain no `white` or `black` colour utilities — c29ee55
 
 #### Manual
 
-- [x] 1.5 Logged-out desktop and one mobile width: the card uses role tokens (no cosmic purple glass)
-- [x] 1.6 Logged-in GET `/auth/signin` redirects to `/dashboard`; a successful sign-in POST still lands on `/`
-- [x] 1.7 Keyboard focus is visible on email, password, the password toggle, submit, and the signup link
-- [x] 1.8 Invalid fields and `?error=` show text plus an icon in destructive roles; signup still submits with the restyled controls
+- [x] 1.5 Logged-out desktop and one mobile width: the card uses role tokens (no cosmic purple glass) — c29ee55
+- [x] 1.6 Logged-in GET `/auth/signin` redirects to `/dashboard`; a successful sign-in POST still lands on `/` — c29ee55
+- [x] 1.7 Keyboard focus is visible on email, password, the password toggle, submit, and the signup link — c29ee55
+- [x] 1.8 Invalid fields and `?error=` show text plus an icon in destructive roles; signup still submits with the restyled controls — c29ee55
 
 ### Phase 2: Kitchen-sink + visual gate
 
 #### Automated
 
-- [ ] 2.1 Kitchen-sink file exists and returns 404 when `import.meta.env.PROD`
-- [ ] 2.2 `npm run lint` and `npx astro check` pass
+- [x] 2.1 Kitchen-sink file exists and returns 404 when `import.meta.env.PROD`
+- [x] 2.2 `npm run lint` and `npx astro check` pass
 
 #### Manual
 
-- [ ] 2.3 In DEV, `/auth/signin/kitchen-sink` shows default, hover/focus, error, and loading/disabled; empty is N/A because the screen is a form
-- [ ] 2.4 Desktop and one mobile-width screenshots saved under `context/changes/ui-auth-signin/screenshots/`
-- [ ] 2.5 Preview/PROD: kitchen-sink is not usable as the sign-in UI
-- [ ] 2.6 A real sign-in submit is checked; if the spinner does not paint before navigation, that live flash is recorded N/A with that reason
+- [x] 2.3 In DEV, `/auth/signin/kitchen-sink` shows default, hover/focus, error, and loading/disabled; empty is N/A because the screen is a form
+- [x] 2.4 Desktop and one mobile-width screenshots saved under `context/changes/ui-auth-signin/screenshots/`
+- [x] 2.5 Preview/PROD: kitchen-sink is not usable as the sign-in UI
+- [x] 2.6 A real sign-in submit is checked; if the spinner does not paint before navigation, that live flash is recorded N/A with that reason
 
 ### Phase 3: Guard — SCOPED_FILES + agent rules
 
