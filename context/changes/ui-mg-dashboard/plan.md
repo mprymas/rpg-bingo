@@ -263,9 +263,9 @@ No DB migrations. Rollback = revert the change commit(s). Relocate is URL-stable
 
 #### Automated
 
-- [x] 3.1 Dashboard files listed in `SCOPED_FILES`; `npm run lint:ui-literals` / `npm run lint` pass on clean tree
-- [x] 3.2 Introducing a banned literal in a scoped dashboard file fails the check
+- [x] 3.1 Dashboard files listed in `SCOPED_FILES`; `npm run lint:ui-literals` / `npm run lint` pass on clean tree — ad3373e
+- [x] 3.2 Introducing a banned literal in a scoped dashboard file fails the check — ad3373e
 
 #### Manual
 
-- [x] 3.3 CLAUDE.md / AGENTS.md mention tokens, `src/components/ui`, no literals, and `/dashboard/kitchen-sink`
+- [x] 3.3 CLAUDE.md / AGENTS.md mention tokens, `src/components/ui`, no literals, and `/dashboard/kitchen-sink` — ad3373e
