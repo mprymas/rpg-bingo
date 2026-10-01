@@ -62,6 +62,9 @@ if (session) {
 const legend = [...rewardCounts.values()];
 const expectedCells = session ? session.size * session.size : 0;
 const boardComplete = session ? session.cells.length === expectedCells : false;
+if (session && !boardComplete) {
+  Astro.response.status = 422;
+}
 ---
 
 {notFound ? (
