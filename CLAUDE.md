@@ -49,7 +49,7 @@ Vintage Paper dark theme via the existing shadcn contract (dark-only: `<html cla
 - **Tokens**: values in `src/styles/global.css` (`:root` / `.dark`); published through `@theme inline`. Prefer role classes (`bg-background`, `text-foreground`, `border-border`, `bg-primary`, `text-destructive`, `ring-ring`, …).
 - **Components**: `src/components/ui/` (new-york). Check that directory before creating a primitive; add missing ones with `npx shadcn@latest add [name]`.
 - **No literals in views**: no hex/rgb/oklch, no Tailwind palette classes (`bg-purple-*`, `text-blue-*`, …), no arbitrary values (`p-[13px]`) in pages/islands — put values in tokens and use role classes. Do not extend `bg-cosmic` to new screens (legacy wrappers on deferred pages only). Enforced on cleaned views by `npm run lint:ui-literals` (wired into `npm run lint`); extend `SCOPED_FILES` in `scripts/check-ui-literals.mjs` when another view is tokenized.
-- **Kitchen sink** (dev only, PROD 404): `/sessions/new/kitchen-sink` (create-session states) and `/dashboard/kitchen-sink` (MG dashboard states) — visual gates for cleaned views.
+- **Kitchen sink** (dev only, PROD 404): `/sessions/new/kitchen-sink` (create-session states), `/dashboard/kitchen-sink` (MG dashboard states), and `/sessions/board/kitchen-sink` (session board states) — visual gates for cleaned views.
 
 ### Environment
 
