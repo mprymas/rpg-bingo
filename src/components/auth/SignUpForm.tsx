@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { flushSync } from "react-dom";
 import { Mail, Lock, UserPlus } from "lucide-react";
 import { FormField } from "@/components/auth/FormField";
 import { PasswordToggle } from "@/components/auth/PasswordToggle";
@@ -18,6 +19,7 @@ export default function SignUpForm({ serverError }: Props) {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [errors, setErrors] = useState<{ email?: string; password?: string; confirmPassword?: string }>({});
+  const [submitting, setSubmitting] = useState(false);
 
   function validate() {
     const next: typeof errors = {};
@@ -51,12 +53,20 @@ export default function SignUpForm({ serverError }: Props) {
   function handleSubmit(e: React.SubmitEvent<HTMLFormElement>) {
     if (!validate()) {
       e.preventDefault();
+      return;
     }
+
+    // Paint the pending label before the browser navigates away on the native POST.
+    e.preventDefault();
+    flushSync(() => {
+      setSubmitting(true);
+    });
+    e.currentTarget.submit();
   }
 
   const passwordHint =
     !errors.password && password.length > 0 && password.length < MIN_PASSWORD_LENGTH ? (
-      <p className="mt-1 text-xs text-blue-100/50">
+      <p className="text-muted-foreground mt-1 text-xs">
         Minimum {MIN_PASSWORD_LENGTH} znaków — brakuje {MIN_PASSWORD_LENGTH - password.length}
       </p>
     ) : undefined;
@@ -125,7 +135,11 @@ export default function SignUpForm({ serverError }: Props) {
 
       <ServerError message={serverError} />
 
-      <SubmitButton pendingText="Tworzenie konta..." icon={<UserPlus className="size-4" />}>
+      <SubmitButton
+        pending={submitting ? true : undefined}
+        pendingText="Tworzenie konta..."
+        icon={<UserPlus className="size-4" />}
+      >
         Załóż konto
       </SubmitButton>
     </form>
