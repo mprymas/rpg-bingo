@@ -1,7 +1,7 @@
 ---
 change_id: ui-auth-confirm-email
 title: Audyt i poprawa widoku potwierdzenia e-mail
-status: implemented
+status: impl_reviewed
 created: 2026-10-02
 updated: 2026-10-02
 archived_at: null
