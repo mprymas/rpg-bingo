@@ -268,24 +268,24 @@ No database migrations. Rollback is reverting the change commits. The relocate k
 
 #### Automated
 
-- [x] 2.1 Kitchen-sink file exists and returns 404 when `import.meta.env.PROD`
-- [x] 2.2 `npm run lint` and `npx astro check` pass
-- [x] 2.3 Hardcoded-value scan (`LITERAL_RE` from `scripts/check-ui-literals.mjs`) on `src/pages/auth/signup/kitchen-sink.astro` and `src/components/auth/SignUpForm.tsx` reports 0 hits
+- [x] 2.1 Kitchen-sink file exists and returns 404 when `import.meta.env.PROD` — 51730bd
+- [x] 2.2 `npm run lint` and `npx astro check` pass — 51730bd
+- [x] 2.3 Hardcoded-value scan (`LITERAL_RE` from `scripts/check-ui-literals.mjs`) on `src/pages/auth/signup/kitchen-sink.astro` and `src/components/auth/SignUpForm.tsx` reports 0 hits — 51730bd
 
 #### Manual
 
-- [x] 2.4 In DEV, `/auth/signup/kitchen-sink` shows default, hover/focus (ring and the muted hint), error (email, password, confirm-password mismatch, and `ServerError`), and loading/disabled; empty is N/A because the screen is a form
-- [x] 2.5 Desktop and one mobile-width screenshots saved under `context/changes/ui-auth-signup/screenshots/`
-- [x] 2.6 Preview/PROD: kitchen-sink is not usable as the signup UI
-- [x] 2.7 A real signup submit is checked; if the spinner does not paint before navigation, that live flash is recorded N/A with that reason
+- [x] 2.4 In DEV, `/auth/signup/kitchen-sink` shows default, hover/focus (ring and the muted hint), error (email, password, confirm-password mismatch, and `ServerError`), and loading/disabled; empty is N/A because the screen is a form — 51730bd
+- [x] 2.5 Desktop and one mobile-width screenshots saved under `context/changes/ui-auth-signup/screenshots/` — 51730bd
+- [x] 2.6 Preview/PROD: kitchen-sink is not usable as the signup UI — 51730bd
+- [x] 2.7 A real signup submit is checked; if the spinner does not paint before navigation, that live flash is recorded N/A with that reason — 51730bd
 
 ### Phase 3: Guard — SCOPED_FILES + agent rules
 
 #### Automated
 
-- [ ] 3.1 The three signup files are listed in `SCOPED_FILES`; `npm run lint` passes on the clean tree
-- [ ] 3.2 Introducing a banned literal in a scoped signup file fails `npm run lint:ui-literals`
+- [x] 3.1 The three signup files are listed in `SCOPED_FILES`; `npm run lint` passes on the clean tree
+- [x] 3.2 Introducing a banned literal in a scoped signup file fails `npm run lint:ui-literals`
 
 #### Manual
 
-- [ ] 3.3 `CLAUDE.md` and `AGENTS.md` name the token source, `src/components/ui`, the no-literals rule, and `/auth/signup/kitchen-sink`
+- [x] 3.3 `CLAUDE.md` and `AGENTS.md` name the token source, `src/components/ui`, the no-literals rule, and `/auth/signup/kitchen-sink`

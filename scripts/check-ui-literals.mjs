@@ -24,6 +24,9 @@ const SCOPED_FILES = [
   "src/components/auth/FormField.tsx",
   "src/components/auth/SubmitButton.tsx",
   "src/components/auth/PasswordToggle.tsx",
+  "src/pages/auth/signup/index.astro",
+  "src/pages/auth/signup/kitchen-sink.astro",
+  "src/components/auth/SignUpForm.tsx",
 ];
 
 const LITERAL_RE =
