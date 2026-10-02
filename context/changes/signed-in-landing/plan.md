@@ -200,7 +200,7 @@ No database migration. Rollback is reverting the change commits. Reverting phase
 #### Manual
 
 - [x] 1.3 Signed-out `/` renders Welcome; a signed-in visit to `/` redirects to `/dashboard`; sign-out still returns to Welcome — 45ba633
-- [x] 1.4 `npm run smoke` against a running server: correct-password POST location is `/dashboard`, the following signed-in GET `/` is 302 to `/dashboard`, wrong-password and sign-out locations stay `/auth/signin?error=` and `/`
+- [x] 1.4 `npm run smoke` against a running server: correct-password POST location is `/dashboard`, the following signed-in GET `/` is 302 to `/dashboard`, wrong-password and sign-out locations stay `/auth/signin?error=` and `/` — 5056cd2
 
 ### Phase 2: In-place sign-in
 

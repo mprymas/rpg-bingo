@@ -1,7 +1,7 @@
 ---
 change_id: signed-in-landing
 title: Signed in landing
-status: implementing
+status: implemented
 created: 2026-10-01
 updated: 2026-10-02
 archived_at: null
