@@ -252,32 +252,32 @@ No database migrations. Rollback is reverting the change commits. The relocate k
 
 #### Automated
 
-- [x] 1.1 `npm run lint` passes
-- [x] 1.2 `npx astro check` passes
-- [x] 1.3 `npm run build` passes
-- [x] 1.4 Hardcoded-value scan (`LITERAL_RE` from `scripts/check-ui-literals.mjs`) on `src/pages/auth/signup/index.astro` and `src/components/auth/SignUpForm.tsx` reports 0 hits, and those files contain no `white` or `black` colour utilities
+- [x] 1.1 `npm run lint` passes — 3aa401d
+- [x] 1.2 `npx astro check` passes — 3aa401d
+- [x] 1.3 `npm run build` passes — 3aa401d
+- [x] 1.4 Hardcoded-value scan (`LITERAL_RE` from `scripts/check-ui-literals.mjs`) on `src/pages/auth/signup/index.astro` and `src/components/auth/SignUpForm.tsx` reports 0 hits, and those files contain no `white` or `black` colour utilities — 3aa401d
 
 #### Manual
 
-- [x] 1.5 Logged-out desktop and one mobile width: the card uses role tokens (no cosmic purple glass), Polish copy unchanged
-- [x] 1.6 Logged-in GET `/auth/signup` redirects to `/dashboard`; a successful signup POST still lands on `/auth/confirm-email`
-- [x] 1.7 Keyboard focus is visible on email, password, confirm-password, both password toggles, submit, and the sign-in link
-- [x] 1.8 A 1–5 character password shows the muted hint; invalid fields and `?error=` show text plus an icon in destructive roles
+- [x] 1.5 Logged-out desktop and one mobile width: the card uses role tokens (no cosmic purple glass), Polish copy unchanged — 3aa401d
+- [x] 1.6 Logged-in GET `/auth/signup` redirects to `/dashboard`; a successful signup POST still lands on `/auth/confirm-email` — 3aa401d
+- [x] 1.7 Keyboard focus is visible on email, password, confirm-password, both password toggles, submit, and the sign-in link — 3aa401d
+- [x] 1.8 A 1–5 character password shows the muted hint; invalid fields and `?error=` show text plus an icon in destructive roles — 3aa401d
 
 ### Phase 2: Kitchen-sink + visual gate
 
 #### Automated
 
-- [ ] 2.1 Kitchen-sink file exists and returns 404 when `import.meta.env.PROD`
-- [ ] 2.2 `npm run lint` and `npx astro check` pass
-- [ ] 2.3 Hardcoded-value scan (`LITERAL_RE` from `scripts/check-ui-literals.mjs`) on `src/pages/auth/signup/kitchen-sink.astro` and `src/components/auth/SignUpForm.tsx` reports 0 hits
+- [x] 2.1 Kitchen-sink file exists and returns 404 when `import.meta.env.PROD`
+- [x] 2.2 `npm run lint` and `npx astro check` pass
+- [x] 2.3 Hardcoded-value scan (`LITERAL_RE` from `scripts/check-ui-literals.mjs`) on `src/pages/auth/signup/kitchen-sink.astro` and `src/components/auth/SignUpForm.tsx` reports 0 hits
 
 #### Manual
 
-- [ ] 2.4 In DEV, `/auth/signup/kitchen-sink` shows default, hover/focus (ring and the muted hint), error (email, password, confirm-password mismatch, and `ServerError`), and loading/disabled; empty is N/A because the screen is a form
-- [ ] 2.5 Desktop and one mobile-width screenshots saved under `context/changes/ui-auth-signup/screenshots/`
-- [ ] 2.6 Preview/PROD: kitchen-sink is not usable as the signup UI
-- [ ] 2.7 A real signup submit is checked; if the spinner does not paint before navigation, that live flash is recorded N/A with that reason
+- [x] 2.4 In DEV, `/auth/signup/kitchen-sink` shows default, hover/focus (ring and the muted hint), error (email, password, confirm-password mismatch, and `ServerError`), and loading/disabled; empty is N/A because the screen is a form
+- [x] 2.5 Desktop and one mobile-width screenshots saved under `context/changes/ui-auth-signup/screenshots/`
+- [x] 2.6 Preview/PROD: kitchen-sink is not usable as the signup UI
+- [x] 2.7 A real signup submit is checked; if the spinner does not paint before navigation, that live flash is recorded N/A with that reason
 
 ### Phase 3: Guard — SCOPED_FILES + agent rules
 
