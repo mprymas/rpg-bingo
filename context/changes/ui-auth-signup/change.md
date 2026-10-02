@@ -1,7 +1,7 @@
 ---
 change_id: ui-auth-signup
 title: Audyt i poprawa widoku rejestracji
-status: implemented
+status: impl_reviewed
 created: 2026-10-02
 updated: 2026-10-02
 archived_at: null
