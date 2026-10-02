@@ -8,7 +8,7 @@ import { readFileSync } from "node:fs";
 function envValue(name) {
   if (process.env[name]) return process.env[name];
   try {
-    const text = readFileSync(new URL("../.env", import.meta.url), "utf8");
+    const text = readFileSync(new globalThis.URL("../.env", import.meta.url), "utf8");
     for (const line of text.split(/\r?\n/)) {
       const trimmed = line.trim();
       if (!trimmed || trimmed.startsWith("#")) continue;
@@ -16,10 +16,7 @@ function envValue(name) {
       if (eq === -1) continue;
       if (trimmed.slice(0, eq).trim() !== name) continue;
       let value = trimmed.slice(eq + 1).trim();
-      if (
-        (value.startsWith('"') && value.endsWith('"')) ||
-        (value.startsWith("'") && value.endsWith("'"))
-      ) {
+      if ((value.startsWith('"') && value.endsWith('"')) || (value.startsWith("'") && value.endsWith("'"))) {
         value = value.slice(1, -1);
       }
       return value;
@@ -148,37 +145,37 @@ if (hasAccount) {
       () => request("/api/auth/signin", { method: "POST", form: { email: accountEmail, password: accountPassword } }),
       { status: 302, location: "/dashboard" },
     ],
-  ["home redirects signed-in user", () => request("/"), { status: 302, location: "/dashboard" }],
-  ["dashboard renders for signed-in user", () => request("/dashboard"), { status: 200 }],
-  ["GET /sessions/new for signed-in user", () => request("/sessions/new"), { status: 200 }],
-  [
-    "POST /api/sessions creates session",
-    async () => {
-      const actual = await request("/api/sessions", {
-        method: "POST",
-        json: {
-          size: 5,
-          customPhrases: [{ text: "Hasło ze smoke", guaranteed: true }],
-          rewards: [],
-        },
-      });
-      if (actual.status === 201 && actual.body?.id) {
-        createdSessionId = actual.body.id;
-      }
-      return actual;
-    },
-    {
-      status: 201,
-      check: (body) => typeof body?.code === "string" && SESSION_CODE_RE.test(body.code),
-    },
-  ],
-  ["GET /sessions/:id for owner", () => request(`/sessions/${createdSessionId}`), { status: 200 }],
-  ["signout clears session", () => request("/api/auth/signout", { method: "POST" }), { status: 302, location: "/" }],
-  [
-    "GET /sessions/:id redirects after signout",
-    () => request(`/sessions/${createdSessionId}`),
-    { status: 302, location: "/auth/signin" },
-  ],
+    ["home redirects signed-in user", () => request("/"), { status: 302, location: "/dashboard" }],
+    ["dashboard renders for signed-in user", () => request("/dashboard"), { status: 200 }],
+    ["GET /sessions/new for signed-in user", () => request("/sessions/new"), { status: 200 }],
+    [
+      "POST /api/sessions creates session",
+      async () => {
+        const actual = await request("/api/sessions", {
+          method: "POST",
+          json: {
+            size: 5,
+            customPhrases: [{ text: "Hasło ze smoke", guaranteed: true }],
+            rewards: [],
+          },
+        });
+        if (actual.status === 201 && actual.body?.id) {
+          createdSessionId = actual.body.id;
+        }
+        return actual;
+      },
+      {
+        status: 201,
+        check: (body) => typeof body?.code === "string" && SESSION_CODE_RE.test(body.code),
+      },
+    ],
+    ["GET /sessions/:id for owner", () => request(`/sessions/${createdSessionId}`), { status: 200 }],
+    ["signout clears session", () => request("/api/auth/signout", { method: "POST" }), { status: 302, location: "/" }],
+    [
+      "GET /sessions/:id redirects after signout",
+      () => request(`/sessions/${createdSessionId}`),
+      { status: 302, location: "/auth/signin" },
+    ],
     ["dashboard redirects after signout", () => request("/dashboard"), { status: 302, location: "/auth/signin" }],
   );
 } else {
