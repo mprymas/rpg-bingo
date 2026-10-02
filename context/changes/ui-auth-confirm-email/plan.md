@@ -244,23 +244,23 @@ No database migrations. Rollback is reverting the change commits. The relocate k
 
 #### Automated
 
-- [x] 2.1 Kitchen-sink file exists and returns 404 when `import.meta.env.PROD`
-- [x] 2.2 `npm run lint` and `npx astro check` pass
-- [x] 2.3 Hardcoded-value scan (`LITERAL_RE` from `scripts/check-ui-literals.mjs`) on `src/pages/auth/confirm-email/kitchen-sink.astro` reports 0 hits
+- [x] 2.1 Kitchen-sink file exists and returns 404 when `import.meta.env.PROD` — 71ca380
+- [x] 2.2 `npm run lint` and `npx astro check` pass — 71ca380
+- [x] 2.3 Hardcoded-value scan (`LITERAL_RE` from `scripts/check-ui-literals.mjs`) on `src/pages/auth/confirm-email/kitchen-sink.astro` reports 0 hits — 71ca380
 
 #### Manual
 
-- [x] 2.4 In DEV, `/auth/confirm-email/kitchen-sink` shows the inbox card (default), a hover/focus card with underline and ring, and labeled N/A for disabled, error, empty, and loading
-- [x] 2.5 Desktop and one mobile-width screenshots saved under `context/changes/ui-auth-confirm-email/screenshots/`
-- [x] 2.6 Preview/PROD: kitchen-sink returns 404; a signed-in visit to the sink in DEV still renders the gallery
+- [x] 2.4 In DEV, `/auth/confirm-email/kitchen-sink` shows the inbox card (default), a hover/focus card with underline and ring, and labeled N/A for disabled, error, empty, and loading — 71ca380
+- [x] 2.5 Desktop and one mobile-width screenshots saved under `context/changes/ui-auth-confirm-email/screenshots/` — 71ca380
+- [x] 2.6 Preview/PROD: kitchen-sink returns 404; a signed-in visit to the sink in DEV still renders the gallery — 71ca380
 
 ### Phase 3: Guard — SCOPED_FILES + agent rules
 
 #### Automated
 
-- [ ] 3.1 `src/pages/auth/confirm-email/index.astro` and `src/pages/auth/confirm-email/kitchen-sink.astro` are listed in `SCOPED_FILES`; `npm run lint` passes on the clean tree
-- [ ] 3.2 Introducing a banned literal in a scoped confirm-email file fails `npm run lint:ui-literals`
+- [x] 3.1 `src/pages/auth/confirm-email/index.astro` and `src/pages/auth/confirm-email/kitchen-sink.astro` are listed in `SCOPED_FILES`; `npm run lint` passes on the clean tree
+- [x] 3.2 Introducing a banned literal in a scoped confirm-email file fails `npm run lint:ui-literals`
 
 #### Manual
 
-- [ ] 3.3 `CLAUDE.md` and `AGENTS.md` name the token source, `src/components/ui`, the no-literals rule, and `/auth/confirm-email/kitchen-sink`
+- [x] 3.3 `CLAUDE.md` and `AGENTS.md` name the token source, `src/components/ui`, the no-literals rule, and `/auth/confirm-email/kitchen-sink`

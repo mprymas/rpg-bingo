@@ -9,7 +9,7 @@ RPG Bingo is an Astro 7 SSR app (React 19 islands, Tailwind 4, Supabase auth) on
 - Secrets: `SUPABASE_URL` and `SUPABASE_KEY` from @.env.example into `.env` (Node) or `.dev.vars` (Cloudflare local). Never commit either file.
 - New DB tables: SQL under `supabase/migrations/` named `YYYYMMDDHHmmss_short_description.sql`, with RLS on and per-operation, per-role policies (@CLAUDE.md).
 - Prefer Astro for static UI; React only when interactivity is required. Put shared types in `src/types.ts`, helpers in `src/lib/` (or `src/lib/services/`), hooks in `src/components/hooks/`.
-- **UI**: tokens in @src/styles/global.css (`:root`/`.dark` → `@theme inline`); components in @src/components/ui — check there before inventing primitives (`npx shadcn@latest add [name]`). No literal colours / palette classes / arbitrary values in views (`npm run lint` runs @scripts/check-ui-literals.mjs). Dark-only. Kitchen sinks (dev): `/sessions/new/kitchen-sink`, `/dashboard/kitchen-sink`, `/sessions/board/kitchen-sink`, `/auth/signin/kitchen-sink`, `/auth/signup/kitchen-sink`. Details: @CLAUDE.md § UI / design tokens.
+- **UI**: tokens in @src/styles/global.css (`:root`/`.dark` → `@theme inline`); components in @src/components/ui — check there before inventing primitives (`npx shadcn@latest add [name]`). No literal colours / palette classes / arbitrary values in views (`npm run lint` runs @scripts/check-ui-literals.mjs). Dark-only. Kitchen sinks (dev): `/sessions/new/kitchen-sink`, `/dashboard/kitchen-sink`, `/sessions/board/kitchen-sink`, `/auth/signin/kitchen-sink`, `/auth/signup/kitchen-sink`, `/auth/confirm-email/kitchen-sink`. Details: @CLAUDE.md § UI / design tokens.
 
 ## Project structure
 

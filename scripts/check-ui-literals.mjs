@@ -27,6 +27,8 @@ const SCOPED_FILES = [
   "src/pages/auth/signup/index.astro",
   "src/pages/auth/signup/kitchen-sink.astro",
   "src/components/auth/SignUpForm.tsx",
+  "src/pages/auth/confirm-email/index.astro",
+  "src/pages/auth/confirm-email/kitchen-sink.astro",
 ];
 
 const LITERAL_RE =
