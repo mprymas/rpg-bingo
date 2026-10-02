@@ -1,0 +1,24 @@
+---
+import Layout from "@/layouts/Layout.astro";
+
+if (Astro.locals.user) {
+  return Astro.redirect("/dashboard");
+}
+---
+
+<Layout title="Sprawdź swoją skrzynkę">
+  <div class="bg-background flex min-h-screen items-center justify-center p-4">
+    <div class="w-full max-w-sm rounded-2xl border border-border bg-card p-8 text-center text-foreground">
+      <h1 class="mb-3 text-2xl font-bold text-foreground">Sprawdź swoją skrzynkę</h1>
+      <p class="mb-6 text-muted-foreground">
+        Wysłaliśmy link potwierdzający na Twój adres e-mail. Kliknij go, aby aktywować konto.
+      </p>
+      <a
+        href="/auth/signin"
+        class="text-sm text-primary outline-none hover:underline focus-visible:ring-2 focus-visible:ring-ring"
+      >
+        Wróć do logowania
+      </a>
+    </div>
+  </div>
+</Layout>
