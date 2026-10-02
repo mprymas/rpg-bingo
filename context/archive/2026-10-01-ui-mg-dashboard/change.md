@@ -1,10 +1,10 @@
 ---
 change_id: ui-mg-dashboard
 title: Audyt i poprawa panelu MG (dashboard)
-status: impl_reviewed
+status: archived
 created: 2026-10-01
-updated: 2026-10-01
-archived_at: null
+updated: 2026-10-02
+archived_at: 2026-10-02T15:02:06Z
 ---
 
 ## Notes
