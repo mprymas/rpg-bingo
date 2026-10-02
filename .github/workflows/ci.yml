@@ -39,18 +39,26 @@ jobs:
       - name: Start local Supabase
         run: |
           supabase start -x studio,imgproxy,mailpit,edge-runtime,logflare,vector,realtime,storage-api,postgres-meta,supavisor
-          supabase status -o env | grep -E '^(API_URL|ANON_KEY)=' > supabase.env
+          supabase status -o env | grep -E '^(API_URL|ANON_KEY|SERVICE_ROLE_KEY)=' > supabase.env
       - name: Configure secrets for build and preview
         run: |
           source supabase.env
           printf 'SUPABASE_URL=%s\nSUPABASE_KEY=%s\n' "$API_URL" "$ANON_KEY" > .env
           cp .env .dev.vars
       - run: npm run build
+      - name: Create smoke user
+        run: |
+          source supabase.env
+          curl -sf -X POST "$API_URL/auth/v1/admin/users" \
+            -H "apikey: $SERVICE_ROLE_KEY" \
+            -H "Authorization: Bearer $SERVICE_ROLE_KEY" \
+            -H "Content-Type: application/json" \
+            -d '{"email":"mg.manual@rpgbingo.test","password":"Manual-Test-Passw0rd!","email_confirm":true}'
       - name: Run smoke test against production preview
         run: |
           npm run preview -- --port 4321 &
           for i in $(seq 1 60); do curl -sf -o /dev/null http://localhost:4321/ && break; sleep 1; done
-          BASE_URL=http://localhost:4321 npm run smoke
+          SMOKE_EMAIL=mg.manual@rpgbingo.test SMOKE_PASSWORD='Manual-Test-Passw0rd!' BASE_URL=http://localhost:4321 npm run smoke
       - if: always()
         run: supabase stop --no-backup
 

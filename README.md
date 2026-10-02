@@ -178,7 +178,7 @@ Platform research and operational notes: `context/foundation/infrastructure.md`.
 
 ## Smoke test
 
-`scripts/smoke.mjs` is a dependency-free Node script that walks the whole auth flow (sign-up, sign-in, protected page, sign-out) over HTTP. Run it against the dev server or the production preview after dependency upgrades:
+`scripts/smoke.mjs` is a dependency-free Node script that walks the auth flow (sign-in, protected page, sign-out) over HTTP. It does not create an account. Set `SMOKE_EMAIL` and `SMOKE_PASSWORD` to an existing user to include the signed-in steps. Run it against the dev server or the production preview after dependency upgrades:
 
 ```bash
 npm run dev            # or: npm run build && npm run preview

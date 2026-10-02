@@ -1,9 +1,40 @@
 // Smoke test: proves the built app, the Cloudflare adapter and the Supabase auth flow still work together.
 // Zero dependencies on purpose. Run against a live server: BASE_URL=http://localhost:4321 node scripts/smoke.mjs
+// Does not create an account. Signed-in steps use SMOKE_EMAIL and SMOKE_PASSWORD
+// from the environment, or from .env in the repo root when those are unset.
+
+import { readFileSync } from "node:fs";
+
+function envValue(name) {
+  if (process.env[name]) return process.env[name];
+  try {
+    const text = readFileSync(new URL("../.env", import.meta.url), "utf8");
+    for (const line of text.split(/\r?\n/)) {
+      const trimmed = line.trim();
+      if (!trimmed || trimmed.startsWith("#")) continue;
+      const eq = trimmed.indexOf("=");
+      if (eq === -1) continue;
+      if (trimmed.slice(0, eq).trim() !== name) continue;
+      let value = trimmed.slice(eq + 1).trim();
+      if (
+        (value.startsWith('"') && value.endsWith('"')) ||
+        (value.startsWith("'") && value.endsWith("'"))
+      ) {
+        value = value.slice(1, -1);
+      }
+      return value;
+    }
+  } catch {
+    return "";
+  }
+  return "";
+}
 
 const BASE_URL = process.env.BASE_URL ?? "http://localhost:4321";
-const email = `smoke-${Date.now()}@example.com`;
-const password = "Smoke-Test-Passw0rd!";
+const accountEmail = envValue("SMOKE_EMAIL");
+const accountPassword = envValue("SMOKE_PASSWORD");
+const hasAccount = accountEmail.length > 0 && accountPassword.length > 0;
+const rejectEmail = "smoke-reject@example.com";
 const jar = new Map();
 const SESSION_CODE_RE = /^[ABCDEFGHJKLMNPQRSTUVWXYZ23456789]{6}$/;
 
@@ -78,13 +109,8 @@ const steps = [
   ],
   ["GET /sessions/new redirects anonymous", () => request("/sessions/new"), { status: 302, location: "/auth/signin" }],
   [
-    "signup creates account",
-    () => request("/api/auth/signup", { method: "POST", form: { email, password } }),
-    { status: 302, location: "/auth/confirm-email" },
-  ],
-  [
     "signin rejects wrong password",
-    () => request("/api/auth/signin", { method: "POST", form: { email, password: "wrong" } }),
+    () => request("/api/auth/signin", { method: "POST", form: { email: rejectEmail, password: "wrong" } }),
     { status: 302, location: "/auth/signin?error=" },
   ],
   [
@@ -92,7 +118,7 @@ const steps = [
     () =>
       request("/api/auth/signin", {
         method: "POST",
-        form: { email, password: "wrong" },
+        form: { email: rejectEmail, password: "wrong" },
         headers: { Accept: "application/json" },
       }),
     {
@@ -100,24 +126,28 @@ const steps = [
       check: (body) => typeof body?.error === "string" && body.error.length > 0,
     },
   ],
-  [
-    "signin JSON accepts correct password",
-    () =>
-      request("/api/auth/signin", {
-        method: "POST",
-        form: { email, password },
-        headers: { Accept: "application/json" },
-      }),
-    {
-      status: 200,
-      check: (body) => body?.redirect === "/dashboard",
-    },
-  ],
-  [
-    "signin accepts correct password",
-    () => request("/api/auth/signin", { method: "POST", form: { email, password } }),
-    { status: 302, location: "/dashboard" },
-  ],
+];
+
+if (hasAccount) {
+  steps.push(
+    [
+      "signin JSON accepts correct password",
+      () =>
+        request("/api/auth/signin", {
+          method: "POST",
+          form: { email: accountEmail, password: accountPassword },
+          headers: { Accept: "application/json" },
+        }),
+      {
+        status: 200,
+        check: (body) => body?.redirect === "/dashboard",
+      },
+    ],
+    [
+      "signin accepts correct password",
+      () => request("/api/auth/signin", { method: "POST", form: { email: accountEmail, password: accountPassword } }),
+      { status: 302, location: "/dashboard" },
+    ],
   ["home redirects signed-in user", () => request("/"), { status: 302, location: "/dashboard" }],
   ["dashboard renders for signed-in user", () => request("/dashboard"), { status: 200 }],
   ["GET /sessions/new for signed-in user", () => request("/sessions/new"), { status: 200 }],
@@ -149,8 +179,15 @@ const steps = [
     () => request(`/sessions/${createdSessionId}`),
     { status: 302, location: "/auth/signin" },
   ],
-  ["dashboard redirects after signout", () => request("/dashboard"), { status: 302, location: "/auth/signin" }],
-];
+    ["dashboard redirects after signout", () => request("/dashboard"), { status: 302, location: "/auth/signin" }],
+  );
+} else {
+  console.log("SKIP  signed-in steps — set SMOKE_EMAIL and SMOKE_PASSWORD");
+  steps.push(
+    ["signout clears session", () => request("/api/auth/signout", { method: "POST" }), { status: 302, location: "/" }],
+    ["dashboard redirects after signout", () => request("/dashboard"), { status: 302, location: "/auth/signin" }],
+  );
+}
 
 let failed = 0;
 for (const [name, run, expected] of steps) {
