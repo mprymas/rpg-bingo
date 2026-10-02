@@ -1,10 +1,10 @@
 ---
 change_id: ui-auth-signin
 title: Audyt i poprawa widoku logowania
-status: impl_reviewed
+status: archived
 created: 2026-10-01
-updated: 2026-10-01
-archived_at: null
+updated: 2026-10-02
+archived_at: 2026-10-02T15:02:06Z
 ---
 
 ## Notes
