@@ -194,26 +194,26 @@ No database migration. Rollback is reverting the change commits. Reverting phase
 
 #### Automated
 
-- [x] 1.1 `npm run lint` passes
-- [x] 1.2 `npx astro check` passes
+- [x] 1.1 `npm run lint` passes — 45ba633
+- [x] 1.2 `npx astro check` passes — 45ba633
 
 #### Manual
 
-- [x] 1.3 Signed-out `/` renders Welcome; a signed-in visit to `/` redirects to `/dashboard`; sign-out still returns to Welcome
+- [x] 1.3 Signed-out `/` renders Welcome; a signed-in visit to `/` redirects to `/dashboard`; sign-out still returns to Welcome — 45ba633
 - [ ] 1.4 `npm run smoke` against a running server: correct-password POST location is `/dashboard`, the following signed-in GET `/` is 302 to `/dashboard`, wrong-password and sign-out locations stay `/auth/signin?error=` and `/`
 
 ### Phase 2: In-place sign-in
 
 #### Automated
 
-- [ ] 2.1 `npm run lint` passes
-- [ ] 2.2 `npx astro check` passes
+- [x] 2.1 `npm run lint` passes
+- [x] 2.2 `npx astro check` passes
 
 #### Manual
 
-- [ ] 2.3 Empty or invalid fields leave the button on Zaloguj się and do not request sign-in
-- [ ] 2.4 A wrong password shows Logowanie..., then an enabled Zaloguj się, the Supabase message in ServerError, and the typed email and password
-- [ ] 2.5 When the response has no message, ServerError shows Nie udało się zalogować and the button is not loading
-- [ ] 2.6 A correct password keeps Logowanie... until Panel MG loads
-- [ ] 2.7 Kitchen-sink loading shows Logowanie... and does not POST
-- [ ] 2.8 `npm run smoke` covers JSON wrong-password 401 with a non-empty `error` and JSON success 200 with `redirect` equal to `/dashboard`
+- [x] 2.3 Empty or invalid fields leave the button on Zaloguj się and do not request sign-in
+- [x] 2.4 A wrong password shows Logowanie..., then an enabled Zaloguj się, the Supabase message in ServerError, and the typed email and password
+- [x] 2.5 When the response has no message, ServerError shows Nie udało się zalogować and the button is not loading
+- [x] 2.6 A correct password keeps Logowanie... until Panel MG loads
+- [x] 2.7 Kitchen-sink loading shows Logowanie... and does not POST
+- [x] 2.8 `npm run smoke` covers JSON wrong-password 401 with a non-empty `error` and JSON success 200 with `redirect` equal to `/dashboard`

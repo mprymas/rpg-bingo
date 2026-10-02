@@ -10,7 +10,8 @@ export type SignInDemoState = "default" | "focus" | "error" | "loading";
 
 const DEMO_EMAIL_ERROR = "E-mail jest wymagany";
 const DEMO_PASSWORD_ERROR = "Hasło jest wymagane";
-const DEMO_SERVER_ERROR = "Nie udało się zalogować";
+const SERVER_ERROR_FALLBACK = "Nie udało się zalogować";
+const DEMO_SERVER_ERROR = SERVER_ERROR_FALLBACK;
 
 interface Props {
   serverError?: string | null;
@@ -18,16 +19,37 @@ interface Props {
   demoState?: SignInDemoState;
 }
 
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null;
+}
+
+function messageFromBody(body: unknown): string {
+  if (!isRecord(body)) {
+    return SERVER_ERROR_FALLBACK;
+  }
+  const error = body.error;
+  if (typeof error === "string" && error.length > 0) {
+    return error;
+  }
+  return SERVER_ERROR_FALLBACK;
+}
+
+function isDashboardRedirect(body: unknown): boolean {
+  return isRecord(body) && body.redirect === "/dashboard";
+}
+
 export default function SignInForm({ serverError, demoState }: Props) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [errors, setErrors] = useState<{ email?: string; password?: string }>({});
+  const [pending, setPending] = useState(false);
+  const [localServerError, setLocalServerError] = useState<string | null>(null);
 
   const showFocusRing = demoState === "focus";
   const emailError = demoState === "error" ? DEMO_EMAIL_ERROR : errors.email;
   const passwordError = demoState === "error" ? DEMO_PASSWORD_ERROR : errors.password;
-  const shownServerError = demoState === "error" ? DEMO_SERVER_ERROR : serverError;
+  const shownServerError = demoState === "error" ? DEMO_SERVER_ERROR : (localServerError ?? serverError);
 
   function fieldId(field: "email" | "password") {
     return demoState ? `${field}-${demoState}` : field;
@@ -51,14 +73,49 @@ export default function SignInForm({ serverError, demoState }: Props) {
     if (errors[field]) setErrors((prev) => ({ ...prev, [field]: undefined }));
   }
 
-  function handleSubmit(e: React.SubmitEvent<HTMLFormElement>) {
+  function showFailure(message: string) {
+    setPassword("");
+    setPending(false);
+    setLocalServerError(message);
+  }
+
+  async function handleSubmit(e: React.SubmitEvent<HTMLFormElement>) {
+    e.preventDefault();
     if (demoState) {
-      e.preventDefault();
       return;
     }
     if (!validate()) {
-      e.preventDefault();
+      return;
     }
+
+    setPending(true);
+
+    let status: number;
+    let body: unknown;
+    try {
+      const response = await fetch("/api/auth/signin", {
+        method: "POST",
+        headers: { Accept: "application/json" },
+        body: new URLSearchParams({ email, password }),
+        credentials: "same-origin",
+      });
+      status = response.status;
+      try {
+        body = await response.json();
+      } catch {
+        body = null;
+      }
+    } catch {
+      showFailure(SERVER_ERROR_FALLBACK);
+      return;
+    }
+
+    if (status === 200 && isDashboardRedirect(body)) {
+      window.location.assign("/dashboard");
+      return;
+    }
+
+    showFailure(messageFromBody(body));
   }
 
   return (
@@ -106,7 +163,7 @@ export default function SignInForm({ serverError, demoState }: Props) {
       <ServerError message={shownServerError} />
 
       <SubmitButton
-        pending={demoState === "loading" ? true : undefined}
+        pending={pending || demoState === "loading" ? true : undefined}
         pendingText="Logowanie..."
         icon={<LogIn className="size-4" />}
       >

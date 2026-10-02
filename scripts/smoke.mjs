@@ -23,8 +23,9 @@ function storeCookies(response) {
   }
 }
 
-async function request(path, { method = "GET", form, json } = {}) {
+async function request(path, { method = "GET", form, json, headers: requestHeaders } = {}) {
   const headers = {
+    ...requestHeaders,
     Cookie: cookieHeader(),
     Origin: BASE_URL,
   };
@@ -85,6 +86,32 @@ const steps = [
     "signin rejects wrong password",
     () => request("/api/auth/signin", { method: "POST", form: { email, password: "wrong" } }),
     { status: 302, location: "/auth/signin?error=" },
+  ],
+  [
+    "signin JSON rejects wrong password",
+    () =>
+      request("/api/auth/signin", {
+        method: "POST",
+        form: { email, password: "wrong" },
+        headers: { Accept: "application/json" },
+      }),
+    {
+      status: 401,
+      check: (body) => typeof body?.error === "string" && body.error.length > 0,
+    },
+  ],
+  [
+    "signin JSON accepts correct password",
+    () =>
+      request("/api/auth/signin", {
+        method: "POST",
+        form: { email, password },
+        headers: { Accept: "application/json" },
+      }),
+    {
+      status: 200,
+      check: (body) => body?.redirect === "/dashboard",
+    },
   ],
   [
     "signin accepts correct password",
