@@ -229,30 +229,30 @@ No database migrations. Rollback is reverting the change commits. The relocate k
 
 #### Automated
 
-- [x] 1.1 `npm run lint` passes
-- [x] 1.2 `npx astro check` passes
-- [x] 1.3 `npm run build` passes
-- [x] 1.4 Hardcoded-value scan (`LITERAL_RE` from `scripts/check-ui-literals.mjs`) on `src/pages/auth/confirm-email/index.astro` reports 0 hits, and that file contains no `white` or `black` colour utilities
+- [x] 1.1 `npm run lint` passes — 6aaeff5
+- [x] 1.2 `npx astro check` passes — 6aaeff5
+- [x] 1.3 `npm run build` passes — 6aaeff5
+- [x] 1.4 Hardcoded-value scan (`LITERAL_RE` from `scripts/check-ui-literals.mjs`) on `src/pages/auth/confirm-email/index.astro` reports 0 hits, and that file contains no `white` or `black` colour utilities — 6aaeff5
 
 #### Manual
 
-- [x] 1.5 Logged-out desktop and one mobile width: the card uses role tokens (no cosmic glass, no emoji, no gradient heading) and only the inbox sentence, with the link to `/auth/signin`
-- [x] 1.6 Signed-in GET `/auth/confirm-email` redirects to `/dashboard`; a local signup that already has a session follows that redirect; `signup.ts` still targets `/auth/confirm-email`
-- [x] 1.7 Keyboard focus on the sign-in link shows a `ring-ring` ring
+- [x] 1.5 Logged-out desktop and one mobile width: the card uses role tokens (no cosmic glass, no emoji, no gradient heading) and only the inbox sentence, with the link to `/auth/signin` — 6aaeff5
+- [x] 1.6 Signed-in GET `/auth/confirm-email` redirects to `/dashboard`; a local signup that already has a session follows that redirect; `signup.ts` still targets `/auth/confirm-email` — 6aaeff5
+- [x] 1.7 Keyboard focus on the sign-in link shows a `ring-ring` ring — 6aaeff5
 
 ### Phase 2: Kitchen-sink + visual gate
 
 #### Automated
 
-- [ ] 2.1 Kitchen-sink file exists and returns 404 when `import.meta.env.PROD`
-- [ ] 2.2 `npm run lint` and `npx astro check` pass
-- [ ] 2.3 Hardcoded-value scan (`LITERAL_RE` from `scripts/check-ui-literals.mjs`) on `src/pages/auth/confirm-email/kitchen-sink.astro` reports 0 hits
+- [x] 2.1 Kitchen-sink file exists and returns 404 when `import.meta.env.PROD`
+- [x] 2.2 `npm run lint` and `npx astro check` pass
+- [x] 2.3 Hardcoded-value scan (`LITERAL_RE` from `scripts/check-ui-literals.mjs`) on `src/pages/auth/confirm-email/kitchen-sink.astro` reports 0 hits
 
 #### Manual
 
-- [ ] 2.4 In DEV, `/auth/confirm-email/kitchen-sink` shows the inbox card (default), a hover/focus card with underline and ring, and labeled N/A for disabled, error, empty, and loading
-- [ ] 2.5 Desktop and one mobile-width screenshots saved under `context/changes/ui-auth-confirm-email/screenshots/`
-- [ ] 2.6 Preview/PROD: kitchen-sink returns 404; a signed-in visit to the sink in DEV still renders the gallery
+- [x] 2.4 In DEV, `/auth/confirm-email/kitchen-sink` shows the inbox card (default), a hover/focus card with underline and ring, and labeled N/A for disabled, error, empty, and loading
+- [x] 2.5 Desktop and one mobile-width screenshots saved under `context/changes/ui-auth-confirm-email/screenshots/`
+- [x] 2.6 Preview/PROD: kitchen-sink returns 404; a signed-in visit to the sink in DEV still renders the gallery
 
 ### Phase 3: Guard — SCOPED_FILES + agent rules
 
