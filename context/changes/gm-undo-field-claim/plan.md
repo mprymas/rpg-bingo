@@ -329,11 +329,11 @@ No new poll interval; undo is a single POST. Confirm/pending gating avoids poll 
 
 #### Automated
 
-- [x] 4.1 npm run lint passes
-- [x] 4.2 npm run build passes
-- [x] 4.3 npm run smoke passes
+- [x] 4.1 npm run lint passes — 951eada
+- [x] 4.2 npm run build passes — 951eada
+- [x] 4.3 npm run smoke passes — 951eada
 
 #### Manual
 
-- [x] 4.4 Kitchen-sink confirm/pending/error sections
-- [x] 4.5 Full claim → undo → reclaim same reward path
+- [x] 4.4 Kitchen-sink confirm/pending/error sections — 951eada
+- [x] 4.5 Full claim → undo → reclaim same reward path — 951eada
