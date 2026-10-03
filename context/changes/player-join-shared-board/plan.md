@@ -371,7 +371,7 @@ The migration only adds a function. Existing rows stay valid. Rollback is `DROP 
 
 #### Manual
 
-- [ ] 1.3 On the local database, anonymous select from `sessions` and `board_cells` returns no rows, the function returns cells for an active code, and it returns no rows for an unknown code and for a code flipped to `closed` then restored
+- [x] 1.3 On the local database, anonymous select from `sessions` and `board_cells` returns no rows, the function returns cells for an active code, and it returns no rows for an unknown code and for a code flipped to `closed` then restored
 
 ### Phase 2: Player page
 
@@ -407,10 +407,10 @@ The migration only adds a function. Existing rows stay valid. Rollback is `DROP 
 
 #### Automated
 
-- [x] 4.1 `npm run smoke` passes, including anonymous play steps for a missing code, a valid code before nick, and the same code after nick
-- [x] 4.2 `npm run lint` and `npx astro check` pass
+- [x] 4.1 `npm run smoke` passes, including anonymous play steps for a missing code, a valid code before nick, and the same code after nick — 6dc4860
+- [x] 4.2 `npm run lint` and `npx astro check` pass — 6dc4860
 
 #### Manual
 
-- [x] 4.3 `/play/kitchen-sink` in dev shows the nick form, the board, not-found, and the load-error state, and the route returns 404 in production
-- [x] 4.4 A 5×5 board at a phone width shows the full grid without horizontal scrolling
+- [x] 4.3 `/play/kitchen-sink` in dev shows the nick form, the board, not-found, and the load-error state, and the route returns 404 in production — 6dc4860
+- [x] 4.4 A 5×5 board at a phone width shows the full grid without horizontal scrolling — 6dc4860
