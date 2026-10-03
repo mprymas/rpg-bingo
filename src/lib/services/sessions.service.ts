@@ -366,7 +366,7 @@ export async function undoBoardCell(
   supabase: AppSupabaseClient,
   input: { sessionId: string; position: number },
 ): Promise<UndoBoardCellResult> {
-  const { error } = await supabase.rpc("undo_board_cell", {
+  const { data, error } = await supabase.rpc("undo_board_cell", {
     p_session_id: input.sessionId,
     p_position: input.position,
   });
@@ -376,6 +376,12 @@ export async function undoBoardCell(
     if (mapped) throw mapped;
     throw error;
   }
+
+  const rows = rpcRows(data);
+  if (rows.length === 0) {
+    throw new UndoBoardCellError("CELL_NOT_FOUND");
+  }
+  const rpcRow = rows[0];
 
   // RPC omits board_cells identity fields; re-select under GM RLS for SessionWithCells cell DTO.
   const { data: cellRow, error: cellError } = await supabase
@@ -398,7 +404,14 @@ export async function undoBoardCell(
   return {
     cell: {
       ...cellRow,
-      claimedByColor: null,
+      // Undo RPC commits a free cell; align DTO with that snapshot (not a later reclaim race).
+      claimed_by_player_id: null,
+      claimed_at: null,
+      claimedByColor: rpcRow.claimed_by_color,
+      reward:
+        rpcRow.reward_slug != null && rpcRow.reward_label != null
+          ? { slug: rpcRow.reward_slug, label: rpcRow.reward_label }
+          : null,
     },
   };
 }
