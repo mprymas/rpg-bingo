@@ -54,9 +54,9 @@ function storeCookies(response) {
 
 async function request(path, { method = "GET", form, json, headers: requestHeaders } = {}) {
   const headers = {
+    Origin: BASE_URL,
     ...requestHeaders,
     Cookie: cookieHeader(),
-    Origin: BASE_URL,
   };
   let body;
   if (form) {
@@ -232,6 +232,76 @@ if (hasAccount) {
       {
         status: 200,
         check: (body) => typeof body === "string" && body.includes("Hasło ze smoke") && body.includes("Anna"),
+      },
+    ],
+    [
+      "POST /api/play/claim claims free position",
+      () =>
+        request("/api/play/claim", {
+          method: "POST",
+          json: { code: createdSessionCode, position: 0 },
+        }),
+      {
+        status: 200,
+        check: (body) =>
+          body?.cell?.position === 0 && typeof body?.cell?.claimedByColor === "number" && body.cell.claimedByColor >= 1,
+      },
+    ],
+    [
+      "POST /api/play/join as second player",
+      async () => {
+        jar.delete("rpg_player");
+        return request("/api/play/join", {
+          method: "POST",
+          form: { code: createdSessionCode, nick: "Borin" },
+        });
+      },
+      { status: 302, location: `/play/${createdSessionCode}` },
+    ],
+    [
+      "POST /api/play/claim conflict for occupied position",
+      () =>
+        request("/api/play/claim", {
+          method: "POST",
+          json: { code: createdSessionCode, position: 0 },
+        }),
+      {
+        status: 409,
+        check: (body) =>
+          body?.error === "conflict" &&
+          body?.occupant?.nick === "Anna" &&
+          typeof body?.occupant?.color === "number" &&
+          body?.cell?.position === 0 &&
+          typeof body?.cell?.claimedByColor === "number",
+      },
+    ],
+    [
+      "GET /api/play/board reflects claim occupant",
+      () => request(`/api/play/board?code=${createdSessionCode}`),
+      {
+        status: 200,
+        check: (body) => {
+          const cell = Array.isArray(body?.cells) ? body.cells.find((c) => c.position === 0) : undefined;
+          return (
+            typeof body?.code === "string" &&
+            cell != null &&
+            typeof cell.claimedByColor === "number" &&
+            cell.claimedByColor >= 1
+          );
+        },
+      },
+    ],
+    [
+      "POST /api/play/claim rejects cross-origin",
+      () =>
+        request("/api/play/claim", {
+          method: "POST",
+          json: { code: createdSessionCode, position: 1 },
+          headers: { Origin: "https://evil.example" },
+        }),
+      {
+        status: 403,
+        check: (body) => body?.error === "Forbidden",
       },
     ],
     [

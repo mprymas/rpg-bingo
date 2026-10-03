@@ -465,23 +465,23 @@ Extend dependency-free smoke for claim + conflict and run the repo verification 
 
 #### Automated
 
-- [x] 5.1 `npm run lint` passes
-- [x] 5.2 `npx astro check` passes
+- [x] 5.1 `npm run lint` passes — f15475a
+- [x] 5.2 `npx astro check` passes — f15475a
 
 #### Manual
 
-- [x] 5.3 MG sees reward labels on free cells; after a player claims, the cell becomes that player’s color within ~10s
-- [x] 5.4 Roster under the board lists joiners with matching colors so MG can map color → nick → reward on that cell
+- [x] 5.3 MG sees reward labels on free cells; after a player claims, the cell becomes that player’s color within ~10s — f15475a
+- [x] 5.4 Roster under the board lists joiners with matching colors so MG can map color → nick → reward on that cell — f15475a
 
 ### Phase 6: Smoke + verification
 
 #### Automated
 
-- [ ] 6.1 `npm run lint` passes
-- [ ] 6.2 `npx astro check` passes
-- [ ] 6.3 `npm run build` passes
-- [ ] 6.4 `npm run smoke` passes including new claim/conflict steps
+- [x] 6.1 `npm run lint` passes
+- [x] 6.2 `npx astro check` passes
+- [x] 6.3 `npm run build` passes
+- [x] 6.4 `npm run smoke` passes including new claim/conflict steps
 
 #### Manual
 
-- [ ] 6.5 One end-to-end table rehearsal: GM creates board, two phones join, one claims a rewarded cell and sees reveal, the other sees color within ~10s, GM maps color via roster to the reward label on that cell
+- [x] 6.5 One end-to-end table rehearsal: GM creates board, two phones join, one claims a rewarded cell and sees reveal, the other sees color within ~10s, GM maps color via roster to the reward label on that cell
