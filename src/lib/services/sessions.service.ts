@@ -2,7 +2,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "@/db/database.types";
 import { generateBoard } from "@/lib/services/board-generator";
 import { generateSessionCode } from "@/lib/services/session-code";
-import type { CreateSessionCommand, CreateSessionResponse, Session, SessionWithCells } from "@/types";
+import type { CreateSessionCommand, CreateSessionResponse, PlayerBoard, Session, SessionWithCells } from "@/types";
 
 type AppSupabaseClient = SupabaseClient<Database>;
 
@@ -136,5 +136,27 @@ export async function getSessionWithCells(
     status: data.status,
     created_at: data.created_at,
     cells,
+  };
+}
+
+export async function getActiveBoardByCode(supabase: AppSupabaseClient, code: string): Promise<PlayerBoard | null> {
+  const { data, error } = await supabase.rpc("get_active_board_by_code", { p_code: code });
+
+  if (error) throw error;
+  if (data.length === 0) return null;
+
+  const head = data[0];
+
+  return {
+    code: head.code,
+    size: head.size,
+    cells: data.map((row) => ({
+      position: row.position,
+      phrase: row.phrase,
+      reward:
+        row.reward_slug === null || row.reward_label === null
+          ? null
+          : { slug: row.reward_slug, label: row.reward_label },
+    })),
   };
 }

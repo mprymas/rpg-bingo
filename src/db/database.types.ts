@@ -127,7 +127,19 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      get_active_board_by_code: {
+        Args: {
+          p_code: string
+        }
+        Returns: {
+          code: string
+          size: number
+          position: number
+          phrase: string
+          reward_slug: string | null
+          reward_label: string | null
+        }[]
+      }
     }
     Enums: {
       [_ in never]: never

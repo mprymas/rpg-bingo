@@ -47,3 +47,13 @@ export type SessionWithCells = Session & {
     reward: Pick<Reward, "slug" | "label"> | null;
   })[];
 };
+
+export interface PlayerBoard {
+  code: string;
+  size: number;
+  cells: {
+    position: number;
+    phrase: string;
+    reward: Pick<Reward, "slug" | "label"> | null;
+  }[];
+}
