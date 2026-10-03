@@ -1,7 +1,7 @@
 ---
 change_id: player-claim-field-reward
 title: Player claim field reward
-status: implementing
+status: implemented
 created: 2026-10-03
 updated: 2026-10-03
 archived_at: null

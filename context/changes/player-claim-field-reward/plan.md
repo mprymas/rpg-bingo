@@ -477,11 +477,11 @@ Extend dependency-free smoke for claim + conflict and run the repo verification 
 
 #### Automated
 
-- [x] 6.1 `npm run lint` passes
-- [x] 6.2 `npx astro check` passes
-- [x] 6.3 `npm run build` passes
-- [x] 6.4 `npm run smoke` passes including new claim/conflict steps
+- [x] 6.1 `npm run lint` passes — bb2d58f
+- [x] 6.2 `npx astro check` passes — bb2d58f
+- [x] 6.3 `npm run build` passes — bb2d58f
+- [x] 6.4 `npm run smoke` passes including new claim/conflict steps — bb2d58f
 
 #### Manual
 
-- [x] 6.5 One end-to-end table rehearsal: GM creates board, two phones join, one claims a rewarded cell and sees reveal, the other sees color within ~10s, GM maps color via roster to the reward label on that cell
+- [x] 6.5 One end-to-end table rehearsal: GM creates board, two phones join, one claims a rewarded cell and sees reveal, the other sees color within ~10s, GM maps color via roster to the reward label on that cell — bb2d58f
