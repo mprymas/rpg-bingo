@@ -158,9 +158,9 @@ Expose undo to the authenticated GM client with zod validation, origin check, an
 
 #### Manual Verification:
 
-- Authenticated GM POST undoes a claimed cell; unauthenticated 401; wrong GM / bad id 404; cross-origin blocked
+- (Deferred to Phase 3 — auth/origin/error cases verified with the GM undo UX path.)
 
-**Implementation Note**: After completing this phase and all automated verification passes, pause here for manual confirmation from the human that the manual testing was successful before proceeding to the next phase.
+**Implementation Note**: No Phase 2 manual gate. After automated verification passes, proceed to the phase-end commit ritual.
 
 ---
 
@@ -216,6 +216,7 @@ Claimed cells become the undo control surface with on-tile Check/X confirm and w
 - Closed session: no confirm chrome
 - Double Check / already free: success, no error banner
 - SQL/RPC (from Phase 1): as GM JWT, undo a claimed cell clears claim columns and leaves `reward_id`; second undo on same cell succeeds; non-owner / closed session fails
+- API (from Phase 2): authenticated GM POST undoes a claimed cell; unauthenticated 401; wrong GM / bad id 404; cross-origin blocked
 
 **Implementation Note**: After completing this phase and all automated verification passes, pause here for manual confirmation from the human that the manual testing was successful before proceeding to the next phase.
 
@@ -298,20 +299,16 @@ No new poll interval; undo is a single POST. Confirm/pending gating avoids poll 
 
 #### Automated
 
-- [x] 1.1 Migration applies on local Supabase
-- [x] 1.2 database.types.ts includes undo_board_cell
-- [x] 1.3 Lint/typecheck clean for generated types path
+- [x] 1.1 Migration applies on local Supabase — 37176f7
+- [x] 1.2 database.types.ts includes undo_board_cell — 37176f7
+- [x] 1.3 Lint/typecheck clean for generated types path — 37176f7
 
 ### Phase 2: Service + GM API
 
 #### Automated
 
-- [ ] 2.1 npm run lint passes
-- [ ] 2.2 astro check passes
-
-#### Manual
-
-- [ ] 2.3 Authenticated GM POST undoes; 401/404/403 cases verified
+- [x] 2.1 npm run lint passes
+- [x] 2.2 astro check passes
 
 ### Phase 3: GmBoard undo UX
 
@@ -326,6 +323,7 @@ No new poll interval; undo is a single POST. Confirm/pending gating avoids poll 
 - [ ] 3.4 Closed: no confirm chrome
 - [ ] 3.5 Already-free / double Check: quiet success
 - [ ] 3.6 SQL: GM undo clears claim keeps reward_id; idempotent; non-owner/closed fail
+- [ ] 3.7 API: Authenticated GM POST undoes; 401/404/403 cases verified
 
 ### Phase 4: Kitchen-sink + verification
 

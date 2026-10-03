@@ -338,3 +338,67 @@ export async function claimBoardCell(
 
   return { status: "claimed", cell };
 }
+
+export type UndoBoardCellErrorCode = "SESSION_NOT_FOUND" | "INVALID_POSITION" | "CELL_NOT_FOUND";
+
+export class UndoBoardCellError extends Error {
+  readonly code: UndoBoardCellErrorCode;
+
+  constructor(code: UndoBoardCellErrorCode) {
+    super(code);
+    this.name = "UndoBoardCellError";
+    this.code = code;
+  }
+}
+
+export interface UndoBoardCellResult {
+  cell: SessionWithCells["cells"][number];
+}
+
+function undoErrorFromMessage(message: string): UndoBoardCellError | null {
+  if (message.includes("session_not_found")) return new UndoBoardCellError("SESSION_NOT_FOUND");
+  if (message.includes("invalid_position")) return new UndoBoardCellError("INVALID_POSITION");
+  if (message.includes("cell_not_found")) return new UndoBoardCellError("CELL_NOT_FOUND");
+  return null;
+}
+
+export async function undoBoardCell(
+  supabase: AppSupabaseClient,
+  input: { sessionId: string; position: number },
+): Promise<UndoBoardCellResult> {
+  const { error } = await supabase.rpc("undo_board_cell", {
+    p_session_id: input.sessionId,
+    p_position: input.position,
+  });
+
+  if (error) {
+    const mapped = undoErrorFromMessage(error.message);
+    if (mapped) throw mapped;
+    throw error;
+  }
+
+  // RPC omits board_cells identity fields; re-select under GM RLS for SessionWithCells cell DTO.
+  const { data: cellRow, error: cellError } = await supabase
+    .from("board_cells")
+    .select(
+      `
+      *,
+      reward:rewards ( slug, label )
+    `,
+    )
+    .eq("session_id", input.sessionId)
+    .eq("position", input.position)
+    .maybeSingle();
+
+  if (cellError) throw cellError;
+  if (!cellRow) {
+    throw new UndoBoardCellError("CELL_NOT_FOUND");
+  }
+
+  return {
+    cell: {
+      ...cellRow,
+      claimedByColor: null,
+    },
+  };
+}

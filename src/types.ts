@@ -91,3 +91,7 @@ export interface ClaimConflictResponse {
   occupant: ClaimOccupant;
   cell: PlayerBoardCell;
 }
+
+export interface UndoClaimSuccessResponse {
+  cell: SessionWithCells["cells"][number];
+}
