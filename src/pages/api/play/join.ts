@@ -49,12 +49,15 @@ export const POST: APIRoute = async (context) => {
     return context.redirect(`/play/${code}?join=1&error=nick`);
   }
 
-  const written = writePlayerIdentity(context.cookies.get(PLAYER_COOKIE_NAME)?.value, code, nickParsed.data);
+  const written = writePlayerIdentity(context.cookies.get(PLAYER_COOKIE_NAME)?.value, code, nickParsed.data, {
+    secure: import.meta.env.PROD,
+  });
   context.cookies.set(PLAYER_COOKIE_NAME, written.value, {
     httpOnly: written.httpOnly,
     sameSite: written.sameSite,
     path: written.path,
     maxAge: written.maxAge,
+    secure: written.secure,
   });
 
   return context.redirect(`/play/${code}`);

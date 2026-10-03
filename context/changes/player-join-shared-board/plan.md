@@ -62,6 +62,10 @@ The player screen and the rebuilt home page use the existing semantic tokens, in
 - **When the board HTML exists.** `?join=1` always shows the nick form for an active code, even if the cookie already has a nick. A request without that flag shows the board only when the cookie has a valid nick and color for that code. The nick-form response must not include cell phrases. A missing, malformed, or closed code is 404 with "Nie znaleziono sesji" and never shows the nick form, including when `?join=1` or `error=nick` is present.
 - **Hosted database.** Add a migration file and apply it only to the local stack. Do not `supabase db push` or `supabase db reset` against the linked project. Regenerate types with `--local`.
 
+### Implementation addenda (post-impl review)
+
+- **Player nick color:** The player header nick uses `text-player-N` typography coloring only (no `bg-player-N` chip). Kitchen-sink matches. Token foreground variables remain available if a chip is wanted later.
+
 ---
 
 ## Phase 1: Code-keyed board read

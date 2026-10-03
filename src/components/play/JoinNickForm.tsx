@@ -29,7 +29,14 @@ export default function JoinNickForm({ code, prefill, nickError }: Props) {
         <Label htmlFor="nick" className="mb-1">
           Nick
         </Label>
-        <Input id="nick" name="nick" type="text" defaultValue={prefill} aria-invalid={nickError || undefined} />
+        <Input
+          id="nick"
+          name="nick"
+          type="text"
+          maxLength={24}
+          defaultValue={prefill}
+          aria-invalid={nickError || undefined}
+        />
         {nickError && <p className="text-destructive mt-1 text-sm">Nick musi mieć od 1 do 24 znaków.</p>}
       </div>
       <SubmitButton pending={submitting || undefined} pendingText="Wchodzenie...">

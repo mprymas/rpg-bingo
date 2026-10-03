@@ -1,7 +1,7 @@
 ---
 change_id: player-join-shared-board
 title: Player join shared board
-status: implemented
+status: impl_reviewed
 created: 2026-10-03
 updated: 2026-10-03
 archived_at: null

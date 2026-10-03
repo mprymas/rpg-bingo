@@ -1,3 +1,5 @@
+import { SESSION_CODE_PATTERN } from "@/lib/services/session-code";
+
 export const PLAYER_COOKIE_NAME = "rpg_player";
 export const PLAYER_COOKIE_MAX_AGE = 34560000;
 
@@ -16,6 +18,7 @@ export interface PlayerCookieWrite {
   sameSite: "lax";
   path: "/";
   maxAge: number;
+  secure: boolean;
 }
 
 interface PlayerCookieState {
@@ -70,6 +73,7 @@ function parsePlayerCookie(cookie: string | null | undefined): PlayerCookieState
 
   if (isRecord(parsed.byCode)) {
     for (const [code, entry] of Object.entries(parsed.byCode)) {
+      if (!SESSION_CODE_PATTERN.test(code)) continue;
       if (!isRecord(entry) || typeof entry.nick !== "string") continue;
       const nick = canonicalPlayerNick(entry.nick);
       if (!nick || !isPlayerColor(entry.color)) continue;
@@ -121,7 +125,12 @@ export function readLastNick(cookie: string | null | undefined): string | null {
   return parsePlayerCookie(cookie).lastNick;
 }
 
-export function writePlayerIdentity(cookie: string | null | undefined, code: string, nick: string): PlayerCookieWrite {
+export function writePlayerIdentity(
+  cookie: string | null | undefined,
+  code: string,
+  nick: string,
+  opts?: { secure?: boolean },
+): PlayerCookieWrite {
   const storedNick = canonicalPlayerNick(nick);
   if (!storedNick) {
     throw new Error("Invalid player nick");
@@ -149,5 +158,6 @@ export function writePlayerIdentity(cookie: string | null | undefined, code: str
     sameSite: "lax",
     path: "/",
     maxAge: PLAYER_COOKIE_MAX_AGE,
+    secure: opts?.secure ?? false,
   };
 }
