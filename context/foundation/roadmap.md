@@ -48,7 +48,7 @@ Mistrz Gry chce przy stole meta-wyzwania i lekką rywalizację zamiast uznaniowy
 | ---- | ---------------------------------------------------- | --------------------------------------------------------------------------------------- | ------------- | ----------------------------------------- | -------- |
 | F-01 | seed-phrase-reward-catalog | (foundation) seedowane hasła predefiniowane i katalog nagród gotowe do losowania        | —             | FR-005, FR-016 (MVP seed), Business Logic | done |
 | S-01 | gm-create-session-board                              | zalogowany MG tworzy sesję, generuje planszę i dostaje krótki kod                       | F-01          | US-01, FR-001, FR-004, FR-005, FR-006     | done |
-| S-02 | player-join-shared-board                             | gracz dołącza kodem i nickiem (bez konta) i widzi wspólną planszę z nagrodami na polach | S-01          | US-01, FR-002, FR-008, FR-010             | in-progress |
+| S-02 | player-join-shared-board                             | gracz dołącza kodem i nickiem (bez konta) i widzi wspólną planszę z nagrodami na polach | S-01          | US-01, FR-002, FR-008, FR-010             | done |
 | S-03 | player-claim-field-reward                            | gracz oznacza wolne pole, widzi nagrodę; inni widzą zajęte pole po odświeżeniu          | S-02          | US-01, FR-009, FR-011                     | proposed |
 | S-04 | gm-undo-field-claim                                  | MG cofa błędne oznaczenie; pole wraca i nagroda jest unieważniona                       | S-03          | FR-012                                    | proposed |
 | S-05 | gm-regenerate-board                                  | MG generuje nową planszę (nowy kod); gracze dołączają od nowa                           | S-02          | FR-007                                    | proposed |
@@ -131,7 +131,7 @@ Foundations below assume these are present and do NOT re-scaffold them.
 - **Blockers:** —
 - **Unknowns:** —
 - **Risk:** Odblokowuje ścieżkę bezkontową i widok nagród od początku; Prerequisite dla claim i regeneracji.
-- **Status:** in-progress
+- **Status:** done
 
 
 
@@ -221,3 +221,4 @@ Foundations below assume these are present and do NOT re-scaffold them.
 
 - **F-01: (foundation) seedowane hasła predefiniowane i katalog nagród są dostępne do losowania planszy.** — Archived 2026-09-27 → `context/archive/2026-09-27-seed-phrase-reward-catalog/`. Lesson: —.
 - **S-01: zalogowany MG tworzy sesję bingo (rozmiar, własne hasła, nagrody i ich liczba), generuje planszę i otrzymuje krótki kod sesji.** — Archived 2026-09-27 → `context/archive/2026-09-27-gm-create-session-board/`. Lesson: —.
+- **S-02: gracz dołącza kodem i nickiem (bez konta) i widzi wspólną planszę z nagrodami na polach** — Archived 2026-10-03 → `context/archive/2026-10-03-player-join-shared-board/`. Lesson: —.
