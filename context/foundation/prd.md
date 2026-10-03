@@ -85,8 +85,8 @@ Trzecia rola: **administrator systemu**, który utrzymuje bazę predefiniowanych
   > Socrates: Brak kontrargumentu; stoi jak jest.
 - FR-009: Gracz może oznaczyć wolne pole jako zdobyte przez siebie. Priority: must-have
   > Socrates: Kontrargument rozważony: "gracz oznaczy pole bez słownej zgody MG — aplikacja nie ma jak tego wykryć." Rozstrzygnięcie: zostaje; uczciwość należy do stołu, MG ma FR-012 do korekty.
-- FR-010: Gracz widzi, które pola oferują nagrodę i jaką. Priority: must-have
-  > Socrates: Brak kontrargumentu; stoi jak jest. Doprecyzowane w fazie 5: rodzaj nagrody jest widoczny od początku, nie dopiero po zajęciu.
+- FR-010: Gracz widzi, które pola oferują nagrodę; rodzaj nagrody poznaje dopiero po zajęciu pola. Priority: must-have
+  > Socrates: Kontrargument rozważony: „ukrywanie rodzaju do zajęcia osłabia strategię; MG też powinien zgadywać.” Rozstrzygnięcie: gracze — mystery-until-claim (obecność nagrody bez etykiety do zajęcia); MG nadal widzi typy nagród od początku jako ścieżkę operacyjną przy stole.
 - FR-011: Gracz widzi, że zdobył nagrodę natychmiast po oznaczeniu pola. Priority: must-have
   > Socrates: Brak kontrargumentu; stoi jak jest.
 - FR-012: MG może cofnąć błędne oznaczenie pola; cofnięcie zwalnia pole i unieważnia powiązaną nagrodę. Priority: must-have
@@ -118,7 +118,7 @@ Trzecia rola: **administrator systemu**, który utrzymuje bazę predefiniowanych
 
 Z puli haseł (predefiniowanych i własnych MG) oraz puli nagród (wprowadzonych przez administratora, wybranych przez MG wraz z liczbą) aplikacja losowo składa planszę N×N i decyduje, które pola niosą którą nagrodę.
 
-Wejścia, które podaje MG: rozmiar planszy (domyślnie 5x5), własne hasła dopisane pod tę grę, wybór dostępnych nagród z listy i ich liczba. Wyjście: plansza N×N z unikalnymi hasłami i losowo rozmieszczonymi nagrodami. Gracze od początku widzą, które pola mają nagrodę i jaką (FR-010); po zajęciu pola gracz natychmiast widzi, że ją zdobył (FR-011).
+Wejścia, które podaje MG: rozmiar planszy (domyślnie 5x5), własne hasła dopisane pod tę grę, wybór dostępnych nagród z listy i ich liczba. Wyjście: plansza N×N z unikalnymi hasłami i losowo rozmieszczonymi nagrodami. Gracze od początku widzą, które pola mają nagrodę, ale rodzaj poznają dopiero po zajęciu (FR-010); MG widzi typy nagród od początku. Po zajęciu pola gracz natychmiast widzi, że ją zdobył (FR-011).
 
 Reguła towarzysząca — zajmowanie pól: pole należy do pierwszego gracza, który je oznaczył, i tylko jemu przypisana zostaje nagroda z tego pola; kolejne kliknięcia innych graczy nie zmieniają stanu. Cofnięcie oznaczenia przez MG zwalnia pole i unieważnia powiązaną nagrodę (FR-012). W MVP nagrody pochodzą z ustalonej listy wprowadzonej przez administratora (np. inspiracja, przedmiot, zadanie poboczne); własne nagrody MG to FR-015 (nice-to-have).
 

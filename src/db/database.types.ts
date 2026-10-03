@@ -16,6 +16,8 @@ export type Database = {
     Tables: {
       board_cells: {
         Row: {
+          claimed_at: string | null
+          claimed_by_player_id: string | null
           id: string
           phrase: string
           position: number
@@ -23,6 +25,8 @@ export type Database = {
           session_id: string
         }
         Insert: {
+          claimed_at?: string | null
+          claimed_by_player_id?: string | null
           id?: string
           phrase: string
           position: number
@@ -30,6 +34,8 @@ export type Database = {
           session_id: string
         }
         Update: {
+          claimed_at?: string | null
+          claimed_by_player_id?: string | null
           id?: string
           phrase?: string
           position?: number
@@ -37,6 +43,13 @@ export type Database = {
           session_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "board_cells_claimed_by_player_id_fkey"
+            columns: ["claimed_by_player_id"]
+            isOneToOne: false
+            referencedRelation: "session_players"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "board_cells_reward_id_fkey"
             columns: ["reward_id"]
@@ -94,6 +107,38 @@ export type Database = {
           slug?: string
         }
         Relationships: []
+      }
+      session_players: {
+        Row: {
+          color: number
+          created_at: string
+          id: string
+          nick: string
+          session_id: string
+        }
+        Insert: {
+          color: number
+          created_at?: string
+          id?: string
+          nick: string
+          session_id: string
+        }
+        Update: {
+          color?: number
+          created_at?: string
+          id?: string
+          nick?: string
+          session_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "session_players_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "sessions"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       sessions: {
         Row: {

@@ -4,6 +4,7 @@ export type Phrase = Database["public"]["Tables"]["phrases"]["Row"];
 export type Reward = Database["public"]["Tables"]["rewards"]["Row"];
 export type Session = Database["public"]["Tables"]["sessions"]["Row"];
 export type BoardCell = Database["public"]["Tables"]["board_cells"]["Row"];
+export type SessionPlayer = Database["public"]["Tables"]["session_players"]["Row"];
 
 export type SessionStatus = "active" | "closed";
 export type BoardSize = 3 | 4 | 5;
@@ -42,18 +43,32 @@ export interface GeneratedCell {
   rewardId: string | null;
 }
 
+/** GM roster entry: nick shown in the player's assigned color. */
+export type SessionPlayerRosterEntry = Pick<SessionPlayer, "id" | "nick" | "color" | "created_at">;
+
 export type SessionWithCells = Session & {
   cells: (BoardCell & {
     reward: Pick<Reward, "slug" | "label"> | null;
+    /** Claimer color 1–16 when occupied; null when free. */
+    claimedByColor: number | null;
   })[];
+  players: SessionPlayerRosterEntry[];
 };
+
+/**
+ * Player-facing board cell. Unclaimed rewarded cells expose `hasReward` only;
+ * `reward` is set after the cell is claimed (public reveal).
+ */
+export interface PlayerBoardCell {
+  position: number;
+  phrase: string;
+  hasReward: boolean;
+  reward: Pick<Reward, "slug" | "label"> | null;
+  claimedByColor: number | null;
+}
 
 export interface PlayerBoard {
   code: string;
   size: number;
-  cells: {
-    position: number;
-    phrase: string;
-    reward: Pick<Reward, "slug" | "label"> | null;
-  }[];
+  cells: PlayerBoardCell[];
 }

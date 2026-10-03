@@ -7,7 +7,7 @@ import { PLAYER_COOKIE_NAME, readLastNick, readPlayerIdentity } from "@/lib/play
 import { SESSION_CODE_PATTERN } from "@/lib/services/session-code";
 import { getActiveBoardByCode } from "@/lib/services/sessions.service";
 import { createClient } from "@/lib/supabase";
-import type { PlayerBoard, SessionWithCells } from "@/types";
+import type { PlayerBoard } from "@/types";
 
 const PLAYER_SWATCH: Record<number, string> = {
   1: "text-player-1",
@@ -89,7 +89,7 @@ if (board && !showForm && !boardComplete) {
   Astro.response.status = 422;
 }
 
-const gridCells = (board?.cells ?? []) as SessionWithCells["cells"];
+const gridCells = board?.cells ?? [];
 ---
 
 {notFound ? (

@@ -32,6 +32,9 @@ function makeCells(sessionId: string, count: number): SessionWithCells["cells"] 
       position: i,
       reward_id: reward ? `demo-${reward.slug}` : null,
       session_id: sessionId,
+      claimed_by_player_id: null,
+      claimed_at: null,
+      claimedByColor: null,
       reward,
     };
   });
@@ -70,6 +73,7 @@ const fixtureComplete: SessionWithCells = {
   gm_id: "demo-gm",
   created_at: "2026-09-15T14:30:00.000Z",
   cells: makeCells("demo-complete", 9),
+  players: [],
 };
 
 const fixtureIncomplete: SessionWithCells = {
@@ -80,6 +84,7 @@ const fixtureIncomplete: SessionWithCells = {
   gm_id: "demo-gm",
   created_at: "2026-09-15T14:30:00.000Z",
   cells: makeCells("demo-incomplete", 4),
+  players: [],
 };
 
 const fixtureClosed: SessionWithCells = {
@@ -90,6 +95,7 @@ const fixtureClosed: SessionWithCells = {
   gm_id: "demo-gm",
   created_at: "2026-08-01T10:00:00.000Z",
   cells: makeCells("demo-closed", 9),
+  players: [],
 };
 
 const loadErrorCopy = "Nie udało się wczytać sesji";

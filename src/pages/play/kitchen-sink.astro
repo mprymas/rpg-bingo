@@ -49,6 +49,9 @@ function makeCells(sessionId: string, count: number): SessionWithCells["cells"] 
       position: i,
       reward_id: reward ? `demo-${reward.slug}` : null,
       session_id: sessionId,
+      claimed_by_player_id: null,
+      claimed_at: null,
+      claimedByColor: null,
       reward,
     };
   });
@@ -76,6 +79,7 @@ const fixtureBoard: SessionWithCells = {
   gm_id: "demo-gm",
   created_at: "2026-09-15T14:30:00.000Z",
   cells: makeCells("demo-play-board", 25),
+  players: [],
 };
 
 const legend = buildLegend(fixtureBoard.cells);

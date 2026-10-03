@@ -126,7 +126,12 @@ export async function getSessionWithCells(
   if (error) throw error;
   if (!data) return null;
 
-  const cells = [...data.cells].sort((a, b) => a.position - b.position);
+  const cells = [...data.cells]
+    .sort((a, b) => a.position - b.position)
+    .map((cell) => ({
+      ...cell,
+      claimedByColor: null as number | null,
+    }));
 
   return {
     id: data.id,
@@ -136,6 +141,7 @@ export async function getSessionWithCells(
     status: data.status,
     created_at: data.created_at,
     cells,
+    players: [],
   };
 }
 
@@ -150,13 +156,19 @@ export async function getActiveBoardByCode(supabase: AppSupabaseClient, code: st
   return {
     code: head.code,
     size: head.size,
-    cells: data.map((row) => ({
-      position: row.position,
-      phrase: row.phrase,
-      reward:
+    cells: data.map((row) => {
+      const reward =
         row.reward_slug === null || row.reward_label === null
           ? null
-          : { slug: row.reward_slug, label: row.reward_label },
-    })),
+          : { slug: row.reward_slug, label: row.reward_label };
+      return {
+        position: row.position,
+        phrase: row.phrase,
+        hasReward: reward !== null,
+        // Until Phase 3 replaces the board RPC, labels still come through here.
+        reward,
+        claimedByColor: null,
+      };
+    }),
   };
 }
