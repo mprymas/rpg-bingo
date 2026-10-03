@@ -1,6 +1,6 @@
 ---
 import Layout from "@/layouts/Layout.astro";
-import BoardGrid from "@/components/sessions/BoardGrid.astro";
+import GmBoard from "@/components/sessions/GmBoard";
 import { Badge } from "@/components/ui/badge";
 import { createClient } from "@/lib/supabase";
 import { getSessionWithCells } from "@/lib/services/sessions.service";
@@ -47,19 +47,6 @@ const createdLabel = session
     })
   : "";
 
-const rewardCounts = new Map<string, { label: string; count: number }>();
-if (session) {
-  for (const cell of session.cells) {
-    if (!cell.reward) continue;
-    const existing = rewardCounts.get(cell.reward.slug);
-    if (existing) {
-      existing.count += 1;
-    } else {
-      rewardCounts.set(cell.reward.slug, { label: cell.reward.label, count: 1 });
-    }
-  }
-}
-const legend = [...rewardCounts.values()];
 const expectedCells = session ? session.size * session.size : 0;
 const boardComplete = session ? session.cells.length === expectedCells : false;
 if (session && !boardComplete) {
@@ -123,24 +110,13 @@ if (session && !boardComplete) {
           </div>
 
           {boardComplete ? (
-            <>
-              <BoardGrid size={session.size} cells={session.cells} />
-
-              {legend.length > 0 && (
-                <div>
-                  <h2 class="mb-3 text-sm font-medium text-muted-foreground">Legenda nagród</h2>
-                  <ul class="flex flex-wrap gap-2">
-                    {legend.map((item) => (
-                      <li>
-                        <Badge variant="outline">
-                          {item.label}: {item.count}
-                        </Badge>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              )}
-            </>
+            <GmBoard
+              sessionId={session.id}
+              size={session.size}
+              initialCells={session.cells}
+              initialPlayers={session.players}
+              client:load
+            />
           ) : (
             <p class="rounded-lg border border-dashed border-border px-4 py-6 text-center text-destructive">
               Nie udało się wczytać planszy (oczekiwano {expectedCells} pól, jest {session.cells.length}). Utwórz sesję

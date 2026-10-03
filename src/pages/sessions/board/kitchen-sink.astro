@@ -1,8 +1,9 @@
 ---
 import Layout from "@/layouts/Layout.astro";
 import BoardGrid from "@/components/sessions/BoardGrid.astro";
+import GmBoard from "@/components/sessions/GmBoard";
 import { Badge } from "@/components/ui/badge";
-import type { SessionWithCells } from "@/types";
+import type { SessionPlayerRosterEntry, SessionWithCells } from "@/types";
 
 if (import.meta.env.PROD) {
   return new Response("Not Found", { status: 404 });
@@ -38,6 +39,43 @@ function makeCells(sessionId: string, count: number): SessionWithCells["cells"] 
       reward,
     };
   });
+}
+
+const demoPlayers: SessionPlayerRosterEntry[] = [
+  {
+    id: "demo-player-aria",
+    nick: "Aria",
+    color: 1,
+    created_at: "2026-09-15T14:31:00.000Z",
+  },
+  {
+    id: "demo-player-borin",
+    nick: "Borin",
+    color: 2,
+    created_at: "2026-09-15T14:32:00.000Z",
+  },
+  {
+    id: "demo-player-cyra",
+    nick: "Cyra",
+    color: 3,
+    created_at: "2026-09-15T14:33:00.000Z",
+  },
+];
+
+function makeClaimedCells(sessionId: string): SessionWithCells["cells"] {
+  const cells = makeCells(sessionId, 9);
+  const claims: { position: number; playerId: string; color: number; at: string }[] = [
+    { position: 0, playerId: "demo-player-aria", color: 1, at: "2026-09-15T14:34:00.000Z" },
+    { position: 4, playerId: "demo-player-borin", color: 2, at: "2026-09-15T14:35:00.000Z" },
+    { position: 7, playerId: "demo-player-cyra", color: 3, at: "2026-09-15T14:36:00.000Z" },
+  ];
+  for (const claim of claims) {
+    const cell = cells[claim.position];
+    cell.claimed_by_player_id = claim.playerId;
+    cell.claimed_at = claim.at;
+    cell.claimedByColor = claim.color;
+  }
+  return cells;
 }
 
 function statusLabel(status: SessionWithCells["status"]) {
@@ -98,9 +136,31 @@ const fixtureClosed: SessionWithCells = {
   players: [],
 };
 
+const fixtureClaimed: SessionWithCells = {
+  id: "demo-claimed",
+  code: "CLM321",
+  size: 3,
+  status: "active",
+  gm_id: "demo-gm",
+  created_at: "2026-09-15T14:30:00.000Z",
+  cells: makeClaimedCells("demo-claimed"),
+  players: demoPlayers,
+};
+
+const fixtureRosterEmpty: SessionWithCells = {
+  id: "demo-roster-empty",
+  code: "EMP000",
+  size: 3,
+  status: "active",
+  gm_id: "demo-gm",
+  created_at: "2026-09-15T14:30:00.000Z",
+  cells: makeCells("demo-roster-empty", 9),
+  players: [],
+};
+
 const loadErrorCopy = "Nie udało się wczytać sesji";
 
-type BoardKind = "complete" | "incomplete" | "closed" | "focus" | "error" | "na";
+type BoardKind = "complete" | "incomplete" | "closed" | "focus" | "error" | "na" | "gm-board";
 
 const sections: {
   id: string;
@@ -115,6 +175,20 @@ const sections: {
     description: "Kompletna plansza 3×3 + legenda nagród (Badge).",
     kind: "complete",
     session: fixtureComplete,
+  },
+  {
+    id: "claimed",
+    title: "claimed + roster",
+    description: "GmBoard: zajęte pola w kolorach graczy (etykieta nagrody widoczna), lista dołączonych pod planszą.",
+    kind: "gm-board",
+    session: fixtureClaimed,
+  },
+  {
+    id: "roster-empty",
+    title: "roster empty",
+    description: "GmBoard bez graczy — copy „Nikt jeszcze nie dołączył”; etykiety nagród na wolnych polach.",
+    kind: "gm-board",
+    session: fixtureRosterEmpty,
   },
   {
     id: "incomplete",
@@ -249,6 +323,32 @@ const sections: {
                       Nie udało się wczytać planszy (oczekiwano {expectedCells} pól, jest {session.cells.length}).
                       Utwórz sesję ponownie.
                     </p>
+                  ) : section.kind === "gm-board" ? (
+                    <>
+                      <GmBoard
+                        sessionId={session.id}
+                        size={session.size}
+                        initialCells={session.cells}
+                        initialPlayers={session.players}
+                        preview
+                        client:load
+                      />
+
+                      {legend.length > 0 && (
+                        <div>
+                          <h2 class="mb-3 text-sm font-medium text-muted-foreground">Legenda nagród</h2>
+                          <ul class="flex flex-wrap gap-2">
+                            {legend.map((item) => (
+                              <li>
+                                <Badge variant="outline">
+                                  {item.label}: {item.count}
+                                </Badge>
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                      )}
+                    </>
                   ) : (
                     <>
                       <BoardGrid size={session.size} cells={session.cells} />

@@ -205,6 +205,17 @@ export type Database = {
           claimed_by_color: number | null
         }[]
       }
+      get_session_players_by_code: {
+        Args: {
+          p_code: string
+        }
+        Returns: {
+          id: string
+          nick: string
+          color: number
+          created_at: string
+        }[]
+      }
       join_session_player: {
         Args: {
           p_code: string

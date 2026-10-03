@@ -17,18 +17,10 @@ const PLAYER_SWATCH: Record<number, string> = {
   6: "text-player-6",
   7: "text-player-7",
   8: "text-player-8",
-  9: "text-player-9",
-  10: "text-player-10",
-  11: "text-player-11",
-  12: "text-player-12",
-  13: "text-player-13",
-  14: "text-player-14",
-  15: "text-player-15",
-  16: "text-player-16",
 };
 
 function swatchFor(color: number): string | null {
-  if (!Number.isInteger(color) || color < 1 || color > 16) return null;
+  if (!Number.isInteger(color) || color < 1 || color > 8) return null;
   return PLAYER_SWATCH[color] ?? null;
 }
 
@@ -134,7 +126,13 @@ if (board && !showForm && !boardComplete) {
               </div>
 
               {boardComplete ? (
-                <PlayerBoard code={code} size={board.size} initialCells={board.cells} client:load />
+                <PlayerBoard
+                  code={code}
+                  size={board.size}
+                  initialCells={board.cells}
+                  initialPlayers={board.players}
+                  client:load
+                />
               ) : (
                 <p class="rounded-lg border border-dashed border-border px-4 py-6 text-center text-destructive">
                   Nie udało się wczytać planszy.

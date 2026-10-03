@@ -195,9 +195,13 @@ export async function getSessionWithCells(
 }
 
 export async function getActiveBoardByCode(supabase: AppSupabaseClient, code: string): Promise<PlayerBoard | null> {
-  const { data, error } = await supabase.rpc("get_active_board_by_code", { p_code: code });
+  const [{ data, error }, { data: playersData, error: playersError }] = await Promise.all([
+    supabase.rpc("get_active_board_by_code", { p_code: code }),
+    supabase.rpc("get_session_players_by_code", { p_code: code }),
+  ]);
 
   if (error) throw error;
+  if (playersError) throw playersError;
   if (data.length === 0) return null;
 
   const head = data[0];
@@ -206,6 +210,12 @@ export async function getActiveBoardByCode(supabase: AppSupabaseClient, code: st
     code: head.code,
     size: head.size,
     cells: data.map((row) => mapPlayerBoardCell(row)),
+    players: playersData.map((player) => ({
+      id: player.id,
+      nick: player.nick,
+      color: player.color,
+      created_at: player.created_at,
+    })),
   };
 }
 

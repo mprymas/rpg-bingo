@@ -49,7 +49,7 @@ export type SessionPlayerRosterEntry = Pick<SessionPlayer, "id" | "nick" | "colo
 export type SessionWithCells = Session & {
   cells: (BoardCell & {
     reward: Pick<Reward, "slug" | "label"> | null;
-    /** Claimer color 1–16 when occupied; null when free. */
+    /** Claimer color 1–8 when occupied; null when free. */
     claimedByColor: number | null;
   })[];
   players: SessionPlayerRosterEntry[];
@@ -71,6 +71,7 @@ export interface PlayerBoard {
   code: string;
   size: number;
   cells: PlayerBoardCell[];
+  players: SessionPlayerRosterEntry[];
 }
 
 export interface ClaimOccupant {

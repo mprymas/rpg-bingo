@@ -34,7 +34,7 @@ function isRecord(value: unknown): value is Record<string, unknown> {
 }
 
 function isPlayerColor(value: unknown): value is number {
-  return typeof value === "number" && Number.isInteger(value) && value >= 1 && value <= 16;
+  return typeof value === "number" && Number.isInteger(value) && value >= 1 && value <= 8;
 }
 
 function isPlayerId(value: unknown): value is string {

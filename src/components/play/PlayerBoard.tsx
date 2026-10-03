@@ -5,6 +5,7 @@ import type {
   ClaimSuccessResponse,
   PlayerBoard as PlayerBoardData,
   PlayerBoardCell,
+  SessionPlayerRosterEntry,
 } from "@/types";
 
 const POLL_MS = 5000;
@@ -26,14 +27,6 @@ const PLAYER_BG: Record<number, string> = {
   6: "bg-player-6",
   7: "bg-player-7",
   8: "bg-player-8",
-  9: "bg-player-9",
-  10: "bg-player-10",
-  11: "bg-player-11",
-  12: "bg-player-12",
-  13: "bg-player-13",
-  14: "bg-player-14",
-  15: "bg-player-15",
-  16: "bg-player-16",
 };
 
 const PLAYER_BORDER: Record<number, string> = {
@@ -45,14 +38,6 @@ const PLAYER_BORDER: Record<number, string> = {
   6: "border-player-6",
   7: "border-player-7",
   8: "border-player-8",
-  9: "border-player-9",
-  10: "border-player-10",
-  11: "border-player-11",
-  12: "border-player-12",
-  13: "border-player-13",
-  14: "border-player-14",
-  15: "border-player-15",
-  16: "border-player-16",
 };
 
 const PLAYER_FG: Record<number, string> = {
@@ -64,20 +49,24 @@ const PLAYER_FG: Record<number, string> = {
   6: "text-player-6-foreground",
   7: "text-player-7-foreground",
   8: "text-player-8-foreground",
-  9: "text-player-9-foreground",
-  10: "text-player-10-foreground",
-  11: "text-player-11-foreground",
-  12: "text-player-12-foreground",
-  13: "text-player-13-foreground",
-  14: "text-player-14-foreground",
-  15: "text-player-15-foreground",
-  16: "text-player-16-foreground",
+};
+
+const PLAYER_NICK: Record<number, string> = {
+  1: "text-player-1",
+  2: "text-player-2",
+  3: "text-player-3",
+  4: "text-player-4",
+  5: "text-player-5",
+  6: "text-player-6",
+  7: "text-player-7",
+  8: "text-player-8",
 };
 
 interface Props {
   code: string;
   size: number;
   initialCells: PlayerBoardCell[];
+  initialPlayers?: SessionPlayerRosterEntry[];
   /** Kitchen-sink fixtures: no claim POSTs and no polling. */
   preview?: boolean;
   /** Seed conflict copy for preview sections. */
@@ -87,7 +76,7 @@ interface Props {
 function isPlayerBoard(value: unknown): value is PlayerBoardData {
   if (!value || typeof value !== "object") return false;
   const record = value as Record<string, unknown>;
-  return typeof record.size === "number" && Array.isArray(record.cells);
+  return typeof record.size === "number" && Array.isArray(record.cells) && Array.isArray(record.players);
 }
 
 function isClaimSuccess(value: unknown): value is ClaimSuccessResponse {
@@ -106,10 +95,12 @@ export default function PlayerBoard({
   code,
   size,
   initialCells,
+  initialPlayers = [],
   preview = false,
   initialConflictMessage = null,
 }: Props) {
   const [cells, setCells] = useState(initialCells);
+  const [players, setPlayers] = useState(initialPlayers);
   const [conflictMessage, setConflictMessage] = useState<string | null>(initialConflictMessage);
   const [claimingPosition, setClaimingPosition] = useState<number | null>(null);
   const [flippingPosition, setFlippingPosition] = useState<number | null>(null);
@@ -139,6 +130,7 @@ export default function PlayerBoard({
         if (!response.ok || pollCancelledRef.current) return;
         if (isPlayerBoard(data)) {
           setCells(data.cells);
+          setPlayers(data.players);
         }
       } catch {
         // Poll failures are non-blocking; next tick retries.
@@ -248,8 +240,9 @@ export default function PlayerBoard({
             "player-board-cell flex w-full flex-col items-center justify-center rounded-md border p-1.5 sm:p-2",
             "outline-none focus-visible:ring-2 focus-visible:ring-ring",
             free && "border-border bg-card text-foreground",
-            mystery && "border-primary ring-primary ring-2",
-            claimedWithReward && "border-primary ring-primary ring-2",
+            mystery && "player-board-cell-reward-frame border-transparent",
+            claimedWithReward && "player-board-cell-reward-frame border-transparent",
+            claimed && "player-board-cell-gloss",
             claimed && color != null && PLAYER_BG[color],
             claimed && !claimedWithReward && color != null && PLAYER_BORDER[color],
             claimed && color != null && PLAYER_FG[color],
@@ -297,6 +290,21 @@ export default function PlayerBoard({
       {rewardCount > 0 ? (
         <p className="text-muted-foreground text-center text-sm">{rewardCount} pól z nagrodą</p>
       ) : null}
+
+      <div>
+        <h2 className="text-muted-foreground mb-3 text-sm font-medium">Gracze</h2>
+        {players.length === 0 ? (
+          <p className="text-muted-foreground text-sm">Nikt jeszcze nie dołączył</p>
+        ) : (
+          <ul className="flex flex-wrap gap-x-4 gap-y-2">
+            {players.map((player) => (
+              <li key={player.id} className={cn("text-sm font-medium", PLAYER_NICK[player.color] ?? "text-foreground")}>
+                {player.nick}
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
     </div>
   );
 }
