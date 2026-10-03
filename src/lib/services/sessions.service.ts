@@ -172,3 +172,37 @@ export async function getActiveBoardByCode(supabase: AppSupabaseClient, code: st
     }),
   };
 }
+
+export interface JoinedSessionPlayer {
+  playerId: string;
+  color: number;
+  nick: string;
+}
+
+export async function joinSessionPlayer(
+  supabase: AppSupabaseClient,
+  input: { code: string; nick: string; playerId?: string | null },
+): Promise<JoinedSessionPlayer> {
+  const args: Database["public"]["Functions"]["join_session_player"]["Args"] = {
+    p_code: input.code,
+    p_nick: input.nick,
+  };
+  if (input.playerId) {
+    args.p_player_id = input.playerId;
+  }
+
+  const { data, error } = await supabase.rpc("join_session_player", args);
+
+  if (error) throw error;
+  if (data.length === 0) {
+    throw new Error("join_session_player returned no row");
+  }
+
+  const row = data[0];
+
+  return {
+    playerId: row.id,
+    color: row.color,
+    nick: row.nick,
+  };
+}

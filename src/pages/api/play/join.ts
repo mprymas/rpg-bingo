@@ -1,7 +1,8 @@
 import type { APIRoute } from "astro";
-import { PLAYER_COOKIE_NAME, writePlayerIdentity } from "@/lib/player-cookie";
+import { PLAYER_COOKIE_NAME, readPlayerIdentity, writePlayerIdentity } from "@/lib/player-cookie";
+import { isAllowedRequestOrigin } from "@/lib/request-origin";
 import { playJoinCodeSchema, playJoinNickSchema } from "@/lib/schemas/play-join";
-import { getActiveBoardByCode } from "@/lib/services/sessions.service";
+import { getActiveBoardByCode, joinSessionPlayer } from "@/lib/services/sessions.service";
 import { createClient } from "@/lib/supabase";
 
 export const prerender = false;
@@ -13,6 +14,10 @@ function isUrlEncodedForm(request: Request): boolean {
 }
 
 export const POST: APIRoute = async (context) => {
+  if (!isAllowedRequestOrigin(context.request)) {
+    return new Response("Forbidden", { status: 403 });
+  }
+
   if (!isUrlEncodedForm(context.request)) {
     return context.redirect("/play");
   }
@@ -49,9 +54,30 @@ export const POST: APIRoute = async (context) => {
     return context.redirect(`/play/${code}?join=1&error=nick`);
   }
 
-  const written = writePlayerIdentity(context.cookies.get(PLAYER_COOKIE_NAME)?.value, code, nickParsed.data, {
-    secure: import.meta.env.PROD,
-  });
+  const cookieValue = context.cookies.get(PLAYER_COOKIE_NAME)?.value;
+  const existing = readPlayerIdentity(cookieValue, code);
+
+  let joined;
+  try {
+    joined = await joinSessionPlayer(supabase, {
+      code,
+      nick: nickParsed.data,
+      playerId: existing?.playerId ?? null,
+    });
+  } catch {
+    return context.redirect(`/play/${code}?join=1`);
+  }
+
+  const written = writePlayerIdentity(
+    cookieValue,
+    code,
+    {
+      playerId: joined.playerId,
+      nick: joined.nick,
+      color: joined.color,
+    },
+    { secure: import.meta.env.PROD },
+  );
   context.cookies.set(PLAYER_COOKIE_NAME, written.value, {
     httpOnly: written.httpOnly,
     sameSite: written.sameSite,

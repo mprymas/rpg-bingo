@@ -185,6 +185,18 @@ export type Database = {
           reward_label: string | null
         }[]
       }
+      join_session_player: {
+        Args: {
+          p_code: string
+          p_nick: string
+          p_player_id?: string
+        }
+        Returns: {
+          id: string
+          color: number
+          nick: string
+        }[]
+      }
     }
     Enums: {
       [_ in never]: never

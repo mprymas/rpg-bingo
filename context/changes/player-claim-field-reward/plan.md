@@ -412,27 +412,27 @@ Extend dependency-free smoke for claim + conflict and run the repo verification 
 
 #### Automated
 
-- [x] 1.1 Migration applies on local Supabase without error
-- [x] 1.2 `npm run lint` passes after type updates
-- [x] 1.3 `npx astro check` passes
+- [x] 1.1 Migration applies on local Supabase without error — f222ffc
+- [x] 1.2 `npm run lint` passes after type updates — f222ffc
+- [x] 1.3 `npx astro check` passes — f222ffc
 
 #### Manual
 
-- [x] 1.4 FR-010 and Business Logic in `prd.md` read as mystery-until-claim for players; GM type visibility is not forbidden by the PRD text
+- [x] 1.4 FR-010 and Business Logic in `prd.md` read as mystery-until-claim for players; GM type visibility is not forbidden by the PRD text — f222ffc
 
 ### Phase 2: Join creates session_players
 
 #### Automated
 
-- [ ] 2.1 `npm run lint` passes
-- [ ] 2.2 `npx astro check` passes
-- [ ] 2.3 Existing smoke join steps still pass against local preview
+- [x] 2.1 `npm run lint` passes
+- [x] 2.2 `npx astro check` passes
+- [x] 2.3 Existing smoke join steps still pass against local preview
 
 #### Manual
 
-- [ ] 2.4 Two browsers can join the same code with the same nick and receive different colors in join order
-- [ ] 2.5 Re-confirm in the same browser keeps the same color/`playerId`
-- [ ] 2.6 Cross-site fashioned join POST is rejected (or no-ops safely per chosen CSRF failure mode)
+- [x] 2.4 Two browsers can join the same code with the same nick and receive different colors in join order
+- [x] 2.5 Re-confirm in the same browser keeps the same color/`playerId`
+- [x] 2.6 Cross-site fashioned join POST is rejected (or no-ops safely per chosen CSRF failure mode)
 
 ### Phase 3: Claim API + board read contracts
 

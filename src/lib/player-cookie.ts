@@ -6,7 +6,10 @@ export const PLAYER_COOKIE_MAX_AGE = 34560000;
 const PLAYER_COOKIE_MAX_LENGTH = 3500;
 const PLAYER_NICK_MIN_LENGTH = 1;
 const PLAYER_NICK_MAX_LENGTH = 24;
+const PLAYER_ID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+
 export interface PlayerIdentity {
+  playerId: string;
   nick: string;
   color: number;
   seen: number;
@@ -32,6 +35,10 @@ function isRecord(value: unknown): value is Record<string, unknown> {
 
 function isPlayerColor(value: unknown): value is number {
   return typeof value === "number" && Number.isInteger(value) && value >= 1 && value <= 16;
+}
+
+function isPlayerId(value: unknown): value is string {
+  return typeof value === "string" && PLAYER_ID_PATTERN.test(value);
 }
 
 function hasControlChar(value: string): boolean {
@@ -76,8 +83,13 @@ function parsePlayerCookie(cookie: string | null | undefined): PlayerCookieState
       if (!SESSION_CODE_PATTERN.test(code)) continue;
       if (!isRecord(entry) || typeof entry.nick !== "string") continue;
       const nick = canonicalPlayerNick(entry.nick);
-      if (!nick || !isPlayerColor(entry.color)) continue;
-      byCode[code] = { nick, color: entry.color, seen: readSeen(entry.seen) };
+      if (!nick || !isPlayerColor(entry.color) || !isPlayerId(entry.playerId)) continue;
+      byCode[code] = {
+        playerId: entry.playerId,
+        nick,
+        color: entry.color,
+        seen: readSeen(entry.seen),
+      };
     }
   }
 
@@ -111,12 +123,6 @@ function omitOldest(byCode: Record<string, PlayerIdentity>, keepCode: string): R
   return next;
 }
 
-function randomPlayerColor(): number {
-  const bytes = new Uint8Array(1);
-  crypto.getRandomValues(bytes);
-  return (bytes[0] % 16) + 1;
-}
-
 export function readPlayerIdentity(cookie: string | null | undefined, code: string): PlayerIdentity | null {
   return parsePlayerCookie(cookie).byCode[code] ?? null;
 }
@@ -128,19 +134,26 @@ export function readLastNick(cookie: string | null | undefined): string | null {
 export function writePlayerIdentity(
   cookie: string | null | undefined,
   code: string,
-  nick: string,
+  player: { playerId: string; nick: string; color: number },
   opts?: { secure?: boolean },
 ): PlayerCookieWrite {
-  const storedNick = canonicalPlayerNick(nick);
+  const storedNick = canonicalPlayerNick(player.nick);
   if (!storedNick) {
     throw new Error("Invalid player nick");
+  }
+  if (!isPlayerId(player.playerId)) {
+    throw new Error("Invalid player id");
+  }
+  if (!isPlayerColor(player.color)) {
+    throw new Error("Invalid player color");
   }
 
   const state = parsePlayerCookie(cookie);
   state.lastNick = storedNick;
   state.byCode[code] = {
+    playerId: player.playerId,
     nick: storedNick,
-    color: code in state.byCode ? state.byCode[code].color : randomPlayerColor(),
+    color: player.color,
     seen: Date.now(),
   };
 
