@@ -15,3 +15,10 @@
 - **Problem**: Catalog load failure showed a branded Layout error but stayed HTTP 200, so monitors/CDNs treat the request as success while siblings use non-2xx for hard failures.
 - **Rule**: When an SSR page renders a branded error UI for a failed data load, set a non-2xx status (e.g. `Astro.response.status = 503`) instead of leaving HTTP 200.
 - **Applies to**: implement, impl-review
+
+## Show a loader on navigation form submit
+
+- **Context**: forms
+- **Problem**: użytkownik nie widzi, że coś się dzieje
+- **Rule**: after clicking button/ submit on a navigation form, show a loader
+- **Applies to**: implement

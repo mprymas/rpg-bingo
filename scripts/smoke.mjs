@@ -36,6 +36,7 @@ const jar = new Map();
 const SESSION_CODE_RE = /^[ABCDEFGHJKLMNPQRSTUVWXYZ23456789]{6}$/;
 
 let createdSessionId = "";
+let createdSessionCode = "";
 
 function cookieHeader() {
   return [...jar.entries()].map(([k, v]) => `${k}=${v}`).join("; ");
@@ -106,6 +107,22 @@ const steps = [
   ],
   ["GET /sessions/new redirects anonymous", () => request("/sessions/new"), { status: 302, location: "/auth/signin" }],
   [
+    "GET /play/AAAAAA is not found",
+    () => request("/play/AAAAAA"),
+    {
+      status: 404,
+      check: (body) => typeof body === "string" && body.includes("Nie znaleziono sesji"),
+    },
+  ],
+  [
+    "GET /play/not-a-code is not found",
+    () => request("/play/not-a-code"),
+    {
+      status: 404,
+      check: (body) => typeof body === "string" && body.includes("Nie znaleziono sesji"),
+    },
+  ],
+  [
     "signin rejects wrong password",
     () => request("/api/auth/signin", { method: "POST", form: { email: rejectEmail, password: "wrong" } }),
     { status: 302, location: "/auth/signin?error=" },
@@ -146,7 +163,14 @@ if (hasAccount) {
       { status: 302, location: "/dashboard" },
     ],
     ["home redirects signed-in user", () => request("/"), { status: 302, location: "/dashboard" }],
-    ["dashboard renders for signed-in user", () => request("/dashboard"), { status: 200 }],
+    [
+      "dashboard renders for signed-in user",
+      () => request("/dashboard"),
+      {
+        status: 200,
+        check: (body) => typeof body === "string" && body.includes("Dołącz do sesji"),
+      },
+    ],
     ["GET /sessions/new for signed-in user", () => request("/sessions/new"), { status: 200 }],
     [
       "POST /api/sessions creates session",
@@ -161,6 +185,9 @@ if (hasAccount) {
         });
         if (actual.status === 201 && actual.body?.id) {
           createdSessionId = actual.body.id;
+        }
+        if (actual.status === 201 && typeof actual.body?.code === "string") {
+          createdSessionCode = actual.body.code;
         }
         return actual;
       },
@@ -177,6 +204,53 @@ if (hasAccount) {
       { status: 302, location: "/auth/signin" },
     ],
     ["dashboard redirects after signout", () => request("/dashboard"), { status: 302, location: "/auth/signin" }],
+    [
+      "GET /sessions/new redirects after signout",
+      () => request("/sessions/new"),
+      { status: 302, location: "/auth/signin" },
+    ],
+    [
+      "GET /play/:code shows nick form before join",
+      () => request(`/play/${createdSessionCode}`),
+      {
+        status: 200,
+        check: (body) => typeof body === "string" && body.includes("Nick") && !body.includes("Hasło ze smoke"),
+      },
+    ],
+    [
+      "POST /api/play/join accepts nick",
+      () =>
+        request("/api/play/join", {
+          method: "POST",
+          form: { code: createdSessionCode, nick: "Anna" },
+        }),
+      { status: 302, location: `/play/${createdSessionCode}` },
+    ],
+    [
+      "GET /play/:code shows board after join",
+      () => request(`/play/${createdSessionCode}`),
+      {
+        status: 200,
+        check: (body) => typeof body === "string" && body.includes("Hasło ze smoke") && body.includes("Anna"),
+      },
+    ],
+    [
+      "POST /api/play/join missing code redirects",
+      () =>
+        request("/api/play/join", {
+          method: "POST",
+          form: { code: "AAAAAA", nick: "Anna" },
+        }),
+      { status: 302, location: "/play/AAAAAA" },
+    ],
+    [
+      "GET /play/AAAAAA stays not found after join attempt",
+      () => request("/play/AAAAAA"),
+      {
+        status: 404,
+        check: (body) => typeof body === "string" && body.includes("Nie znaleziono sesji"),
+      },
+    ],
   );
 } else {
   console.log("SKIP  signed-in steps — set SMOKE_EMAIL and SMOKE_PASSWORD");
