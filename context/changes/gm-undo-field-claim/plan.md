@@ -307,23 +307,23 @@ No new poll interval; undo is a single POST. Confirm/pending gating avoids poll 
 
 #### Automated
 
-- [x] 2.1 npm run lint passes
-- [x] 2.2 astro check passes
+- [x] 2.1 npm run lint passes — 4e4c425
+- [x] 2.2 astro check passes — 4e4c425
 
 ### Phase 3: GmBoard undo UX
 
 #### Automated
 
-- [ ] 3.1 npm run lint passes (ui-literals on GmBoard)
-- [ ] 3.2 astro check passes
+- [x] 3.1 npm run lint passes (ui-literals on GmBoard)
+- [x] 3.2 astro check passes
 
 #### Manual
 
-- [ ] 3.3 Active: Check/X wait-for-API free; player mystery restored; GM reward badge remains
-- [ ] 3.4 Closed: no confirm chrome
-- [ ] 3.5 Already-free / double Check: quiet success
-- [ ] 3.6 SQL: GM undo clears claim keeps reward_id; idempotent; non-owner/closed fail
-- [ ] 3.7 API: Authenticated GM POST undoes; 401/404/403 cases verified
+- [x] 3.3 Active: Check/X wait-for-API free; player mystery restored; GM reward badge remains
+- [x] 3.4 Closed: no confirm chrome
+- [x] 3.5 Already-free / double Check: quiet success
+- [x] 3.6 SQL: GM undo clears claim keeps reward_id; idempotent; non-owner/closed fail
+- [x] 3.7 API: Authenticated GM POST undoes; 401/404/403 cases verified
 
 ### Phase 4: Kitchen-sink + verification
 
