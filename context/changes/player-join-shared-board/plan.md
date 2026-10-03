@@ -366,8 +366,8 @@ The migration only adds a function. Existing rows stay valid. Rollback is `DROP 
 
 #### Automated
 
-- [x] 1.1 `npx astro check` passes and the generated database types include `get_active_board_by_code`
-- [x] 1.2 `npm run lint` passes
+- [x] 1.1 `npx astro check` passes and the generated database types include `get_active_board_by_code` — 0f8a055
+- [x] 1.2 `npm run lint` passes — 0f8a055
 
 #### Manual
 
@@ -377,16 +377,16 @@ The migration only adds a function. Existing rows stay valid. Rollback is `DROP 
 
 #### Automated
 
-- [ ] 2.1 `npx astro check` passes
-- [ ] 2.2 `npm run lint` passes with the player page included in the UI literal scan
+- [x] 2.1 `npx astro check` passes
+- [x] 2.2 `npm run lint` passes with the player page included in the UI literal scan
 
 #### Manual
 
-- [ ] 2.3 Opening `/play/{code}` for an active session without the player cookie shows the nick form and the HTML does not contain any cell phrase
-- [ ] 2.4 Submitting a valid nick shows the board with that nick and its color above the grid, cell phrases, and reward labels, and does not show the session code in that header slot
-- [ ] 2.5 Reloading `/play/{code}` stays on the board; opening `/play/{code}?join=1` shows the nick form prefilled with that nick, and confirming again keeps the same color
-- [ ] 2.6 A missing code, a malformed code, and a closed code all show "Nie znaleziono sesji" with status 404 and no board
-- [ ] 2.7 Opening the nick step for a different active code prefills the last confirmed nick, and confirming it may use a different color
+- [x] 2.3 Opening `/play/{code}` for an active session without the player cookie shows the nick form and the HTML does not contain any cell phrase
+- [x] 2.4 Submitting a valid nick shows the board with that nick and its color above the grid, cell phrases, and reward labels, and does not show the session code in that header slot
+- [x] 2.5 Reloading `/play/{code}` stays on the board; opening `/play/{code}?join=1` shows the nick form prefilled with that nick, and confirming again keeps the same color
+- [x] 2.6 A missing code, a malformed code, and a closed code all show "Nie znaleziono sesji" with status 404 and no board
+- [x] 2.7 Opening the nick step for a different active code prefills the last confirmed nick, and confirming it may use a different color
 
 ### Phase 3: Home and dashboard entry
 

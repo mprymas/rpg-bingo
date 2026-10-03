@@ -1,0 +1,182 @@
+---
+import Layout from "@/layouts/Layout.astro";
+import JoinNickForm from "@/components/play/JoinNickForm";
+import BoardGrid from "@/components/sessions/BoardGrid.astro";
+import { Badge } from "@/components/ui/badge";
+import { PLAYER_COOKIE_NAME, readLastNick, readPlayerIdentity } from "@/lib/player-cookie";
+import { SESSION_CODE_PATTERN } from "@/lib/services/session-code";
+import { getActiveBoardByCode } from "@/lib/services/sessions.service";
+import { createClient } from "@/lib/supabase";
+import type { PlayerBoard, SessionWithCells } from "@/types";
+
+const PLAYER_SWATCH: Record<number, string> = {
+  1: "text-player-1",
+  2: "text-player-2",
+  3: "text-player-3",
+  4: "text-player-4",
+  5: "text-player-5",
+  6: "text-player-6",
+  7: "text-player-7",
+  8: "text-player-8",
+  9: "text-player-9",
+  10: "text-player-10",
+  11: "text-player-11",
+  12: "text-player-12",
+  13: "text-player-13",
+  14: "text-player-14",
+  15: "text-player-15",
+  16: "text-player-16",
+};
+
+function swatchFor(color: number): string | null {
+  if (!Number.isInteger(color) || color < 1 || color > 16) return null;
+  return PLAYER_SWATCH[color] ?? null;
+}
+
+const code = (Astro.params.code ?? "").trim().toUpperCase();
+const backHref = Astro.locals.user ? "/dashboard" : "/";
+
+let board: PlayerBoard | null = null;
+let notFound = false;
+let loadError: string | null = null;
+
+if (!SESSION_CODE_PATTERN.test(code)) {
+  notFound = true;
+  Astro.response.status = 404;
+} else {
+  const supabase = createClient(Astro.request.headers, Astro.cookies);
+  if (!supabase) {
+    return new Response("Brak konfiguracji", { status: 500 });
+  }
+
+  try {
+    board = await getActiveBoardByCode(supabase, code);
+    if (!board) {
+      notFound = true;
+      Astro.response.status = 404;
+    }
+  } catch {
+    loadError = "Nie udało się wczytać sesji";
+    Astro.response.status = 503;
+  }
+}
+
+const rawCookie = board ? (Astro.cookies.get(PLAYER_COOKIE_NAME)?.value ?? null) : null;
+const identity = board ? readPlayerIdentity(rawCookie, code) : null;
+const lastNick = board ? readLastNick(rawCookie) : null;
+const swatchClass = identity ? swatchFor(identity.color) : null;
+const joinRequested = Astro.url.searchParams.get("join") === "1";
+const nickError = Astro.url.searchParams.get("error") === "nick";
+const showForm = Boolean(board) && (joinRequested || !swatchClass);
+const prefill = identity?.nick ?? lastNick ?? "";
+
+const rewardCounts = new Map<string, { label: string; count: number }>();
+if (board && !showForm) {
+  for (const cell of board.cells) {
+    if (!cell.reward) continue;
+    const existing = rewardCounts.get(cell.reward.slug);
+    if (existing) {
+      existing.count += 1;
+    } else {
+      rewardCounts.set(cell.reward.slug, { label: cell.reward.label, count: 1 });
+    }
+  }
+}
+const legend = [...rewardCounts.values()];
+const expectedCells = board ? board.size * board.size : 0;
+const boardComplete = board ? board.cells.length === expectedCells : false;
+if (board && !showForm && !boardComplete) {
+  Astro.response.status = 422;
+}
+
+const gridCells = (board?.cells ?? []) as SessionWithCells["cells"];
+---
+
+{notFound ? (
+  <Layout title="Sesja">
+    <div class="bg-background min-h-screen p-4 sm:p-8">
+      <div class="mx-auto w-full max-w-2xl rounded-2xl border border-border bg-card p-6 text-foreground sm:p-8">
+        <a
+          href={backHref}
+          class="mb-6 inline-block self-start text-sm text-primary outline-none hover:underline focus-visible:ring-2 focus-visible:ring-ring"
+        >
+          Wróć
+        </a>
+        <p class="text-sm text-muted-foreground">Nie znaleziono sesji</p>
+      </div>
+    </div>
+  </Layout>
+) : loadError ? (
+  <Layout title="Sesja">
+    <div class="bg-background min-h-screen p-4 sm:p-8">
+      <div class="mx-auto w-full max-w-2xl rounded-2xl border border-border bg-card p-6 text-foreground sm:p-8">
+        <a
+          href={backHref}
+          class="mb-6 inline-block self-start text-sm text-primary outline-none hover:underline focus-visible:ring-2 focus-visible:ring-ring"
+        >
+          Wróć
+        </a>
+        <p class="text-sm text-destructive">{loadError}</p>
+      </div>
+    </div>
+  </Layout>
+) : (
+  board && (
+    <Layout title="Sesja">
+      <div class="bg-background min-h-screen p-4 sm:p-8">
+        <div class="mx-auto w-full max-w-2xl space-y-8 rounded-2xl border border-border bg-card p-6 text-foreground sm:p-8">
+          {showForm ? (
+            <div class="flex flex-col gap-4">
+              <a
+                href={backHref}
+                class="self-start text-sm text-primary outline-none hover:underline focus-visible:ring-2 focus-visible:ring-ring"
+              >
+                Wróć
+              </a>
+              <JoinNickForm code={code} prefill={prefill} nickError={nickError} client:load />
+            </div>
+          ) : (
+            <>
+              <div class="flex flex-col gap-4">
+                <a
+                  href={backHref}
+                  class="self-start text-sm text-primary outline-none hover:underline focus-visible:ring-2 focus-visible:ring-ring"
+                >
+                  Wróć
+                </a>
+                <p class:list={["text-center text-3xl font-medium break-words sm:text-4xl", swatchClass]}>
+                  {identity?.nick}
+                </p>
+              </div>
+
+              {boardComplete ? (
+                <>
+                  <BoardGrid size={board.size} cells={gridCells} />
+
+                  {legend.length > 0 && (
+                    <div>
+                      <h2 class="mb-3 text-sm font-medium text-muted-foreground">Legenda nagród</h2>
+                      <ul class="flex flex-wrap gap-2">
+                        {legend.map((item) => (
+                          <li>
+                            <Badge variant="outline">
+                              {item.label}: {item.count}
+                            </Badge>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+                </>
+              ) : (
+                <p class="rounded-lg border border-dashed border-border px-4 py-6 text-center text-destructive">
+                  Nie udało się wczytać planszy.
+                </p>
+              )}
+            </>
+          )}
+        </div>
+      </div>
+    </Layout>
+  )
+)}

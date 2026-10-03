@@ -5,7 +5,7 @@ CREATE FUNCTION public.get_active_board_by_code(p_code text)
 RETURNS TABLE (
   code text,
   size smallint,
-  position smallint,
+  "position" smallint,
   phrase text,
   reward_slug text,
   reward_label text

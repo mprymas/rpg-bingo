@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 
 interface SubmitButtonProps {
   pendingText: string;
-  icon: ReactNode;
+  icon?: ReactNode;
   children: ReactNode;
   /** Kitchen-sink only — forces the pending label without a real submit. */
   pending?: boolean;
