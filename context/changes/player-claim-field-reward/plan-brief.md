@@ -26,7 +26,7 @@ Join persists a `session_players` row (sequential color). Claiming flips a myste
 | Claimed label layout | Single line in-tile, smaller type, ellipsis | Must fit phone cells without wrap |
 | GM mapping | Claimer color on cell + join roster (nick in color) | Color↔nick without nick text on every cell |
 | CSRF | Origin/referrer on join and claim | Closes S-02 review debt when claims bind to cookie |
-| Duplicate nicks | Allowed; distinct rows; color by join order (cycle 1–16) | Two “Ala” stay distinguishable by color |
+| Duplicate nicks | Allowed; distinct rows; color by join order (cycle 1–8) | Two “Ala” stay distinguishable by color |
 | Cut line | Drop flip animation polish first | Keep claim, reveal, poll, first-wins |
 
 ## Scope

@@ -57,7 +57,9 @@ const identity = board ? readPlayerIdentity(rawCookie, code) : null;
 const lastNick = board ? readLastNick(rawCookie) : null;
 const swatchClass = identity ? swatchFor(identity.color) : null;
 const joinRequested = Astro.url.searchParams.get("join") === "1";
-const nickError = Astro.url.searchParams.get("error") === "nick";
+const joinError = Astro.url.searchParams.get("error");
+const nickError = joinError === "nick";
+const fullError = joinError === "full";
 const showForm = Boolean(board) && (joinRequested || !swatchClass);
 const prefill = identity?.nick ?? lastNick ?? "";
 
@@ -109,7 +111,7 @@ if (board && !showForm && !boardComplete) {
               >
                 Wróć
               </a>
-              <JoinNickForm code={code} prefill={prefill} nickError={nickError} client:load />
+              <JoinNickForm code={code} prefill={prefill} nickError={nickError} fullError={fullError} client:load />
             </div>
           ) : (
             <>

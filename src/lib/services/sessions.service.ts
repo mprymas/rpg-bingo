@@ -8,12 +8,18 @@ import type {
   CreateSessionResponse,
   PlayerBoard,
   PlayerBoardCell,
+  PlayerRosterEntry,
   Session,
   SessionPlayerRosterEntry,
   SessionWithCells,
 } from "@/types";
 
 type AppSupabaseClient = SupabaseClient<Database>;
+
+/** Supabase generated types omit null; runtime can still return null on success. */
+function rpcRows<T>(data: T[] | null): T[] {
+  return data ?? [];
+}
 
 export type SessionServiceErrorCode = "UNKNOWN_REWARD" | "CODE_COLLISION";
 
@@ -202,52 +208,82 @@ export async function getActiveBoardByCode(supabase: AppSupabaseClient, code: st
 
   if (error) throw error;
   if (playersError) throw playersError;
-  if (data.length === 0) return null;
 
-  const head = data[0];
+  const boardRows = rpcRows(data);
+  const playerRows = rpcRows(playersData);
+  if (boardRows.length === 0) return null;
+
+  const head = boardRows[0];
+  const players: PlayerRosterEntry[] = playerRows.map((player) => ({
+    nick: player.nick,
+    color: player.color,
+    created_at: player.created_at,
+  }));
 
   return {
     code: head.code,
     size: head.size,
-    cells: data.map((row) => mapPlayerBoardCell(row)),
-    players: playersData.map((player) => ({
-      id: player.id,
-      nick: player.nick,
-      color: player.color,
-      created_at: player.created_at,
-    })),
+    cells: boardRows.map((row) => mapPlayerBoardCell(row)),
+    players,
   };
 }
 
 export interface JoinedSessionPlayer {
   playerId: string;
+  claimToken: string;
   color: number;
   nick: string;
 }
 
+export type JoinSessionPlayerErrorCode = "SESSION_NOT_FOUND" | "SESSION_FULL" | "INVALID_NICK";
+
+export class JoinSessionPlayerError extends Error {
+  readonly code: JoinSessionPlayerErrorCode;
+
+  constructor(code: JoinSessionPlayerErrorCode) {
+    super(code);
+    this.name = "JoinSessionPlayerError";
+    this.code = code;
+  }
+}
+
+function joinErrorFromMessage(message: string): JoinSessionPlayerError | null {
+  if (message.includes("session_not_found")) return new JoinSessionPlayerError("SESSION_NOT_FOUND");
+  if (message.includes("session_full")) return new JoinSessionPlayerError("SESSION_FULL");
+  if (message.includes("invalid_nick")) return new JoinSessionPlayerError("INVALID_NICK");
+  return null;
+}
+
 export async function joinSessionPlayer(
   supabase: AppSupabaseClient,
-  input: { code: string; nick: string; playerId?: string | null },
+  input: { code: string; nick: string; claimToken?: string | null },
 ): Promise<JoinedSessionPlayer> {
   const args: Database["public"]["Functions"]["join_session_player"]["Args"] = {
     p_code: input.code,
     p_nick: input.nick,
   };
-  if (input.playerId) {
-    args.p_player_id = input.playerId;
+  if (input.claimToken) {
+    args.p_claim_token = input.claimToken;
   }
 
   const { data, error } = await supabase.rpc("join_session_player", args);
 
-  if (error) throw error;
-  if (data.length === 0) {
+  if (error) {
+    const mapped = joinErrorFromMessage(error.message);
+    if (mapped) throw mapped;
+    throw error;
+  }
+
+  const rows = rpcRows(data);
+  if (rows.length === 0) {
     throw new Error("join_session_player returned no row");
   }
 
-  const row = data[0];
+  const row = rows[0];
 
   return {
     playerId: row.id,
+    claimToken: row.claim_token,
     color: row.color,
     nick: row.nick,
   };
@@ -263,11 +299,11 @@ function claimErrorFromMessage(message: string): ClaimBoardCellError | null {
 
 export async function claimBoardCell(
   supabase: AppSupabaseClient,
-  input: { code: string; playerId: string; position: number },
+  input: { code: string; claimToken: string; position: number },
 ): Promise<ClaimBoardCellResult> {
   const { data, error } = await supabase.rpc("claim_board_cell", {
     p_code: input.code,
-    p_player_id: input.playerId,
+    p_claim_token: input.claimToken,
     p_position: input.position,
   });
 
@@ -276,11 +312,13 @@ export async function claimBoardCell(
     if (mapped) throw mapped;
     throw error;
   }
-  if (data.length === 0) {
+
+  const rows = rpcRows(data);
+  if (rows.length === 0) {
     throw new Error("claim_board_cell returned no row");
   }
 
-  const row = data[0];
+  const row = rows[0];
   const cell = mapPlayerBoardCell(row);
 
   if (row.status === "conflict") {

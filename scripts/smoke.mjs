@@ -282,11 +282,23 @@ if (hasAccount) {
         status: 200,
         check: (body) => {
           const cell = Array.isArray(body?.cells) ? body.cells.find((c) => c.position === 0) : undefined;
+          const playersOk =
+            Array.isArray(body?.players) &&
+            body.players.every(
+              (p) =>
+                typeof p?.nick === "string" &&
+                typeof p?.color === "number" &&
+                typeof p?.created_at === "string" &&
+                !("id" in p) &&
+                !("claim_token" in p) &&
+                !("claimToken" in p),
+            );
           return (
             typeof body?.code === "string" &&
             cell != null &&
             typeof cell.claimedByColor === "number" &&
-            cell.claimedByColor >= 1
+            cell.claimedByColor >= 1 &&
+            playersOk
           );
         },
       },

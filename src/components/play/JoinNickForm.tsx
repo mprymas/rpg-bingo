@@ -8,9 +8,10 @@ interface Props {
   code: string;
   prefill: string;
   nickError: boolean;
+  fullError?: boolean;
 }
 
-export default function JoinNickForm({ code, prefill, nickError }: Props) {
+export default function JoinNickForm({ code, prefill, nickError, fullError = false }: Props) {
   const [submitting, setSubmitting] = useState(false);
 
   function handleSubmit(event: SubmitEvent<HTMLFormElement>) {
@@ -38,6 +39,7 @@ export default function JoinNickForm({ code, prefill, nickError }: Props) {
           aria-invalid={nickError || undefined}
         />
         {nickError && <p className="text-destructive mt-1 text-sm">Nick musi mieć od 1 do 24 znaków.</p>}
+        {fullError && <p className="text-destructive mt-1 text-sm">Stół jest pełny (max 10 graczy).</p>}
       </div>
       <SubmitButton pending={submitting || undefined} pendingText="Wchodzenie...">
         Wejdź

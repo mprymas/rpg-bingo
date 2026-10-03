@@ -49,7 +49,7 @@ Mistrz Gry chce przy stole meta-wyzwania i lekką rywalizację zamiast uznaniowy
 | F-01 | seed-phrase-reward-catalog | (foundation) seedowane hasła predefiniowane i katalog nagród gotowe do losowania        | —             | FR-005, FR-016 (MVP seed), Business Logic | done |
 | S-01 | gm-create-session-board                              | zalogowany MG tworzy sesję, generuje planszę i dostaje krótki kod                       | F-01          | US-01, FR-001, FR-004, FR-005, FR-006     | done |
 | S-02 | player-join-shared-board                             | gracz dołącza kodem i nickiem (bez konta) i widzi wspólną planszę z nagrodami na polach | S-01          | US-01, FR-002, FR-008, FR-010             | done |
-| S-03 | player-claim-field-reward                            | gracz oznacza wolne pole, widzi nagrodę; inni widzą zajęte pole po odświeżeniu          | S-02          | US-01, FR-009, FR-011                     | in-progress |
+| S-03 | player-claim-field-reward                            | gracz oznacza wolne pole, widzi nagrodę; inni widzą zajęte pole w ~10s (poll)             | S-02          | US-01, FR-009, FR-011                     | done |
 | S-04 | gm-undo-field-claim                                  | MG cofa błędne oznaczenie; pole wraca i nagroda jest unieważniona                       | S-03          | FR-012                                    | proposed |
 | S-05 | gm-regenerate-board                                  | MG generuje nową planszę (nowy kod); gracze dołączają od nowa                           | S-02          | FR-007                                    | proposed |
 
@@ -137,7 +137,7 @@ Foundations below assume these are present and do NOT re-scaffold them.
 
 ### S-03: Gracz zdobywa pole i nagrodę
 
-- **Outcome:** gracz oznacza wolne pole jako swoje, natychmiast widzi czy zdobył nagrodę; pole staje się niedostępne dla innych (widoczne po odświeżeniu); MG widzi kto zdobył którą nagrodę.
+- **Outcome:** gracz oznacza wolne pole jako swoje, natychmiast widzi czy zdobył nagrodę; pole staje się niedostępne dla innych (zajętość widoczna u innych i u MG w ~10s przez polling ~5s); MG mapuje kolor → nick → nagrodę przez roster.
 - **Change ID:** player-claim-field-reward
 - **PRD refs:** US-01, FR-009, FR-011
 - **Prerequisites:** S-02
@@ -145,7 +145,7 @@ Foundations below assume these are present and do NOT re-scaffold them.
 - **Blockers:** —
 - **Unknowns:** —
 - **Risk:** Tu leży guardrail „nigdy dwóch graczy na tym samym polu” przy niemal równoczesnych kliknięciach — najwcześniejszy dowód Primary SC; przy `capacity` warto nie odkładać.
-- **Status:** in-progress
+- **Status:** done
 
 
 
@@ -185,8 +185,8 @@ Foundations below assume these are present and do NOT re-scaffold them.
 | F-01       | seed-phrase-reward-catalog | Seed haseł predefiniowanych i katalogu nagród                 | yes                   | [#1](https://github.com/mprymas/rpg-bingo/issues/1) — Run `/10x-plan seed-phrase-reward-catalog` |
 | S-01       | gm-create-session-board    | MG tworzy sesję, generuje planszę, dostaje kod                | no                    | [#2](https://github.com/mprymas/rpg-bingo/issues/2) — Czeka na F-01                              |
 | S-02       | player-join-shared-board   | Gracz dołącza kodem/nickiem i widzi planszę z nagrodami       | no                    | [#3](https://github.com/mprymas/rpg-bingo/issues/3) — Czeka na S-01                              |
-| S-03       | player-claim-field-reward  | Gracz oznacza pole i widzi nagrodę                            | no                    | [#4](https://github.com/mprymas/rpg-bingo/issues/4) — North star; czeka na S-02                  |
-| S-04       | gm-undo-field-claim        | MG cofa oznaczenie pola i unieważnia nagrodę                  | no                    | [#5](https://github.com/mprymas/rpg-bingo/issues/5) — Czeka na S-03                              |
+| S-03       | player-claim-field-reward  | Gracz oznacza pole i widzi nagrodę                            | —                     | [#4](https://github.com/mprymas/rpg-bingo/issues/4) — done                                       |
+| S-04       | gm-undo-field-claim        | MG cofa oznaczenie pola i unieważnia nagrodę                  | yes                   | [#5](https://github.com/mprymas/rpg-bingo/issues/5) — Prerequisites S-03 done                    |
 | S-05       | gm-regenerate-board        | MG generuje nową planszę (nowy kod), gracze dołączają od nowa | no                    | [#6](https://github.com/mprymas/rpg-bingo/issues/6) — Czeka na S-02; parallel z S-03/S-04        |
 
 

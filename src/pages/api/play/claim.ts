@@ -48,7 +48,7 @@ export const POST: APIRoute = async (context) => {
   try {
     const result = await claimBoardCell(supabase, {
       code,
-      playerId: identity.playerId,
+      claimToken: identity.claimToken,
       position,
     });
 

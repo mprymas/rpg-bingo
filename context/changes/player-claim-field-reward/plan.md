@@ -72,7 +72,7 @@ sequenceDiagram
 - **First-wins**: claim must be one conditional update (`claimed_by_player_id IS NULL`); application-level read-then-write is not enough for the PRD guardrail.
 - **Player snapshot secrecy**: unclaimed cells may expose `hasReward: boolean` only; `reward.label`/`slug` appear for a cell only after it is claimed (public reveal) or on the authenticated GM path (always).
 - **Cookie binding**: re-confirming nick in the same browser with a valid `playerId` for that session keeps the row (update nick if needed); a browser without that id creates a new `session_players` row even if the nick string matches another player.
-- **Color assignment**: `color = ((join_ordinal - 1) % 16) + 1` where ordinal is insert order per session (not `randomPlayerColor`).
+- **Color assignment**: `color = ((join_ordinal - 1) % 8) + 1` where ordinal is insert order per session (not `randomPlayerColor`). Locked to the 8 Vintage Paper `--player-1`…`--player-8` swatches (see Addenda).
 - **Cut line**: if time is tight, ship reveal as an immediate state swap and drop flip animation polish.
 
 ## Phase 1: PRD + schema + types
@@ -403,6 +403,28 @@ Extend dependency-free smoke for claim + conflict and run the repo verification 
 - Cookie: `src/lib/player-cookie.ts`
 - Player page: `src/pages/play/[code].astro`
 - GM page: `src/pages/sessions/[id].astro`
+
+## Implementation Addenda
+
+> Post-plan decisions that supersede earlier contracts. Prefer these over Current State / Phase contracts when they conflict.
+
+### Addendum A — Player colors locked to 1–8 (2026-10-03)
+
+Original plan prose (Desired End State, Phase 1/2 contracts, early Current State) assumed join-order colors cycling **1–16** and `--player-1`…`--player-16` tokens.
+
+**Shipped contract:** palette is the 8 Vintage Paper swatches only:
+
+- DB: `session_players.color` CHECK `BETWEEN 1 AND 8` (`20261003180000_player_colors_8.sql`)
+- Join: `color = ((join_ordinal - 1) % 8) + 1`
+- Cookie validation and CSS tokens: `--player-1`…`--player-8` only
+
+Do **not** re-expand the CHECK or reintroduce tokens 9–16 without a new product decision.
+
+### Addendum B — Conflict feedback banner (2026-10-03)
+
+Phase 4 said “no toast/modal” and What We’re NOT Doing forbids blocking toast/modal **reward** UX. Shipped conflict feedback is a non-blocking, auto-dismiss floating status banner (`role="status"`) over the board — not a modal, and not used for reward reveal (reward stays cell flip/label).
+
+**Accepted:** keep this banner for “already taken” / claim errors. Do not treat it as a violation of the reward-toast ban. Optional later polish (inline under-grid copy, rename kitchen-sink “toast” labels) is out of scope unless product asks.
 
 ## Progress
 

@@ -2,7 +2,7 @@
 import Layout from "@/layouts/Layout.astro";
 import JoinNickForm from "@/components/play/JoinNickForm";
 import PlayerBoard from "@/components/play/PlayerBoard";
-import type { PlayerBoardCell, SessionPlayerRosterEntry } from "@/types";
+import type { PlayerBoardCell, PlayerRosterEntry } from "@/types";
 
 if (import.meta.env.PROD) {
   return new Response("Not Found", { status: 404 });
@@ -81,10 +81,10 @@ const mixedBoardCells = makePlayerCells(9, (cell, i) => {
   return cell;
 });
 
-const demoPlayers: SessionPlayerRosterEntry[] = [
-  { id: "demo-p1", nick: "Anna", color: 1, created_at: "2026-09-15T14:31:00.000Z" },
-  { id: "demo-p2", nick: "Borin", color: 3, created_at: "2026-09-15T14:32:00.000Z" },
-  { id: "demo-p3", nick: "Cyra", color: 7, created_at: "2026-09-15T14:33:00.000Z" },
+const demoPlayers: PlayerRosterEntry[] = [
+  { nick: "Anna", color: 1, created_at: "2026-09-15T14:31:00.000Z" },
+  { nick: "Borin", color: 3, created_at: "2026-09-15T14:32:00.000Z" },
+  { nick: "Cyra", color: 7, created_at: "2026-09-15T14:33:00.000Z" },
 ];
 
 const nickErrorCopy = "Nick musi mieć od 1 do 24 znaków.";

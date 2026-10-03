@@ -5,7 +5,7 @@ import type {
   ClaimSuccessResponse,
   PlayerBoard as PlayerBoardData,
   PlayerBoardCell,
-  SessionPlayerRosterEntry,
+  PlayerRosterEntry,
 } from "@/types";
 
 const POLL_MS = 5000;
@@ -66,7 +66,7 @@ interface Props {
   code: string;
   size: number;
   initialCells: PlayerBoardCell[];
-  initialPlayers?: SessionPlayerRosterEntry[];
+  initialPlayers?: PlayerRosterEntry[];
   /** Kitchen-sink fixtures: no claim POSTs and no polling. */
   preview?: boolean;
   /** Seed conflict copy for preview sections. */
@@ -298,7 +298,10 @@ export default function PlayerBoard({
         ) : (
           <ul className="flex flex-wrap gap-x-4 gap-y-2">
             {players.map((player) => (
-              <li key={player.id} className={cn("text-sm font-medium", PLAYER_NICK[player.color] ?? "text-foreground")}>
+              <li
+                key={`${player.nick}-${player.color}-${player.created_at}`}
+                className={cn("text-sm font-medium", PLAYER_NICK[player.color] ?? "text-foreground")}
+              >
                 {player.nick}
               </li>
             ))}

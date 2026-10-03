@@ -2,7 +2,7 @@ import type { APIRoute } from "astro";
 import { PLAYER_COOKIE_NAME, readPlayerIdentity, writePlayerIdentity } from "@/lib/player-cookie";
 import { isAllowedRequestOrigin } from "@/lib/request-origin";
 import { playJoinCodeSchema, playJoinNickSchema } from "@/lib/schemas/play-join";
-import { getActiveBoardByCode, joinSessionPlayer } from "@/lib/services/sessions.service";
+import { getActiveBoardByCode, JoinSessionPlayerError, joinSessionPlayer } from "@/lib/services/sessions.service";
 import { createClient } from "@/lib/supabase";
 
 export const prerender = false;
@@ -62,9 +62,17 @@ export const POST: APIRoute = async (context) => {
     joined = await joinSessionPlayer(supabase, {
       code,
       nick: nickParsed.data,
-      playerId: existing?.playerId ?? null,
+      claimToken: existing?.claimToken ?? null,
     });
-  } catch {
+  } catch (error) {
+    if (error instanceof JoinSessionPlayerError) {
+      if (error.code === "SESSION_FULL") {
+        return context.redirect(`/play/${code}?join=1&error=full`);
+      }
+      if (error.code === "INVALID_NICK") {
+        return context.redirect(`/play/${code}?join=1&error=nick`);
+      }
+    }
     return context.redirect(`/play/${code}?join=1`);
   }
 
@@ -73,6 +81,7 @@ export const POST: APIRoute = async (context) => {
     code,
     {
       playerId: joined.playerId,
+      claimToken: joined.claimToken,
       nick: joined.nick,
       color: joined.color,
     },

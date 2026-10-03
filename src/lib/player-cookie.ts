@@ -6,10 +6,12 @@ export const PLAYER_COOKIE_MAX_AGE = 34560000;
 const PLAYER_COOKIE_MAX_LENGTH = 3500;
 const PLAYER_NICK_MIN_LENGTH = 1;
 const PLAYER_NICK_MAX_LENGTH = 24;
-const PLAYER_ID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
 export interface PlayerIdentity {
   playerId: string;
+  /** Secret capability for claim/rebind — never expose on player poll. */
+  claimToken: string;
   nick: string;
   color: number;
   seen: number;
@@ -37,8 +39,8 @@ function isPlayerColor(value: unknown): value is number {
   return typeof value === "number" && Number.isInteger(value) && value >= 1 && value <= 8;
 }
 
-function isPlayerId(value: unknown): value is string {
-  return typeof value === "string" && PLAYER_ID_PATTERN.test(value);
+function isUuid(value: unknown): value is string {
+  return typeof value === "string" && UUID_PATTERN.test(value);
 }
 
 function hasControlChar(value: string): boolean {
@@ -83,9 +85,11 @@ function parsePlayerCookie(cookie: string | null | undefined): PlayerCookieState
       if (!SESSION_CODE_PATTERN.test(code)) continue;
       if (!isRecord(entry) || typeof entry.nick !== "string") continue;
       const nick = canonicalPlayerNick(entry.nick);
-      if (!nick || !isPlayerColor(entry.color) || !isPlayerId(entry.playerId)) continue;
+      // Entries without claimToken (pre-hardening cookies) are unbound — force re-join.
+      if (!nick || !isPlayerColor(entry.color) || !isUuid(entry.playerId) || !isUuid(entry.claimToken)) continue;
       byCode[code] = {
         playerId: entry.playerId,
+        claimToken: entry.claimToken,
         nick,
         color: entry.color,
         seen: readSeen(entry.seen),
@@ -134,15 +138,18 @@ export function readLastNick(cookie: string | null | undefined): string | null {
 export function writePlayerIdentity(
   cookie: string | null | undefined,
   code: string,
-  player: { playerId: string; nick: string; color: number },
+  player: { playerId: string; claimToken: string; nick: string; color: number },
   opts?: { secure?: boolean },
 ): PlayerCookieWrite {
   const storedNick = canonicalPlayerNick(player.nick);
   if (!storedNick) {
     throw new Error("Invalid player nick");
   }
-  if (!isPlayerId(player.playerId)) {
+  if (!isUuid(player.playerId)) {
     throw new Error("Invalid player id");
+  }
+  if (!isUuid(player.claimToken)) {
+    throw new Error("Invalid claim token");
   }
   if (!isPlayerColor(player.color)) {
     throw new Error("Invalid player color");
@@ -152,6 +159,7 @@ export function writePlayerIdentity(
   state.lastNick = storedNick;
   state.byCode[code] = {
     playerId: player.playerId,
+    claimToken: player.claimToken,
     nick: storedNick,
     color: player.color,
     seen: Date.now(),

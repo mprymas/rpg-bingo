@@ -46,6 +46,9 @@ export interface GeneratedCell {
 /** GM roster entry: nick shown in the player's assigned color. */
 export type SessionPlayerRosterEntry = Pick<SessionPlayer, "id" | "nick" | "color" | "created_at">;
 
+/** Player-facing roster — no row ids (claim auth uses a secret claim_token in the cookie). */
+export type PlayerRosterEntry = Pick<SessionPlayer, "nick" | "color" | "created_at">;
+
 export type SessionWithCells = Session & {
   cells: (BoardCell & {
     reward: Pick<Reward, "slug" | "label"> | null;
@@ -71,7 +74,7 @@ export interface PlayerBoard {
   code: string;
   size: number;
   cells: PlayerBoardCell[];
-  players: SessionPlayerRosterEntry[];
+  players: PlayerRosterEntry[];
 }
 
 export interface ClaimOccupant {

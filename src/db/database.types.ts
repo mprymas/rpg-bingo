@@ -110,6 +110,7 @@ export type Database = {
       }
       session_players: {
         Row: {
+          claim_token: string
           color: number
           created_at: string
           id: string
@@ -117,6 +118,7 @@ export type Database = {
           session_id: string
         }
         Insert: {
+          claim_token?: string
           color: number
           created_at?: string
           id?: string
@@ -124,6 +126,7 @@ export type Database = {
           session_id: string
         }
         Update: {
+          claim_token?: string
           color?: number
           created_at?: string
           id?: string
@@ -175,7 +178,7 @@ export type Database = {
       claim_board_cell: {
         Args: {
           p_code: string
-          p_player_id: string
+          p_claim_token: string
           p_position: number
         }
         Returns: {
@@ -210,7 +213,6 @@ export type Database = {
           p_code: string
         }
         Returns: {
-          id: string
           nick: string
           color: number
           created_at: string
@@ -220,10 +222,11 @@ export type Database = {
         Args: {
           p_code: string
           p_nick: string
-          p_player_id?: string
+          p_claim_token?: string
         }
         Returns: {
           id: string
+          claim_token: string
           color: number
           nick: string
         }[]
