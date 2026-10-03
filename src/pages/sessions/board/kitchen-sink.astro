@@ -147,6 +147,17 @@ const fixtureClaimed: SessionWithCells = {
   players: demoPlayers,
 };
 
+const fixtureClaimedClosed: SessionWithCells = {
+  id: "demo-claimed-closed",
+  code: "CLM000",
+  size: 3,
+  status: "closed",
+  gm_id: "demo-gm",
+  created_at: "2026-08-01T10:00:00.000Z",
+  cells: makeClaimedCells("demo-claimed-closed"),
+  players: demoPlayers,
+};
+
 const fixtureRosterEmpty: SessionWithCells = {
   id: "demo-roster-empty",
   code: "EMP000",
@@ -159,8 +170,16 @@ const fixtureRosterEmpty: SessionWithCells = {
 };
 
 const loadErrorCopy = "Nie udało się wczytać sesji";
+const undoErrorCopy = "Nie udało się cofnąć oznaczenia";
 
 type BoardKind = "complete" | "incomplete" | "closed" | "focus" | "error" | "na" | "gm-board";
+
+interface GmBoardFixture {
+  sessionStatus?: string;
+  initialConfirmPosition?: number | null;
+  initialPending?: boolean;
+  initialError?: string | null;
+}
 
 const sections: {
   id: string;
@@ -168,6 +187,7 @@ const sections: {
   description: string;
   kind: BoardKind;
   session?: SessionWithCells;
+  gmBoard?: GmBoardFixture;
 }[] = [
   {
     id: "default",
@@ -179,9 +199,46 @@ const sections: {
   {
     id: "claimed",
     title: "claimed + roster",
-    description: "GmBoard: zajęte pola w kolorach graczy (etykieta nagrody widoczna), lista dołączonych pod planszą.",
+    description: "GmBoard (active): zajęte pola gotowe do undo — klik otwiera confirm; lista dołączonych pod planszą.",
     kind: "gm-board",
     session: fixtureClaimed,
+    gmBoard: { sessionStatus: "active" },
+  },
+  {
+    id: "undo-confirm",
+    title: "undo confirm",
+    description: "GmBoard: zajęte pole w trybie potwierdzenia (Check / X).",
+    kind: "gm-board",
+    session: fixtureClaimed,
+    gmBoard: { sessionStatus: "active", initialConfirmPosition: 0 },
+  },
+  {
+    id: "undo-pending",
+    title: "undo pending",
+    description: "GmBoard: busy spinner na polu podczas cofania oznaczenia.",
+    kind: "gm-board",
+    session: fixtureClaimed,
+    gmBoard: { sessionStatus: "active", initialConfirmPosition: 0, initialPending: true },
+  },
+  {
+    id: "undo-error",
+    title: "undo error",
+    description: "GmBoard: baner błędu po nieudanym undo; confirm chrome nadal otwarty.",
+    kind: "gm-board",
+    session: fixtureClaimed,
+    gmBoard: {
+      sessionStatus: "active",
+      initialConfirmPosition: 0,
+      initialError: undoErrorCopy,
+    },
+  },
+  {
+    id: "undo-closed",
+    title: "undo closed",
+    description: "GmBoard (closed): zajęte pola bez chrome undo — brak interakcji.",
+    kind: "gm-board",
+    session: fixtureClaimedClosed,
+    gmBoard: { sessionStatus: "closed" },
   },
   {
     id: "roster-empty",
@@ -189,6 +246,7 @@ const sections: {
     description: "GmBoard bez graczy — copy „Nikt jeszcze nie dołączył”; etykiety nagród na wolnych polach.",
     kind: "gm-board",
     session: fixtureRosterEmpty,
+    gmBoard: { sessionStatus: "active" },
   },
   {
     id: "incomplete",
@@ -330,6 +388,10 @@ const sections: {
                         size={session.size}
                         initialCells={session.cells}
                         initialPlayers={session.players}
+                        sessionStatus={section.gmBoard?.sessionStatus}
+                        initialConfirmPosition={section.gmBoard?.initialConfirmPosition}
+                        initialPending={section.gmBoard?.initialPending}
+                        initialError={section.gmBoard?.initialError}
                         preview
                         client:load
                       />

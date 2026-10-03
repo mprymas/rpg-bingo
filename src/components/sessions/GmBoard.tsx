@@ -57,6 +57,12 @@ interface Props {
   sessionStatus?: string;
   /** Kitchen-sink fixtures: no polling; undo POST is a local no-op. */
   preview?: boolean;
+  /** Kitchen-sink: seed confirm chrome on a claimed cell position. */
+  initialConfirmPosition?: number | null;
+  /** Kitchen-sink: seed busy spinner inside confirm chrome. */
+  initialPending?: boolean;
+  /** Kitchen-sink: seed undo error banner. */
+  initialError?: string | null;
 }
 
 function isSessionWithCells(value: unknown): value is SessionWithCells {
@@ -89,14 +95,17 @@ export default function GmBoard({
   initialPlayers,
   sessionStatus,
   preview = false,
+  initialConfirmPosition = null,
+  initialPending = false,
+  initialError = null,
 }: Props) {
   const [cells, setCells] = useState(initialCells);
   const [players, setPlayers] = useState(initialPlayers);
-  const [confirmPosition, setConfirmPosition] = useState<number | null>(null);
-  const [pending, setPending] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [confirmPosition, setConfirmPosition] = useState<number | null>(initialConfirmPosition);
+  const [pending, setPending] = useState(initialPending);
+  const [error, setError] = useState<string | null>(initialError);
   const pollCancelledRef = useRef(false);
-  const confirmPositionRef = useRef<number | null>(null);
+  const confirmPositionRef = useRef<number | null>(initialConfirmPosition);
 
   const undoEnabled = sessionStatus === "active";
 

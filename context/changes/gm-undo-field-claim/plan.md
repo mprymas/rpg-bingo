@@ -314,26 +314,26 @@ No new poll interval; undo is a single POST. Confirm/pending gating avoids poll 
 
 #### Automated
 
-- [x] 3.1 npm run lint passes (ui-literals on GmBoard)
-- [x] 3.2 astro check passes
+- [x] 3.1 npm run lint passes (ui-literals on GmBoard) — ed29031
+- [x] 3.2 astro check passes — ed29031
 
 #### Manual
 
-- [x] 3.3 Active: Check/X wait-for-API free; player mystery restored; GM reward badge remains
-- [x] 3.4 Closed: no confirm chrome
-- [x] 3.5 Already-free / double Check: quiet success
-- [x] 3.6 SQL: GM undo clears claim keeps reward_id; idempotent; non-owner/closed fail
-- [x] 3.7 API: Authenticated GM POST undoes; 401/404/403 cases verified
+- [x] 3.3 Active: Check/X wait-for-API free; player mystery restored; GM reward badge remains — ed29031
+- [x] 3.4 Closed: no confirm chrome — ed29031
+- [x] 3.5 Already-free / double Check: quiet success — ed29031
+- [x] 3.6 SQL: GM undo clears claim keeps reward_id; idempotent; non-owner/closed fail — ed29031
+- [x] 3.7 API: Authenticated GM POST undoes; 401/404/403 cases verified — ed29031
 
 ### Phase 4: Kitchen-sink + verification
 
 #### Automated
 
-- [ ] 4.1 npm run lint passes
-- [ ] 4.2 npm run build passes
-- [ ] 4.3 npm run smoke passes
+- [x] 4.1 npm run lint passes
+- [x] 4.2 npm run build passes
+- [x] 4.3 npm run smoke passes
 
 #### Manual
 
-- [ ] 4.4 Kitchen-sink confirm/pending/error sections
-- [ ] 4.5 Full claim → undo → reclaim same reward path
+- [x] 4.4 Kitchen-sink confirm/pending/error sections
+- [x] 4.5 Full claim → undo → reclaim same reward path
