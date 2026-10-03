@@ -1,0 +1,12 @@
+---
+import Layout from "@/layouts/Layout.astro";
+import Welcome from "@/components/Welcome.astro";
+
+if (import.meta.env.PROD) {
+  return new Response("Not Found", { status: 404 });
+}
+---
+
+<Layout title="Kitchen sink — Strona główna">
+  <Welcome />
+</Layout>

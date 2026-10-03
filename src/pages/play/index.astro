@@ -1,0 +1,27 @@
+---
+import Layout from "@/layouts/Layout.astro";
+import { SESSION_CODE_PATTERN } from "@/lib/services/session-code";
+
+const code = (Astro.url.searchParams.get("code") ?? "").trim().toUpperCase();
+
+if (SESSION_CODE_PATTERN.test(code)) {
+  return Astro.redirect(`/play/${code}?join=1`);
+}
+
+Astro.response.status = 404;
+const backHref = Astro.locals.user ? "/dashboard" : "/";
+---
+
+<Layout title="Sesja">
+  <div class="bg-background min-h-screen p-4 sm:p-8">
+    <div class="mx-auto w-full max-w-2xl rounded-2xl border border-border bg-card p-6 text-foreground sm:p-8">
+      <a
+        href={backHref}
+        class="mb-6 inline-block self-start text-sm text-primary outline-none hover:underline focus-visible:ring-2 focus-visible:ring-ring"
+      >
+        Wróć
+      </a>
+      <p class="text-sm text-muted-foreground">Nie znaleziono sesji</p>
+    </div>
+  </div>
+</Layout>

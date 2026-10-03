@@ -1,4 +1,5 @@
 ---
+import JoinSessionForm from "@/components/JoinSessionForm";
 import DashboardActions from "@/components/dashboard/DashboardActions";
 import type { Session } from "@/types";
 
@@ -39,6 +40,13 @@ function formatDate(iso: string) {
       <h1 class="text-3xl font-bold text-foreground">Panel MG</h1>
       <DashboardActions kind="new-session" demo={demo} demoFocus={focusDemo} client:load />
     </div>
+
+    <section class="space-y-3" aria-labelledby="join-session-heading">
+      <h2 id="join-session-heading" class="text-lg font-semibold text-foreground">
+        Dołącz do sesji
+      </h2>
+      <JoinSessionForm client:load demo={demo} layout="inline" inputId="dashboard-session-code" />
+    </section>
 
     {sessions.length === 0 ? (
       <p class="rounded-lg border border-dashed border-border px-4 py-8 text-center text-muted-foreground">

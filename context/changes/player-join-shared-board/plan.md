@@ -377,31 +377,31 @@ The migration only adds a function. Existing rows stay valid. Rollback is `DROP 
 
 #### Automated
 
-- [x] 2.1 `npx astro check` passes
-- [x] 2.2 `npm run lint` passes with the player page included in the UI literal scan
+- [x] 2.1 `npx astro check` passes — 0af7ae2
+- [x] 2.2 `npm run lint` passes with the player page included in the UI literal scan — 0af7ae2
 
 #### Manual
 
-- [x] 2.3 Opening `/play/{code}` for an active session without the player cookie shows the nick form and the HTML does not contain any cell phrase
-- [x] 2.4 Submitting a valid nick shows the board with that nick and its color above the grid, cell phrases, and reward labels, and does not show the session code in that header slot
-- [x] 2.5 Reloading `/play/{code}` stays on the board; opening `/play/{code}?join=1` shows the nick form prefilled with that nick, and confirming again keeps the same color
-- [x] 2.6 A missing code, a malformed code, and a closed code all show "Nie znaleziono sesji" with status 404 and no board
-- [x] 2.7 Opening the nick step for a different active code prefills the last confirmed nick, and confirming it may use a different color
+- [x] 2.3 Opening `/play/{code}` for an active session without the player cookie shows the nick form and the HTML does not contain any cell phrase — 0af7ae2
+- [x] 2.4 Submitting a valid nick shows the board with that nick and its color above the grid, cell phrases, and reward labels, and does not show the session code in that header slot — 0af7ae2
+- [x] 2.5 Reloading `/play/{code}` stays on the board; opening `/play/{code}?join=1` shows the nick form prefilled with that nick, and confirming again keeps the same color — 0af7ae2
+- [x] 2.6 A missing code, a malformed code, and a closed code all show "Nie znaleziono sesji" with status 404 and no board — 0af7ae2
+- [x] 2.7 Opening the nick step for a different active code prefills the last confirmed nick, and confirming it may use a different color — 0af7ae2
 
 ### Phase 3: Home and dashboard entry
 
 #### Automated
 
-- [ ] 3.1 `npm run lint` passes
-- [ ] 3.2 `npx astro check` passes
+- [x] 3.1 `npm run lint` passes
+- [x] 3.2 `npx astro check` passes
 
 #### Manual
 
-- [ ] 3.3 Anonymous `/` shows the code field, "Zaloguj się", and "Załóż konto"
-- [ ] 3.4 Submitting an active code opens the nick step; submitting a bad code shows "Nie znaleziono sesji" and no board
-- [ ] 3.5 A signed-in visit to `/` still redirects to `/dashboard`
-- [ ] 3.6 Anonymous `/` uses semantic tokens and does not use `bg-cosmic` or Tailwind palette classes
-- [ ] 3.7 Signed-in `/dashboard` shows "Dołącz do sesji", and a session joined from there does not appear in the created-sessions list
+- [x] 3.3 Anonymous `/` shows the code field, "Zaloguj się", and "Załóż konto"
+- [x] 3.4 Submitting an active code opens the nick step; submitting a bad code shows "Nie znaleziono sesji" and no board
+- [x] 3.5 A signed-in visit to `/` still redirects to `/dashboard`
+- [x] 3.6 Anonymous `/` uses semantic tokens and does not use `bg-cosmic` or Tailwind palette classes
+- [x] 3.7 Signed-in `/dashboard` shows "Dołącz do sesji", and a session joined from there does not appear in the created-sessions list
 
 ### Phase 4: Verification
 
