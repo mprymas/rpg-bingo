@@ -176,59 +176,58 @@ export type Database = {
     }
     Functions: {
       claim_board_cell: {
-        Args: {
-          p_code: string
-          p_claim_token: string
-          p_position: number
-        }
+        Args: { p_claim_token: string; p_code: string; p_position: number }
         Returns: {
-          status: string
-          position: number
-          phrase: string
-          has_reward: boolean
-          reward_slug: string | null
-          reward_label: string | null
           claimed_by_color: number | null
-          occupant_nick: string | null
+          has_reward: boolean
           occupant_color: number | null
+          occupant_nick: string | null
+          phrase: string
+          position: number
+          reward_label: string | null
+          reward_slug: string | null
+          status: string
         }[]
       }
       get_active_board_by_code: {
-        Args: {
-          p_code: string
-        }
+        Args: { p_code: string }
         Returns: {
-          code: string
-          size: number
-          position: number
-          phrase: string
-          has_reward: boolean
-          reward_slug: string | null
-          reward_label: string | null
           claimed_by_color: number | null
+          code: string
+          has_reward: boolean
+          phrase: string
+          position: number
+          reward_label: string | null
+          reward_slug: string | null
+          size: number
         }[]
       }
       get_session_players_by_code: {
-        Args: {
-          p_code: string
-        }
+        Args: { p_code: string }
         Returns: {
-          nick: string
           color: number
           created_at: string
+          nick: string
         }[]
       }
       join_session_player: {
-        Args: {
-          p_code: string
-          p_nick: string
-          p_claim_token?: string
-        }
+        Args: { p_claim_token?: string; p_code: string; p_nick: string }
         Returns: {
-          id: string
           claim_token: string
           color: number
+          id: string
           nick: string
+        }[]
+      }
+      undo_board_cell: {
+        Args: { p_position: number; p_session_id: string }
+        Returns: {
+          claimed_by_color: number | null
+          has_reward: boolean
+          phrase: string
+          position: number
+          reward_label: string | null
+          reward_slug: string | null
         }[]
       }
     }
