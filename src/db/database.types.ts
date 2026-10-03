@@ -172,6 +172,24 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      claim_board_cell: {
+        Args: {
+          p_code: string
+          p_player_id: string
+          p_position: number
+        }
+        Returns: {
+          status: string
+          position: number
+          phrase: string
+          has_reward: boolean
+          reward_slug: string | null
+          reward_label: string | null
+          claimed_by_color: number | null
+          occupant_nick: string | null
+          occupant_color: number | null
+        }[]
+      }
       get_active_board_by_code: {
         Args: {
           p_code: string
@@ -181,8 +199,10 @@ export type Database = {
           size: number
           position: number
           phrase: string
+          has_reward: boolean
           reward_slug: string | null
           reward_label: string | null
+          claimed_by_color: number | null
         }[]
       }
       join_session_player: {

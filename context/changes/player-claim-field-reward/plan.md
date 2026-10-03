@@ -424,23 +424,23 @@ Extend dependency-free smoke for claim + conflict and run the repo verification 
 
 #### Automated
 
-- [x] 2.1 `npm run lint` passes
-- [x] 2.2 `npx astro check` passes
-- [x] 2.3 Existing smoke join steps still pass against local preview
+- [x] 2.1 `npm run lint` passes — 1ac7c34
+- [x] 2.2 `npx astro check` passes — 1ac7c34
+- [x] 2.3 Existing smoke join steps still pass against local preview — 1ac7c34
 
 #### Manual
 
-- [x] 2.4 Two browsers can join the same code with the same nick and receive different colors in join order
-- [x] 2.5 Re-confirm in the same browser keeps the same color/`playerId`
-- [x] 2.6 Cross-site fashioned join POST is rejected (or no-ops safely per chosen CSRF failure mode)
+- [x] 2.4 Two browsers can join the same code with the same nick and receive different colors in join order — 1ac7c34
+- [x] 2.5 Re-confirm in the same browser keeps the same color/`playerId` — 1ac7c34
+- [x] 2.6 Cross-site fashioned join POST is rejected (or no-ops safely per chosen CSRF failure mode) — 1ac7c34
 
 ### Phase 3: Claim API + board read contracts
 
 #### Automated
 
-- [ ] 3.1 `npm run lint` passes
-- [ ] 3.2 `npx astro check` passes
-- [ ] 3.3 Smoke can call claim after join (steps may land fully in Phase 6; route exists and typechecks here)
+- [x] 3.1 `npm run lint` passes
+- [x] 3.2 `npx astro check` passes
+- [x] 3.3 Smoke can call claim after join (steps may land fully in Phase 6; route exists and typechecks here)
 
 #### Manual
 

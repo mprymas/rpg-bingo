@@ -2,7 +2,16 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "@/db/database.types";
 import { generateBoard } from "@/lib/services/board-generator";
 import { generateSessionCode } from "@/lib/services/session-code";
-import type { CreateSessionCommand, CreateSessionResponse, PlayerBoard, Session, SessionWithCells } from "@/types";
+import type {
+  ClaimOccupant,
+  CreateSessionCommand,
+  CreateSessionResponse,
+  PlayerBoard,
+  PlayerBoardCell,
+  Session,
+  SessionPlayerRosterEntry,
+  SessionWithCells,
+} from "@/types";
 
 type AppSupabaseClient = SupabaseClient<Database>;
 
@@ -16,6 +25,40 @@ export class SessionServiceError extends Error {
     this.name = "SessionServiceError";
     this.code = code;
   }
+}
+
+export type ClaimBoardCellErrorCode = "SESSION_NOT_FOUND" | "PLAYER_NOT_FOUND" | "INVALID_POSITION" | "CELL_NOT_FOUND";
+
+export class ClaimBoardCellError extends Error {
+  readonly code: ClaimBoardCellErrorCode;
+
+  constructor(code: ClaimBoardCellErrorCode) {
+    super(code);
+    this.name = "ClaimBoardCellError";
+    this.code = code;
+  }
+}
+
+export type ClaimBoardCellResult =
+  { status: "claimed"; cell: PlayerBoardCell } | { status: "conflict"; occupant: ClaimOccupant; cell: PlayerBoardCell };
+
+function mapPlayerBoardCell(row: {
+  position: number;
+  phrase: string;
+  has_reward: boolean;
+  reward_slug: string | null;
+  reward_label: string | null;
+  claimed_by_color: number | null;
+}): PlayerBoardCell {
+  const reward =
+    row.reward_slug === null || row.reward_label === null ? null : { slug: row.reward_slug, label: row.reward_label };
+  return {
+    position: row.position,
+    phrase: row.phrase,
+    hasReward: row.has_reward,
+    reward,
+    claimedByColor: row.claimed_by_color,
+  };
 }
 
 const MAX_CODE_ATTEMPTS = 5;
@@ -116,7 +159,8 @@ export async function getSessionWithCells(
       cells:board_cells (
         *,
         reward:rewards ( slug, label )
-      )
+      ),
+      players:session_players ( id, nick, color, created_at )
     `,
     )
     .eq("id", id)
@@ -126,11 +170,16 @@ export async function getSessionWithCells(
   if (error) throw error;
   if (!data) return null;
 
+  const players: SessionPlayerRosterEntry[] = [...data.players].sort((a, b) =>
+    a.created_at < b.created_at ? -1 : a.created_at > b.created_at ? 1 : 0,
+  );
+  const colorByPlayerId = new Map(players.map((player) => [player.id, player.color]));
+
   const cells = [...data.cells]
     .sort((a, b) => a.position - b.position)
     .map((cell) => ({
       ...cell,
-      claimedByColor: null as number | null,
+      claimedByColor: cell.claimed_by_player_id ? (colorByPlayerId.get(cell.claimed_by_player_id) ?? null) : null,
     }));
 
   return {
@@ -141,7 +190,7 @@ export async function getSessionWithCells(
     status: data.status,
     created_at: data.created_at,
     cells,
-    players: [],
+    players,
   };
 }
 
@@ -156,20 +205,7 @@ export async function getActiveBoardByCode(supabase: AppSupabaseClient, code: st
   return {
     code: head.code,
     size: head.size,
-    cells: data.map((row) => {
-      const reward =
-        row.reward_slug === null || row.reward_label === null
-          ? null
-          : { slug: row.reward_slug, label: row.reward_label };
-      return {
-        position: row.position,
-        phrase: row.phrase,
-        hasReward: reward !== null,
-        // Until Phase 3 replaces the board RPC, labels still come through here.
-        reward,
-        claimedByColor: null,
-      };
-    }),
+    cells: data.map((row) => mapPlayerBoardCell(row)),
   };
 }
 
@@ -205,4 +241,52 @@ export async function joinSessionPlayer(
     color: row.color,
     nick: row.nick,
   };
+}
+
+function claimErrorFromMessage(message: string): ClaimBoardCellError | null {
+  if (message.includes("session_not_found")) return new ClaimBoardCellError("SESSION_NOT_FOUND");
+  if (message.includes("player_not_found")) return new ClaimBoardCellError("PLAYER_NOT_FOUND");
+  if (message.includes("invalid_position")) return new ClaimBoardCellError("INVALID_POSITION");
+  if (message.includes("cell_not_found")) return new ClaimBoardCellError("CELL_NOT_FOUND");
+  return null;
+}
+
+export async function claimBoardCell(
+  supabase: AppSupabaseClient,
+  input: { code: string; playerId: string; position: number },
+): Promise<ClaimBoardCellResult> {
+  const { data, error } = await supabase.rpc("claim_board_cell", {
+    p_code: input.code,
+    p_player_id: input.playerId,
+    p_position: input.position,
+  });
+
+  if (error) {
+    const mapped = claimErrorFromMessage(error.message);
+    if (mapped) throw mapped;
+    throw error;
+  }
+  if (data.length === 0) {
+    throw new Error("claim_board_cell returned no row");
+  }
+
+  const row = data[0];
+  const cell = mapPlayerBoardCell(row);
+
+  if (row.status === "conflict") {
+    if (row.occupant_nick === null || row.occupant_color === null) {
+      throw new Error("claim_board_cell conflict missing occupant");
+    }
+    return {
+      status: "conflict",
+      occupant: { nick: row.occupant_nick, color: row.occupant_color },
+      cell,
+    };
+  }
+
+  if (row.status !== "claimed") {
+    throw new Error(`claim_board_cell unknown status: ${row.status}`);
+  }
+
+  return { status: "claimed", cell };
 }

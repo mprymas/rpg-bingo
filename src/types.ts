@@ -72,3 +72,18 @@ export interface PlayerBoard {
   size: number;
   cells: PlayerBoardCell[];
 }
+
+export interface ClaimOccupant {
+  nick: string;
+  color: number;
+}
+
+export interface ClaimSuccessResponse {
+  cell: PlayerBoardCell;
+}
+
+export interface ClaimConflictResponse {
+  error: "conflict";
+  occupant: ClaimOccupant;
+  cell: PlayerBoardCell;
+}
