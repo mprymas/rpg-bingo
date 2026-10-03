@@ -438,28 +438,28 @@ Extend dependency-free smoke for claim + conflict and run the repo verification 
 
 #### Automated
 
-- [x] 3.1 `npm run lint` passes
-- [x] 3.2 `npx astro check` passes
-- [x] 3.3 Smoke can call claim after join (steps may land fully in Phase 6; route exists and typechecks here)
+- [x] 3.1 `npm run lint` passes — 655373f
+- [x] 3.2 `npx astro check` passes — 655373f
+- [x] 3.3 Smoke can call claim after join (steps may land fully in Phase 6; route exists and typechecks here) — 655373f
 
 #### Manual
 
-- [ ] 3.4 Two near-simultaneous claims on one cell: exactly one winner in DB; loser sees conflict payload with winner color/nick
-- [ ] 3.5 Player JSON snapshot never includes reward label on an unclaimed cell that has a reward
-- [ ] 3.6 GM snapshot includes labels on unclaimed rewarded cells and claimer colors on claimed cells
+- [x] 3.4 Two near-simultaneous claims on one cell: exactly one winner in DB; loser sees conflict payload with winner color/nick
+- [x] 3.5 Player JSON snapshot never includes reward label on an unclaimed cell that has a reward
+- [x] 3.6 GM snapshot includes labels on unclaimed rewarded cells and claimer colors on claimed cells
 
 ### Phase 4: Player board UX
 
 #### Automated
 
-- [ ] 4.1 `npm run lint` passes (including UI literals if scoped)
-- [ ] 4.2 `npx astro check` passes
+- [x] 4.1 `npm run lint` passes (including UI literals if scoped)
+- [x] 4.2 `npx astro check` passes
 
 #### Manual
 
-- [ ] 4.3 On a phone-sized viewport, tap claims a free cell; reward presence frame flips to label; cell takes player color
-- [ ] 4.4 Second player loses a race and sees occupied state + message; within ~10s the other phone shows the claim without manual refresh
-- [ ] 4.5 Flip animation may be absent if cut; reveal still happens
+- [x] 4.3 On a phone-sized viewport, tap claims a free cell; reward presence frame flips to label; cell takes player color
+- [x] 4.4 Second player loses a race and sees occupied state + message; within ~10s the other phone shows the claim without manual refresh
+- [x] 4.5 Flip animation may be absent if cut; reveal still happens
 
 ### Phase 5: GM board UX
 

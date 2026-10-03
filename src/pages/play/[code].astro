@@ -1,13 +1,12 @@
 ---
 import Layout from "@/layouts/Layout.astro";
 import JoinNickForm from "@/components/play/JoinNickForm";
-import BoardGrid from "@/components/sessions/BoardGrid.astro";
-import { Badge } from "@/components/ui/badge";
+import PlayerBoard from "@/components/play/PlayerBoard";
 import { PLAYER_COOKIE_NAME, readLastNick, readPlayerIdentity } from "@/lib/player-cookie";
 import { SESSION_CODE_PATTERN } from "@/lib/services/session-code";
 import { getActiveBoardByCode } from "@/lib/services/sessions.service";
 import { createClient } from "@/lib/supabase";
-import type { PlayerBoard } from "@/types";
+import type { PlayerBoard as PlayerBoardData } from "@/types";
 
 const PLAYER_SWATCH: Record<number, string> = {
   1: "text-player-1",
@@ -36,7 +35,7 @@ function swatchFor(color: number): string | null {
 const code = (Astro.params.code ?? "").trim().toUpperCase();
 const backHref = Astro.locals.user ? "/dashboard" : "/";
 
-let board: PlayerBoard | null = null;
+let board: PlayerBoardData | null = null;
 let notFound = false;
 let loadError: string | null = null;
 
@@ -70,26 +69,11 @@ const nickError = Astro.url.searchParams.get("error") === "nick";
 const showForm = Boolean(board) && (joinRequested || !swatchClass);
 const prefill = identity?.nick ?? lastNick ?? "";
 
-const rewardCounts = new Map<string, { label: string; count: number }>();
-if (board && !showForm) {
-  for (const cell of board.cells) {
-    if (!cell.reward) continue;
-    const existing = rewardCounts.get(cell.reward.slug);
-    if (existing) {
-      existing.count += 1;
-    } else {
-      rewardCounts.set(cell.reward.slug, { label: cell.reward.label, count: 1 });
-    }
-  }
-}
-const legend = [...rewardCounts.values()];
 const expectedCells = board ? board.size * board.size : 0;
 const boardComplete = board ? board.cells.length === expectedCells : false;
 if (board && !showForm && !boardComplete) {
   Astro.response.status = 422;
 }
-
-const gridCells = board?.cells ?? [];
 ---
 
 {notFound ? (
@@ -150,24 +134,7 @@ const gridCells = board?.cells ?? [];
               </div>
 
               {boardComplete ? (
-                <>
-                  <BoardGrid size={board.size} cells={gridCells} />
-
-                  {legend.length > 0 && (
-                    <div>
-                      <h2 class="mb-3 text-sm font-medium text-muted-foreground">Legenda nagród</h2>
-                      <ul class="flex flex-wrap gap-2">
-                        {legend.map((item) => (
-                          <li>
-                            <Badge variant="outline">
-                              {item.label}: {item.count}
-                            </Badge>
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-                  )}
-                </>
+                <PlayerBoard code={code} size={board.size} initialCells={board.cells} client:load />
               ) : (
                 <p class="rounded-lg border border-dashed border-border px-4 py-6 text-center text-destructive">
                   Nie udało się wczytać planszy.

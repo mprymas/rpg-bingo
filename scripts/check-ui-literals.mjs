@@ -22,6 +22,7 @@ const SCOPED_FILES = [
   "src/pages/play/kitchen-sink.astro",
   "src/pages/play/index.astro",
   "src/components/play/JoinNickForm.tsx",
+  "src/components/play/PlayerBoard.tsx",
   "src/components/JoinSessionForm.tsx",
   "src/components/Welcome.astro",
   "src/pages/kitchen-sink.astro",

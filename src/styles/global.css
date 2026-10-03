@@ -220,6 +220,54 @@
   background-image: linear-gradient(to bottom, #0a0e1a, #0f1529, #0a0e1a);
 }
 
+@keyframes player-cell-flip {
+  0% {
+    transform: scaleX(1);
+  }
+  45% {
+    transform: scaleX(0.05);
+  }
+  100% {
+    transform: scaleX(1);
+  }
+}
+
+@utility animate-player-cell-flip {
+  animation: player-cell-flip 0.45s ease;
+}
+
+/* Square board cells: size from grid column; type scales with the smaller cell axis. */
+@utility player-board-cell {
+  container-type: size;
+  aspect-ratio: 1 / 1;
+}
+
+@utility player-board-cell-phrase {
+  max-width: 100%;
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 4;
+  text-align: center;
+  font-size: clamp(0.55rem, 12cqmin, 0.75rem);
+  line-height: 1.15;
+  overflow-wrap: normal;
+  word-break: normal;
+  hyphens: none;
+}
+
+@utility player-board-cell-reward {
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  text-align: center;
+  font-size: clamp(0.55rem, 12cqmin, 0.75rem);
+  line-height: 1.15;
+  font-weight: 500;
+  opacity: 0.9;
+}
+
 @layer base {
   * {
     @apply border-border outline-ring/50;

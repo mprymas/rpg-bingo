@@ -1,9 +1,8 @@
 ---
 import Layout from "@/layouts/Layout.astro";
 import JoinNickForm from "@/components/play/JoinNickForm";
-import BoardGrid from "@/components/sessions/BoardGrid.astro";
-import { Badge } from "@/components/ui/badge";
-import type { SessionWithCells } from "@/types";
+import PlayerBoard from "@/components/play/PlayerBoard";
+import type { PlayerBoardCell } from "@/types";
 
 if (import.meta.env.PROD) {
   return new Response("Not Found", { status: 404 });
@@ -22,67 +21,66 @@ const PHRASES = [
   "Rozpoznaj magiczne właściwości przedmiotu",
   "Oswój zwierzę",
   "Wpadnij w pułapkę",
-  "Rzuć na inicjatywę",
-  "Użyj przedmiotu z ekwipunku",
-  "Opisz krytyczne niepowodzenie",
-  "Negocjuj z NPC",
-  "Rzuć kością fortuny",
-  "Odkryj sekret lokacji",
-  "Pomóż sojusznikowi w walce",
-  "Użyj zdolności klasowej",
-  "Przetrwaj pułapkę",
-  "Znajdź skarb",
-  "Rzuć naturalne 20",
-  "Przegraj test umiejętności",
-  "Zawrzyj sojusz",
-  "Ucieknij z walki",
-  "Rzuć na obrażenia",
-  "Zakończ scenę epicko",
 ];
 
-function makeCells(sessionId: string, count: number): SessionWithCells["cells"] {
+function makePlayerCells(
+  count: number,
+  mutate?: (cell: PlayerBoardCell, index: number) => PlayerBoardCell,
+): PlayerBoardCell[] {
   return Array.from({ length: count }, (_, i) => {
-    const reward = i % 3 === 0 ? rewardInspiration : i % 3 === 1 ? rewardExperience : null;
-    return {
-      id: `${sessionId}-cell-${String(i)}`,
-      phrase: PHRASES[i % PHRASES.length] ?? `Hasło ${String(i + 1)}`,
+    const hasReward = i % 3 === 0;
+    const base: PlayerBoardCell = {
       position: i,
-      reward_id: reward ? `demo-${reward.slug}` : null,
-      session_id: sessionId,
-      claimed_by_player_id: null,
-      claimed_at: null,
+      phrase: PHRASES[i % PHRASES.length] ?? `Hasło ${String(i + 1)}`,
+      hasReward,
+      reward: null,
       claimedByColor: null,
-      reward,
     };
+    return mutate ? mutate(base, i) : base;
   });
 }
 
-function buildLegend(cells: SessionWithCells["cells"]) {
-  const rewardCounts = new Map<string, { label: string; count: number }>();
-  for (const cell of cells) {
-    if (!cell.reward) continue;
-    const existing = rewardCounts.get(cell.reward.slug);
-    if (existing) {
-      existing.count += 1;
-    } else {
-      rewardCounts.set(cell.reward.slug, { label: cell.reward.label, count: 1 });
-    }
+const mysteryCells = makePlayerCells(9);
+const claimedRewardCells = makePlayerCells(9, (cell, i) => {
+  if (i !== 0) return cell;
+  return {
+    ...cell,
+    hasReward: true,
+    reward: rewardInspiration,
+    claimedByColor: 3,
+  };
+});
+const claimedEmptyCells = makePlayerCells(9, (cell, i) => {
+  if (i !== 1) return cell;
+  return {
+    ...cell,
+    hasReward: false,
+    reward: null,
+    claimedByColor: 7,
+  };
+});
+const conflictCells = makePlayerCells(9, (cell, i) => {
+  if (i !== 2) return cell;
+  return {
+    ...cell,
+    hasReward: true,
+    reward: rewardExperience,
+    claimedByColor: 1,
+  };
+});
+const mixedBoardCells = makePlayerCells(9, (cell, i) => {
+  if (i === 0) {
+    return { ...cell, hasReward: true, reward: rewardInspiration, claimedByColor: 3 };
   }
-  return [...rewardCounts.values()];
-}
+  if (i === 1) {
+    return { ...cell, hasReward: false, reward: null, claimedByColor: 7 };
+  }
+  if (i === 2) {
+    return { ...cell, hasReward: true, reward: null, claimedByColor: null };
+  }
+  return cell;
+});
 
-const fixtureBoard: SessionWithCells = {
-  id: "demo-play-board",
-  code: "PLAY01",
-  size: 5,
-  status: "active",
-  gm_id: "demo-gm",
-  created_at: "2026-09-15T14:30:00.000Z",
-  cells: makeCells("demo-play-board", 25),
-  players: [],
-};
-
-const legend = buildLegend(fixtureBoard.cells);
 const nickErrorCopy = "Nick musi mieć od 1 do 24 znaków.";
 const notFoundCopy = "Nie znaleziono sesji";
 const loadErrorCopy = "Nie udało się wczytać sesji";
@@ -116,9 +114,43 @@ const sections = [
   },
   {
     id: "board",
-    title: "board",
-    description: "Plansza 5×5 z kolorowym nickiem i legendą nagród.",
+    title: "board — mixed states",
+    description: "Plansza gracza: mystery frame, zajęte z nagrodą, zajęte puste, wolne bez nagrody.",
     kind: "board" as const,
+    cells: mixedBoardCells,
+    conflictMessage: null as string | null,
+  },
+  {
+    id: "mystery",
+    title: "mystery frame",
+    description: "Niezajęte pole z nagrodą — kolorowa ramka, bez etykiety typu.",
+    kind: "board" as const,
+    cells: mysteryCells,
+    conflictMessage: null as string | null,
+  },
+  {
+    id: "claimed-reward",
+    title: "claimed + reward",
+    description: "Zajęte pole z ujawnioną etykietą nagrody i kolorem gracza.",
+    kind: "board" as const,
+    cells: claimedRewardCells,
+    conflictMessage: null as string | null,
+  },
+  {
+    id: "claimed-empty",
+    title: "claimed empty",
+    description: "Zajęte pole bez nagrody — kolor gracza, bez etykiety.",
+    kind: "board" as const,
+    cells: claimedEmptyCells,
+    conflictMessage: null as string | null,
+  },
+  {
+    id: "conflict",
+    title: "conflict",
+    description: "Komunikat „Pole jest zajęte” jako toast po przegranej rywalizacji o pole.",
+    kind: "board" as const,
+    cells: conflictCells,
+    conflictMessage: "Pole jest zajęte",
   },
   {
     id: "not-found",
@@ -184,22 +216,14 @@ const sections = [
                 </p>
               </div>
 
-              <BoardGrid size={fixtureBoard.size} cells={fixtureBoard.cells} />
-
-              {legend.length > 0 && (
-                <div>
-                  <h2 class="mb-3 text-sm font-medium text-muted-foreground">Legenda nagród</h2>
-                  <ul class="flex flex-wrap gap-2">
-                    {legend.map((item) => (
-                      <li>
-                        <Badge variant="outline">
-                          {item.label}: {item.count}
-                        </Badge>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              )}
+              <PlayerBoard
+                code="PLAY01"
+                size={3}
+                initialCells={section.cells}
+                preview
+                initialConflictMessage={section.conflictMessage}
+                client:load
+              />
             </div>
           ) : section.kind === "not-found" ? (
             <div class="mx-auto w-full max-w-2xl rounded-2xl border border-border bg-card p-6 text-foreground sm:p-8">
