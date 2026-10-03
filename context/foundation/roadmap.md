@@ -50,7 +50,7 @@ Mistrz Gry chce przy stole meta-wyzwania i lekką rywalizację zamiast uznaniowy
 | S-01 | gm-create-session-board                              | zalogowany MG tworzy sesję, generuje planszę i dostaje krótki kod                       | F-01          | US-01, FR-001, FR-004, FR-005, FR-006     | done |
 | S-02 | player-join-shared-board                             | gracz dołącza kodem i nickiem (bez konta) i widzi wspólną planszę z nagrodami na polach | S-01          | US-01, FR-002, FR-008, FR-010             | done |
 | S-03 | player-claim-field-reward                            | gracz oznacza wolne pole, widzi nagrodę; inni widzą zajęte pole w ~10s (poll)             | S-02          | US-01, FR-009, FR-011                     | done |
-| S-04 | gm-undo-field-claim                                  | MG cofa błędne oznaczenie; pole wraca i nagroda jest unieważniona                       | S-03          | FR-012                                    | proposed |
+| S-04 | gm-undo-field-claim                                  | MG cofa błędne oznaczenie; pole wraca i nagroda jest unieważniona                       | S-03          | FR-012                                    | done |
 | S-05 | gm-regenerate-board                                  | MG generuje nową planszę (nowy kod); gracze dołączają od nowa                           | S-02          | FR-007                                    | proposed |
 
 
@@ -159,7 +159,7 @@ Foundations below assume these are present and do NOT re-scaffold them.
 - **Blockers:** —
 - **Unknowns:** —
 - **Risk:** Zaufanie MG przy stole; bez cofnięcia błędny klik psuje sesję — po north star, nie przed.
-- **Status:** proposed
+- **Status:** done
 
 
 
@@ -223,3 +223,4 @@ Foundations below assume these are present and do NOT re-scaffold them.
 - **S-01: zalogowany MG tworzy sesję bingo (rozmiar, własne hasła, nagrody i ich liczba), generuje planszę i otrzymuje krótki kod sesji.** — Archived 2026-09-27 → `context/archive/2026-09-27-gm-create-session-board/`. Lesson: —.
 - **S-02: gracz dołącza kodem i nickiem (bez konta) i widzi wspólną planszę z nagrodami na polach** — Archived 2026-10-03 → `context/archive/2026-10-03-player-join-shared-board/`. Lesson: —.
 - **S-03: gracz oznacza wolne pole jako swoje, natychmiast widzi czy zdobył nagrodę; pole staje się niedostępne dla innych (zajętość widoczna u innych i u MG w ~10s przez polling ~5s); MG mapuje kolor → nick → nagrodę przez roster.** — Archived 2026-10-03 → context/archive/2026-10-03-player-claim-field-reward/. Lesson: —.
+- **S-04: MG cofa błędne oznaczenie pola; pole wraca do puli wolnych, powiązana nagroda jest unieważniona.** — Archived 2026-10-03 → `context/archive/2026-10-03-gm-undo-field-claim/`. Lesson: —.
