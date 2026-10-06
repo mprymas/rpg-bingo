@@ -47,6 +47,7 @@ research's job, see §1 principle #3).
 | 6 | Abuse: outsider with a guessed/leaked code (or forged player identity) joins or claims on someone else’s session | High | Medium | PRD Access Control + NFR code-guessing; FR-002 join-by-code |
 | 7 | MG undo frees the cell visually but leaves the reward (or ownership) intact | Medium | Medium | PRD FR-012; roadmap S-04 done |
 | 8 | Abuse: unauthenticated user reaches MG-protected surfaces (create board, board list, board preview as MG) and sees or acts as MG | High | Medium | user correction to test plan; PRD Access Control; AGENTS.md PROTECTED_ROUTES + auth smoke |
+| 9 | MG creates a board with custom phrases marked guaranteed; create succeeds, but one or more guaranteed phrases never appear on the generated board | High | Medium | user concern (test-plan correction); archive S-01 create-session AC (guaranteed customs always appear); PRD FR-004–005; hot-spot dir `src/lib/services` |
 
 ### Risk Response Guidance
 
@@ -60,6 +61,7 @@ research's job, see §1 principle #3).
 | #6 | Claim/undo require valid session player (or MG) identity; invalid code cannot see board | "Logged-in ⇒ can touch any session" | join token/cookie vs session ownership | API authz integration | full e2e login theater |
 | #7 | After undo: cell free, previous reward invalidated, other players’ view consistent | "Undo only clears the cell label" | undo side effects on claim + reward | integration | UI-only undo click without DB assert |
 | #8 | Unauthenticated request to MG create / list / board-preview surfaces is denied (redirect or 401/403) with no protected board content | "Auth-flow smoke ⇒ every MG-protected route is closed" | PROTECTED_ROUTES / middleware vs create, list, MG preview entry points | route-guard / integration (anonymous GET/POST) | full e2e login theater; kitchen-sink only |
+| #9 | After successful create with ≥1 guaranteed custom, every guaranteed phrase text appears among persisted board cells (trim/normalize per product rules) | "`guaranteed: true` in request + HTTP 201 ⇒ phrase is on the board" | create command guaranteed flag → persisted board phrase set; how guaranteed vs pool draw is supposed to behave | integration (create → GM board membership) and/or pure unit on generator with fixed RNG | assert only cell count/uniqueness; mirror shuffle internals; oracle = generator’s own output list |
 
 ## 3. Phased Rollout
 
@@ -69,10 +71,10 @@ orchestrator updates Status as artifacts appear on disk.
 
 | # | Phase name | Goal (one line) | Risks covered | Test types | Status | Change folder |
 |---|------------|-----------------|---------------|------------|--------|---------------|
-| 1 | Runner bootstrap + board integrity | Install cheapest runner; prove create never ships invalid boards; lock non-success HTTP contract on core APIs | #1, #2 | runner setup, integration, contract | implementing | testing-runner-bootstrap-board-integrity |
+| 1 | Runner bootstrap + board integrity | Install cheapest runner; prove create never ships invalid boards; prove guaranteed customs appear on success; lock non-success HTTP contract on core APIs | #1, #2, #9 | runner setup, integration, contract | done | testing-runner-bootstrap-board-integrity |
 | 2 | Play-path claim & undo | Protect unique claim, reward reveal, undo invalidation, rejoin without cache clear | #3, #4, #5, #7 | integration (+ optional thin e2e if research requires UI) | not started | — |
 | 3 | Abuse & join identity | Unauthorized claim/undo and invalid code denied; unauthenticated access to MG create/list/preview denied | #6, #8 | API authz / integration, route-guard | not started | — |
-| 4 | Quality-gates wiring | Extend smoke/CI so regressions fail the PR; document cookbook | cross-cutting (locks #1–#8 floor) | smoke expansion, CI gates, cookbook | not started | — |
+| 4 | Quality-gates wiring | Extend smoke/CI so regressions fail the PR; document cookbook | cross-cutting (locks #1–#9 floor) | smoke expansion, CI gates, cookbook | done | testing-runner-bootstrap-board-integrity |
 
 ## 4. Stack
 
@@ -83,10 +85,10 @@ plus the MCP/tools actually exposed in the current session.
 
 | Layer | Tool | Version | Notes |
 |-------|------|---------|-------|
-| unit + integration | none yet — see §3 Phase 1 | — | No vitest/jest config; AGENTS.md: gate is smoke only |
-| API / HTTP contract | none yet — see §3 Phase 1 | — | Prefer asserting status + side effects over UI |
+| unit + integration | Vitest (`vitest.config.ts` projects `unit` / `integration`) | ^5.0.3 | Scripts: `npm run test:unit`, `npm run test:integration`, `npm test`. Naming: `*.test.ts`. Unit: `src/**/*.test.ts` (and `tests/unit/` if needed). Integration: `tests/integration/**/*.test.ts`; needs preview URL (`PREVIEW_BASE_URL` preferred — Vite may overwrite `BASE_URL`) |
+| API / HTTP contract | Vitest integration + `tests/helpers/http.ts` | same | Assert status + side effects / error shape; no full-body snapshots. Helpers mirror smoke cookie-jar + Origin |
 | e2e | none yet — see §3 Phase 2 | — | Add only if research shows a UI-only failure mode for Risks #4/#5 |
-| Existing smoke | `scripts/smoke.mjs` via `npm run smoke` | n/a | Auth-flow smoke; CI already runs against preview + local Supabase |
+| Existing smoke | `scripts/smoke.mjs` via `npm run smoke` | n/a | Auth-flow smoke; CI `smoke` job runs smoke then `test:integration` against preview + local Supabase |
 | accessibility | none planned | — | PRD non-goal: full WCAG AA out of MVP |
 | AI-native | none planned | — | Cost × signal: deterministic integration preferred; browser MCP is manual only |
 
@@ -106,10 +108,10 @@ phase lands; before that, the gate is `planned`.
 |------|-------|-----------|---------|
 | lint + `astro check` + build | local + CI | required (today) | syntactic / type / build drift |
 | `npm run smoke` | CI (`smoke` job) + local against running server | required (today) | auth-flow / environment wiring breaks |
-| unit + integration suite | local + CI | required after §3 Phase 1 | board integrity + HTTP success-contract regressions |
+| unit + integration suite | local + CI (`test:unit` in `ci`; `test:integration` in `smoke`) | required (today) | board integrity + guaranteed-phrase membership + HTTP success-contract regressions |
 | play-path integration (+ thin e2e if added) | local + CI | required after §3 Phase 2 | claim race, undo, rejoin stuck-state |
 | authz / abuse API checks | local + CI | required after §3 Phase 3 | unauthorized claim/join; unauthenticated MG create/list/preview |
-| expanded smoke / CI test job wiring | CI on PR | required after §3 Phase 4 | floor stays green on every PR |
+| expanded smoke / CI test job wiring | CI on PR (`smoke` then Vitest integration) | required (today) | floor stays green on every PR |
 
 ## 6. Cookbook Patterns
 
@@ -119,11 +121,25 @@ the relevant rollout phase ships; before that, the sub-section reads
 
 ### 6.1 Adding a unit test
 
-TBD — see §3 Phase 1 for runner location, naming, and reference test.
+1. Put the file next to the module as `src/**/<name>.test.ts` (or under `tests/unit/` if colocating is awkward).
+2. Import from `vitest` (`describe` / `it` / `expect`). Use the `@/` alias for `src` imports.
+3. Prefer pure functions with fixed inputs (e.g. inject `random` for generators). No network, no Supabase, no preview.
+4. Run: `npm run test:unit`.
+
+Reference: `src/lib/services/board-generator.test.ts` (fixed `random`, asserts cell count / uniqueness / non-empty phrases).
 
 ### 6.2 Adding an integration test
 
-TBD — see §3 Phase 1 for board-integrity / HTTP-contract pattern (assert status + persisted side effects; do not treat any JSON as success).
+1. Add `tests/integration/<name>.test.ts`.
+2. Use `createHttpClient` / `hasBaseUrl` / `requireBaseUrl` / `resolveTestCredentials` from `tests/helpers/http.ts`.
+3. Gate suites with `describe.skipIf(!hasBaseUrl())` (and credentials when auth is required) so local `npm test` without preview does not fail.
+4. Assert **HTTP status** and **observable side effects** (follow-up GET, membership, error field presence). Do **not** snapshot full response bodies; do **not** treat any JSON as success.
+5. Env: `PREVIEW_BASE_URL` (preferred) or absolute `BASE_URL`; signed-in cases need `SMOKE_EMAIL`/`SMOKE_PASSWORD` or `TEST_EMAIL`/`TEST_PASSWORD`.
+6. Run against a healthy preview: `PREVIEW_BASE_URL=http://localhost:4321 npm run test:integration` (CI sets the same after `npm run smoke`).
+
+References: `tests/integration/create-session-board.test.ts`, `tests/integration/http-contract-matrix.test.ts`.
+
+**Phase 1 exclusions / known gap:** blank catalog and RLS-bypass scenarios are out of Phase 1 scope. Orphan 0-cell session after failed cell insert (create returns 500; row may remain) is a **known deferred gap** — document only; no red test and no transactional rewrite in Phase 1 (see change notes for `testing-runner-bootstrap-board-integrity`).
 
 ### 6.3 Adding an e2e test
 
@@ -131,11 +147,21 @@ TBD — see §3 Phase 2 (only if research proves a UI-only failure for board cla
 
 ### 6.4 Adding a test for a new API endpoint
 
-TBD — see §3 Phase 1–3: prefer integration asserting request → non-ambiguous status → side effects; authz / unauthenticated MG route cases follow Phase 3 pattern.
+1. Prefer a Vitest integration case in `tests/integration/` using `tests/helpers/http.ts`.
+2. Cover the failure classes that matter: unauthenticated → expected deny status; bad input → 4xx + `{ error: string }`; happy path → success status **and** a side-effect check (not body shape alone).
+3. Extend or mirror `tests/integration/http-contract-matrix.test.ts` for status-contract rows; keep assertions status-first.
+4. Authz / unauthenticated MG route breadth beyond Phase 1 create/board guards belongs in §3 Phase 3 — do not expand the matrix into full abuse coverage here.
 
 ### 6.5 Adding a test for board create / claim / undo
 
-TBD — see §3 Phase 1 (create integrity) and Phase 2 (claim uniqueness, reward reveal, undo invalidation, rejoin).
+**Create (Phase 1 — in place):**
+1. Sign in via `http.signIn`, `POST /api/sessions` with a typed body.
+2. Expect create status (`201` success / `400` validation / `401` anonymous).
+3. On success, `GET /api/sessions/{id}/board` as GM and assert playable invariants: `size²` cells, positions `0..n-1`, non-empty unique phrases, reward ids null or from the request set.
+4. For guaranteed customs: oracle = request guaranteed texts (normalized with product `normalizePhrase`); every guaranteed phrase must appear on the board. Do not oracle against the generator’s own output list.
+5. Reference: `tests/integration/create-session-board.test.ts`.
+
+**Claim / undo / rejoin:** TBD — see §3 Phase 2 (uniqueness, reward reveal, undo invalidation, rejoin without cache clear).
 
 ### 6.6 Per-rollout-phase notes
 
@@ -152,8 +178,8 @@ contributors should respect these unless the underlying assumption changes.
 
 ## 8. Freshness Ledger
 
-- Strategy (§1–§5) last reviewed: 2026-10-06 (Risk #8 added: unauthenticated MG surfaces)
-- Stack versions last verified: 2026-10-06
+- Strategy (§1–§5) last reviewed: 2026-10-06 (Risk #9 added: guaranteed custom phrase missing from board; Phase 1 status → done; stack + cookbook §6.1/6.2/6.4/6.5 filled)
+- Stack versions last verified: 2026-10-06 (Vitest ^5.0.3)
 - AI-native tool references last verified: 2026-10-06 (none planned)
 
 Refresh (`/10x-test-plan --refresh`) when:

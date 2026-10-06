@@ -382,17 +382,17 @@ No DB migrations. No production schema changes. Local/CI only need existing Supa
 
 #### Automated
 
-- [x] 3.1 Contract matrix tests pass on preview
-- [x] 3.2 Locked failure paths would fail the suite if they returned **2xx**
+- [x] 3.1 Contract matrix tests pass on preview — 3c135e5
+- [x] 3.2 Locked failure paths would fail the suite if they returned **2xx** — 3c135e5
 
 ### Phase 4: CI + cookbook
 
 #### Automated
 
-- [ ] 4.1 CI smoke job runs smoke + Vitest integration
-- [ ] 4.2 `ci` job runs unit tests if wired
-- [ ] 4.3 lint / astro check / build still pass
+- [x] 4.1 CI smoke job runs smoke + Vitest integration
+- [x] 4.2 `ci` job runs unit tests if wired
+- [x] 4.3 lint / astro check / build still pass
 
 #### Manual
 
-- [ ] 4.4 Cookbook §6 Phase 1 sections are clear enough to add a new test
+- [x] 4.4 Cookbook §6 Phase 1 sections are clear enough to add a new test

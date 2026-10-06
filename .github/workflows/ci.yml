@@ -19,6 +19,7 @@ jobs:
       - run: npx astro sync
       - run: npm run lint
       - run: npx astro check
+      - run: npm run test:unit
       - run: npm run build
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
@@ -56,6 +57,13 @@ jobs:
           npm run preview -- --port 4321 &
           for i in $(seq 1 60); do curl -sf -o /dev/null http://localhost:4321/ && break; sleep 1; done
           SMOKE_EMAIL=mg.manual@rpgbingo.test SMOKE_PASSWORD='Manual-Test-Passw0rd!' BASE_URL=http://localhost:4321 npm run smoke
+      - name: Run Vitest integration against production preview
+        run: |
+          SMOKE_EMAIL=mg.manual@rpgbingo.test \
+          SMOKE_PASSWORD='Manual-Test-Passw0rd!' \
+          BASE_URL=http://localhost:4321 \
+          PREVIEW_BASE_URL=http://localhost:4321 \
+          npm run test:integration
       - if: always()
         run: |
           if [ -x node_modules/.bin/supabase ]; then
