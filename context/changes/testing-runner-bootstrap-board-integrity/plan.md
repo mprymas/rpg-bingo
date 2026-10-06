@@ -389,10 +389,10 @@ No DB migrations. No production schema changes. Local/CI only need existing Supa
 
 #### Automated
 
-- [x] 4.1 CI smoke job runs smoke + Vitest integration
-- [x] 4.2 `ci` job runs unit tests if wired
-- [x] 4.3 lint / astro check / build still pass
+- [x] 4.1 CI smoke job runs smoke + Vitest integration — 4b843cb
+- [x] 4.2 `ci` job runs unit tests if wired — 4b843cb
+- [x] 4.3 lint / astro check / build still pass — 4b843cb
 
 #### Manual
 
-- [x] 4.4 Cookbook §6 Phase 1 sections are clear enough to add a new test
+- [x] 4.4 Cookbook §6 Phase 1 sections are clear enough to add a new test — 4b843cb
