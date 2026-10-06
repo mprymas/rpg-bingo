@@ -3,7 +3,34 @@
  * Mirrors the cookie-jar + Origin pattern from scripts/smoke.mjs without expanding smoke itself.
  */
 
+import { readFileSync } from "node:fs";
+import { fileURLToPath } from "node:url";
+
 export type CookieJar = Map<string, string>;
+
+/** Same lookup as scripts/smoke.mjs: process.env, then repo-root `.env`. */
+function envValue(name: string): string {
+  if (process.env[name]) return process.env[name];
+  try {
+    const envPath = fileURLToPath(new URL("../../.env", import.meta.url));
+    const text = readFileSync(envPath, "utf8");
+    for (const line of text.split(/\r?\n/)) {
+      const trimmed = line.trim();
+      if (!trimmed || trimmed.startsWith("#")) continue;
+      const eq = trimmed.indexOf("=");
+      if (eq === -1) continue;
+      if (trimmed.slice(0, eq).trim() !== name) continue;
+      let value = trimmed.slice(eq + 1).trim();
+      if ((value.startsWith('"') && value.endsWith('"')) || (value.startsWith("'") && value.endsWith("'"))) {
+        value = value.slice(1, -1);
+      }
+      return value;
+    }
+  } catch {
+    return "";
+  }
+  return "";
+}
 
 export interface RequestOptions {
   method?: string;
@@ -32,17 +59,40 @@ function normalizeBaseUrl(baseUrl: string): string {
   return baseUrl.replace(/\/+$/, "");
 }
 
+/**
+ * True when a preview absolute http(s) URL is available.
+ * Prefers PREVIEW_BASE_URL / TEST_BASE_URL (Vite/Vitest also set BASE_URL to the asset base "/").
+ */
 export function hasBaseUrl(): boolean {
-  return Boolean(process.env.BASE_URL?.trim());
+  return Boolean(resolvePreviewBaseUrl());
 }
 
-/** Returns trimmed BASE_URL or throws (integration tests should skip when unset). */
-export function requireBaseUrl(): string {
-  const value = process.env.BASE_URL?.trim();
-  if (!value) {
-    throw new Error("BASE_URL is required for integration tests (e.g. http://localhost:4321)");
+function resolvePreviewBaseUrl(): string | undefined {
+  for (const key of ["PREVIEW_BASE_URL", "TEST_BASE_URL", "BASE_URL"] as const) {
+    const value = process.env[key]?.trim();
+    if (value && isPreviewBaseUrl(value)) return normalizeBaseUrl(value);
   }
-  return normalizeBaseUrl(value);
+  return undefined;
+}
+
+function isPreviewBaseUrl(value: string | undefined): boolean {
+  const trimmed = value?.trim();
+  if (!trimmed) return false;
+  try {
+    const url = new URL(trimmed);
+    return url.protocol === "http:" || url.protocol === "https:";
+  } catch {
+    return false;
+  }
+}
+
+/** Returns trimmed preview base URL or throws (integration tests should skip when unset). */
+export function requireBaseUrl(): string {
+  const value = resolvePreviewBaseUrl();
+  if (!value) {
+    throw new Error("PREVIEW_BASE_URL or BASE_URL is required for integration tests (e.g. http://localhost:4321)");
+  }
+  return value;
 }
 
 /**
@@ -50,8 +100,8 @@ export function requireBaseUrl(): string {
  * Prefers TEST_EMAIL/TEST_PASSWORD, then SMOKE_EMAIL/SMOKE_PASSWORD (CI smoke user).
  */
 export function resolveTestCredentials(): { email: string; password: string } | null {
-  const email = (process.env.TEST_EMAIL ?? process.env.SMOKE_EMAIL ?? "").trim();
-  const password = (process.env.TEST_PASSWORD ?? process.env.SMOKE_PASSWORD ?? "").trim();
+  const email = (envValue("TEST_EMAIL") || envValue("SMOKE_EMAIL")).trim();
+  const password = (envValue("TEST_PASSWORD") || envValue("SMOKE_PASSWORD")).trim();
   if (!email || !password) return null;
   return { email, password };
 }

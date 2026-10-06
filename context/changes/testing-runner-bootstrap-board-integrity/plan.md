@@ -309,25 +309,25 @@ No DB migrations. No production schema changes. Local/CI only need existing Supa
 
 #### Automated
 
-- [x] 1.1 `npm test` / `test:unit` passes without local Supabase
-- [x] 1.2 `npx astro check` and `npm run lint` pass after Vitest config/deps
-- [x] 1.3 Vitest discovers agreed `*.test.ts` patterns
+- [x] 1.1 `npm test` / `test:unit` passes without local Supabase — 0ae4bb6
+- [x] 1.2 `npx astro check` and `npm run lint` pass after Vitest config/deps — 0ae4bb6
+- [x] 1.3 Vitest discovers agreed `*.test.ts` patterns — 0ae4bb6
 
 #### Manual
 
-- [x] 1.4 Local `npm run test:unit` works as the quick loop without Docker
+- [x] 1.4 Local `npm run test:unit` works as the quick loop without Docker — 0ae4bb6
 
 ### Phase 2: Board integrity (Risk #1)
 
 #### Automated
 
-- [ ] 2.1 Create→GM board invariant integration test passes on preview + Supabase
-- [ ] 2.2 Create **401** / **400** cases pass
-- [ ] 2.3 No product transactional rewrite of `createSession` in this change
+- [x] 2.1 Create→GM board invariant integration test passes on preview + Supabase
+- [x] 2.2 Create **401** / **400** cases pass
+- [x] 2.3 No product transactional rewrite of `createSession` in this change
 
 #### Manual
 
-- [ ] 2.4 UI create still navigates only on success
+- [x] 2.4 UI create still navigates only on success
 
 ### Phase 3: HTTP contract matrix (Risk #2)
 
