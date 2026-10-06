@@ -372,18 +372,18 @@ No DB migrations. No production schema changes. Local/CI only need existing Supa
 
 #### Automated
 
-- [x] 2.5 Create with ≥1 guaranteed custom → every guaranteed phrase appears on GM board (membership assert; not cell-count-only; not generator-output oracle)
+- [x] 2.5 Create with ≥1 guaranteed custom → every guaranteed phrase appears on GM board (membership assert; not cell-count-only; not generator-output oracle) — 8f53839
 
 #### Manual
 
-- [x] 2.6 Spot-check one UI create with a guaranteed custom still shows that phrase on the board preview
+- [x] 2.6 Spot-check one UI create with a guaranteed custom still shows that phrase on the board preview — 8f53839
 
 ### Phase 3: HTTP contract matrix (Risk #2)
 
 #### Automated
 
-- [ ] 3.1 Contract matrix tests pass on preview
-- [ ] 3.2 Locked failure paths would fail the suite if they returned **2xx**
+- [x] 3.1 Contract matrix tests pass on preview
+- [x] 3.2 Locked failure paths would fail the suite if they returned **2xx**
 
 ### Phase 4: CI + cookbook
 
