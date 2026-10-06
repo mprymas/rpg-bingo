@@ -22,6 +22,7 @@ const baseConfig = defineConfig({
     },
   },
   rules: {
+    "linebreak-style": ["error", "windows"],
     "no-console": "warn",
     "no-unused-vars": "off",
     "@typescript-eslint/no-unused-vars": [
