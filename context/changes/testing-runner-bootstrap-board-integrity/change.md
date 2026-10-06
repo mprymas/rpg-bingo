@@ -1,0 +1,17 @@
+---
+change_id: testing-runner-bootstrap-board-integrity
+title: Runner bootstrap + board integrity
+status: implementing
+created: 2026-10-06
+updated: 2026-10-06
+archived_at: null
+---
+
+## Notes
+
+Open a change folder for rollout Phase 1 of context/foundation/test-plan.md: "Runner bootstrap + board integrity".
+Risks covered: #1 (invalid/incomplete board on create), #2 (API failure treated as HTTP success). Test types planned: runner setup, integration, contract.
+Risk response intent:
+- #1: prove create-session never persists a board with wrong cell count, empty phrase, or unknown reward id; challenge "Generate returned OK => board is playable"; avoid asserting only HTTP 200 or mirroring generator internals.
+- #2: prove non-success paths use non-2xx (or an error body the client treats as failure) so the client does not advance on error; challenge "Any JSON body means success"; avoid happy-path-only and full-body snapshots.
+After creating the folder, follow the downstream continuation rule.
