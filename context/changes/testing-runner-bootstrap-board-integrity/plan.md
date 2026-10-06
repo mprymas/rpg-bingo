@@ -6,7 +6,7 @@
 
 ## Overview
 
-Install Vitest as the first unit/integration runner, then lock Risk #1 (create never ships an incomplete/invalid board on the success path) and Risk #2 (core JSON APIs use non-2xx for failures) via HTTP tests against `astro preview` + local Supabase—the same harness CI already uses for smoke.
+Install Vitest as the first unit/integration runner, then lock Risk #1 (create never ships an incomplete/invalid board on the success path), Risk #9 (guaranteed custom phrases appear on the persisted board), and Risk #2 (core JSON APIs use non-2xx for failures) via HTTP tests against `astro preview` + local Supabase—the same harness CI already uses for smoke.
 
 ## Current State Analysis
 
@@ -20,7 +20,7 @@ Install Vitest as the first unit/integration runner, then lock Risk #1 (create n
 
 - `npm test` (Vitest) runs unit tests without Supabase; integration/contract tests run against preview + local Supabase.
 - CI `smoke` job runs the suite after preview is up (smoke script remains).
-- Create **201** is proven by board invariants via GM board GET; failure statuses on create + thin JSON matrix are locked.
+- Create **201** is proven by board invariants via GM board GET; guaranteed customs from the create body appear among cell phrases; failure statuses on create + thin JSON matrix are locked.
 - test-plan cookbook §6.1, §6.2, §6.4, §6.5 (Phase 1 notes) filled; orphan gap called out as known / deferred.
 
 ### Key Discoveries:
@@ -180,6 +180,42 @@ Prove successful create persists a playable board; lock create failure status cl
 
 ---
 
+## Phase 2b: Guaranteed phrase membership (Risk #9)
+
+### Overview
+
+Prove that a successful create with custom phrases marked guaranteed persists those phrase texts on the board—not only a structurally valid N² grid.
+
+### Changes Required:
+
+#### 1. Guaranteed membership assert
+
+**File**: extend `tests/integration/create-session-board.test.ts` (and/or a cheap unit on the generator with fixed RNG)
+
+**Intent**: Challenge "`guaranteed: true` + HTTP 201 ⇒ phrase is on the board." Structural invariants alone are insufficient.
+
+**Contract**:
+- Create with ≥1 guaranteed custom (prefer multiple if cheap) → **201**
+- GM board GET → **200**
+- Every guaranteed phrase text from the request appears among cell phrases (trim/normalize per product rules)
+- Oracle is the request’s guaranteed texts, never the generator’s intermediate phrase list
+- Do not assert shuffle positions; do not weaken existing size/uniqueness/non-empty asserts
+
+### Success Criteria:
+
+#### Automated Verification:
+
+- Membership test fails if a guaranteed phrase is omitted while cell count stays correct
+- Existing board-integrity cases still pass
+
+#### Manual Verification:
+
+- One UI create with a guaranteed custom shows that phrase on the board preview
+
+**Implementation Note**: After completing this phase and all automated verification passes, pause here for manual confirmation from the human before proceeding to Phase 3.
+
+---
+
 ## Phase 3: HTTP contract matrix (Risk #2)
 
 ### Overview
@@ -275,6 +311,7 @@ Wire suite into CI smoke job; fill test-plan cookbook for Phase 1 patterns; upda
 ### Integration Tests:
 
 - Create **201** → GM board invariants
+- Create with ≥1 guaranteed custom → every guaranteed phrase text appears on GM board (Risk #9)
 - Create **401** / **400** (zod + unknown reward)
 - Thin failure matrix for board GET (GM + play), claim, undo-claim
 
@@ -321,13 +358,25 @@ No DB migrations. No production schema changes. Local/CI only need existing Supa
 
 #### Automated
 
-- [x] 2.1 Create→GM board invariant integration test passes on preview + Supabase
-- [x] 2.2 Create **401** / **400** cases pass
-- [x] 2.3 No product transactional rewrite of `createSession` in this change
+- [x] 2.1 Create→GM board invariant integration test passes on preview + Supabase — bae9803
+- [x] 2.2 Create **401** / **400** cases pass — bae9803
+- [x] 2.3 No product transactional rewrite of `createSession` in this change — bae9803
 
 #### Manual
 
-- [x] 2.4 UI create still navigates only on success
+- [x] 2.4 UI create still navigates only on success — bae9803
+
+### Phase 2b: Guaranteed phrase membership (Risk #9)
+
+> Added after test-plan correction (Risk #9). Structural board invariants alone do not prove the guaranteed-flag business rule.
+
+#### Automated
+
+- [x] 2.5 Create with ≥1 guaranteed custom → every guaranteed phrase appears on GM board (membership assert; not cell-count-only; not generator-output oracle)
+
+#### Manual
+
+- [x] 2.6 Spot-check one UI create with a guaranteed custom still shows that phrase on the board preview
 
 ### Phase 3: HTTP contract matrix (Risk #2)
 

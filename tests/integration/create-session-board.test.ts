@@ -1,4 +1,5 @@
 import { beforeAll, describe, expect, it } from "vitest";
+import { normalizePhrase } from "@/lib/services/board-generator";
 import { createHttpClient, hasBaseUrl, resolveTestCredentials, requireBaseUrl, type HttpClient } from "../helpers/http";
 
 const SESSION_CODE_RE = /^[ABCDEFGHJKLMNPQRSTUVWXYZ23456789]{6}$/;
@@ -40,6 +41,14 @@ function assertPlayableBoard(board: GmBoardDto, size: number, allowedRewardIds: 
   }
 }
 
+/** Oracle = request guaranteed texts; compare with product normalize (trim / collapse / pl lower). */
+function assertGuaranteedPhrasesOnBoard(board: GmBoardDto, guaranteedTexts: string[]) {
+  const boardNorms = new Set(board.cells.map((c) => normalizePhrase(c.phrase)));
+  for (const text of guaranteedTexts) {
+    expect(boardNorms.has(normalizePhrase(text))).toBe(true);
+  }
+}
+
 describe.skipIf(!hasBaseUrl())("POST /api/sessions — unauthenticated", () => {
   it("rejects create with 401", async () => {
     const http = createHttpClient(requireBaseUrl());
@@ -69,10 +78,15 @@ describe.skipIf(!hasBaseUrl() || !resolveTestCredentials())(
       expect(signIn.status).toBe(200);
     });
 
-    it("returns 201 then GM board with playable size-5 invariants", async () => {
+    it("returns 201 then GM board with playable size-5 invariants and guaranteed membership", async () => {
+      const guaranteedTexts = [
+        "Hasło gwarantowane integracja A",
+        "Hasło gwarantowane integracja B",
+        "Hasło gwarantowane integracja C",
+      ];
       const createBody: CreateSessionBody = {
         size: 5,
-        customPhrases: [{ text: "Hasło z integracji", guaranteed: true }],
+        customPhrases: guaranteedTexts.map((text) => ({ text, guaranteed: true })),
         rewards: [],
       };
       const allowedRewardIds = new Set(createBody.rewards.filter((r) => r.count > 0).map((r) => r.rewardId));
@@ -92,7 +106,9 @@ describe.skipIf(!hasBaseUrl() || !resolveTestCredentials())(
 
       const boardRes = await http.request(`/api/sessions/${body.id}/board`);
       expect(boardRes.status).toBe(200);
-      assertPlayableBoard(boardRes.body as GmBoardDto, 5, allowedRewardIds);
+      const board = boardRes.body as GmBoardDto;
+      assertPlayableBoard(board, 5, allowedRewardIds);
+      assertGuaranteedPhrasesOnBoard(board, guaranteedTexts);
     });
 
     it("rejects empty custom phrase text with 400", async () => {
