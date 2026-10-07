@@ -38,15 +38,15 @@ Cheapest layer for both risks on this architecture: Vitest preview HTTP integrat
 
 **Surfaces to prove (this inspected set):**
 
-| Surface | Protection for #6 |
-|---------|-------------------|
-| `POST /api/play/claim` | Cookie identity for `code` + RPC `claim_token` binding |
-| `POST /api/play/join` | Active code required; optional token rebinds **same** session only |
-| `GET /api/play/board` | Code-gated public poll — **no** player cookie check |
-| `POST /api/sessions/{id}/undo-claim` | Logged-in GM + `gm_id = auth.uid()` in RPC |
-| `GET /api/sessions/{id}/board` | Logged-in GM + `getSessionWithCells(..., user.id)` `gm_id` filter |
-| `GET /play/{code}` | Same read model as board RPC; invalid code → 404 |
-| `GET /sessions/{id}` | Middleware login + owner filter → 404 if not GM |
+| Surface                              | Protection for #6                                                  |
+| ------------------------------------ | ------------------------------------------------------------------ |
+| `POST /api/play/claim`               | Cookie identity for `code` + RPC `claim_token` binding             |
+| `POST /api/play/join`                | Active code required; optional token rebinds **same** session only |
+| `GET /api/play/board`                | Code-gated public poll — **no** player cookie check                |
+| `POST /api/sessions/{id}/undo-claim` | Logged-in GM + `gm_id = auth.uid()` in RPC                         |
+| `GET /api/sessions/{id}/board`       | Logged-in GM + `getSessionWithCells(..., user.id)` `gm_id` filter  |
+| `GET /play/{code}`                   | Same read model as board RPC; invalid code → 404                   |
+| `GET /sessions/{id}`                 | Middleware login + owner filter → 404 if not GM                    |
 
 **Claim deny path (inspected):** missing/invalid cookie → **401** before RPC ([claim.ts:37-41](src/pages/api/play/claim.ts)); unknown/inactive code with forged well-formed cookie → RPC `session_not_found` → **404** ([claim.ts:69-70](src/pages/api/play/claim.ts); matrix [http-contract-matrix.test.ts:90-97](tests/integration/http-contract-matrix.test.ts)); active code + fake `claimToken` → RPC `player_not_found` → **401** ([claim.ts:71-72](src/pages/api/play/claim.ts); migration [20261003190000:154-162](supabase/migrations/20261003190000_player_claim_token.sql)). Cookie `playerId` is not sent to the claim RPC — only `claimToken` is ([claim.ts:49-52](src/pages/api/play/claim.ts)).
 
@@ -58,7 +58,7 @@ Cheapest layer for both risks on this architecture: Vitest preview HTTP integrat
 
 1. Create active session → forge cookie for that **real** code with random UUIDs → `POST /api/play/claim` → **401**; follow-up player board shows cell still free.
 2. Player A joins session 1; use A’s cookie (or forged entry keyed to session 2’s code with A’s token) against session 2 claim → **401**; no occupancy change.
-3. Signed-in GM (smoke account) → `GET/POST` board/undo on a session id owned by… *(cross-owner needs a second GM account or fixture; if only one test user exists, assert unknown id **404** already covered and document cross-owner as blocked gap or add second credentials)*.
+3. Signed-in GM (smoke account) → `GET/POST` board/undo on a session id owned by… _(cross-owner needs a second GM account or fixture; if only one test user exists, assert unknown id **404** already covered and document cross-owner as blocked gap or add second credentials)_.
 4. Unknown code → play board **404** (already in matrix) + optional HTML `/play/{code}` **404** (smoke).
 
 **Anti-patterns:** full browser login theater; treating public code-gated poll as a failure; kitchen-sink GM preview; sequential claim-only negatives without a live session; NFR 100k guess loop.
@@ -67,14 +67,14 @@ Cheapest layer for both risks on this architecture: Vitest preview HTTP integrat
 
 **MG entry points (inspected):**
 
-| Method | Path | Guard | Anon outcome |
-|--------|------|-------|--------------|
-| GET | `/sessions/new` | Middleware prefix `/sessions` | **302** `/auth/signin` |
-| GET | `/dashboard` | Middleware `/dashboard` | **302** `/auth/signin` |
-| GET | `/sessions/{id}` | Middleware + page `locals.user` | **302** (middleware first) |
-| POST | `/api/sessions` | Handler `locals.user` | **401** JSON |
-| GET | `/api/sessions/{id}/board` | Handler `locals.user` | **401** JSON |
-| POST | `/api/sessions/{id}/undo-claim` | Origin then `locals.user` | **401** (or **403** cross-origin) |
+| Method | Path                            | Guard                           | Anon outcome                      |
+| ------ | ------------------------------- | ------------------------------- | --------------------------------- |
+| GET    | `/sessions/new`                 | Middleware prefix `/sessions`   | **302** `/auth/signin`            |
+| GET    | `/dashboard`                    | Middleware `/dashboard`         | **302** `/auth/signin`            |
+| GET    | `/sessions/{id}`                | Middleware + page `locals.user` | **302** (middleware first)        |
+| POST   | `/api/sessions`                 | Handler `locals.user`           | **401** JSON                      |
+| GET    | `/api/sessions/{id}/board`      | Handler `locals.user`           | **401** JSON                      |
+| POST   | `/api/sessions/{id}/undo-claim` | Origin then `locals.user`       | **401** (or **403** cross-origin) |
 
 There is **no** `GET /api/sessions` list API on the inspected tree — MG list is SSR `GET /dashboard` only ([src/pages/dashboard/index.astro](src/pages/dashboard/index.astro)). `/api/*` is **not** in `PROTECTED_ROUTES` ([middleware.ts:4](src/middleware.ts)); each MG API must keep its own check.
 
@@ -84,12 +84,12 @@ There is **no** `GET /api/sessions` list API on the inspected tree — MG list i
 
 ### Existing harness (reuse)
 
-| Asset | Role for Phase 3 |
-|-------|------------------|
-| `tests/helpers/http.ts` | Cookie jar, Origin, `signIn`, `joinPlayer`, `createActiveSession` |
-| `http-contract-matrix.test.ts` `forgePlayerCookie` | Local forge helper — extract or duplicate for live-session cases |
-| `play-path-claim-undo.test.ts` board helpers | Pattern for follow-up GET “board unchanged” |
-| `scripts/smoke.mjs` | Route-guard redirects + Origin 403 claim; not a substitute for live forged-token claim |
+| Asset                                              | Role for Phase 3                                                                       |
+| -------------------------------------------------- | -------------------------------------------------------------------------------------- |
+| `tests/helpers/http.ts`                            | Cookie jar, Origin, `signIn`, `joinPlayer`, `createActiveSession`                      |
+| `http-contract-matrix.test.ts` `forgePlayerCookie` | Local forge helper — extract or duplicate for live-session cases                       |
+| `play-path-claim-undo.test.ts` board helpers       | Pattern for follow-up GET “board unchanged”                                            |
+| `scripts/smoke.mjs`                                | Route-guard redirects + Origin 403 claim; not a substitute for live forged-token claim |
 
 **Missing today for #6/#8 prove criteria:** dedicated abuse suite; forged cookie against **active** session; cross-code cookie mismatch; wrong-GM undo/board; systematic no-leak body checks on MG pages/APIs.
 
@@ -123,16 +123,16 @@ There is **no** `GET /api/sessions` list API on the inspected tree — MG list i
 
 ## Historical Context (from prior changes)
 
-| Claim | Verdict | Notes |
-|-------|---------|-------|
-| Fix A: auth via `claim_token`; no public player ids on roster | **Supported** (shipped intent) | Phase 2 research historical table; smoke roster hygiene |
-| Forged cookie + unknown code → claim 404 | **Supported** | Matrix `:90-97` |
-| Forged cookie on **live** session fails claim | **Unknown until Phase 3 proves** | No live-session forge case today |
-| “Logged-in ⇒ any session” false for GM APIs | **Supported** by `gm_id` filters; **unproven** by cross-owner test | Matrix covers unknown id only |
-| Code guessing NFR (&lt;1/100k) is Phase 3 suite work | **Contradicted as Phase 3 scope** | Product NFR (`prd.md`); rollout is authz/identity |
-| Phase 1 deferred RLS bypass / join matrix / authz breadth | **Supported** | Phase 1 plan-brief + cookbook §6.4 → Phase 3 |
-| Phase 2 deferred forged identity to #6/#8 | **Supported** | Phase 2 research Architecture Insights |
-| Anon MG pages → login; no valid code → no board | **Supported** | PRD Access Control `:136-137`; implemented as 302 / 404 on inspected paths |
+| Claim                                                         | Verdict                                                            | Notes                                                                      |
+| ------------------------------------------------------------- | ------------------------------------------------------------------ | -------------------------------------------------------------------------- |
+| Fix A: auth via `claim_token`; no public player ids on roster | **Supported** (shipped intent)                                     | Phase 2 research historical table; smoke roster hygiene                    |
+| Forged cookie + unknown code → claim 404                      | **Supported**                                                      | Matrix `:90-97`                                                            |
+| Forged cookie on **live** session fails claim                 | **Unknown until Phase 3 proves**                                   | No live-session forge case today                                           |
+| “Logged-in ⇒ any session” false for GM APIs                   | **Supported** by `gm_id` filters; **unproven** by cross-owner test | Matrix covers unknown id only                                              |
+| Code guessing NFR (&lt;1/100k) is Phase 3 suite work          | **Contradicted as Phase 3 scope**                                  | Product NFR (`prd.md`); rollout is authz/identity                          |
+| Phase 1 deferred RLS bypass / join matrix / authz breadth     | **Supported**                                                      | Phase 1 plan-brief + cookbook §6.4 → Phase 3                               |
+| Phase 2 deferred forged identity to #6/#8                     | **Supported**                                                      | Phase 2 research Architecture Insights                                     |
+| Anon MG pages → login; no valid code → no board               | **Supported**                                                      | PRD Access Control `:136-137`; implemented as 302 / 404 on inspected paths |
 
 Related archives: `context/archive/2026-10-03-player-join-shared-board/`, `context/archive/2026-10-03-player-claim-field-reward/` (impl-review Fix A), `context/archive/2026-09-27-gm-create-session-board/`.
 

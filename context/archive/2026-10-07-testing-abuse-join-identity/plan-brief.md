@@ -17,14 +17,14 @@ Dedicated `abuse-join-identity` integration suite, second CI GM + shared forge h
 
 ## Key Decisions Made
 
-| Decision | Choice | Why (1 sentence) | Source |
-| -------- | ------ | ---------------- | ------ |
-| Cross-owner GM proof | Second CI admin GM + live **404** on board/undo | Directly challenges “logged-in ⇒ any session” on a real row | Plan |
-| Join abuse depth | Live forge + cross-code claim only | Write identity is claim-bound; stolen join token only adds a seat | Plan |
-| #8 no-leak surfaces | Anon live GM board API + session page **302** (no follow) | API payload check plus SSR route guard without dashboard HTML scrape | Plan |
-| Suite packaging | `abuse-join-identity.test.ts` + shared helpers in `http.ts` | §6.4 keeps matrix thin; one forge implementation | Plan |
-| Closeout | §6.6 + Phase 3 done | Matches Phase 2 cookbook pattern | Plan |
-| Test layer | Vitest preview HTTP | Same harness as play-path; no thin e2e | Research |
+| Decision             | Choice                                                      | Why (1 sentence)                                                     | Source   |
+| -------------------- | ----------------------------------------------------------- | -------------------------------------------------------------------- | -------- |
+| Cross-owner GM proof | Second CI admin GM + live **404** on board/undo             | Directly challenges “logged-in ⇒ any session” on a real row          | Plan     |
+| Join abuse depth     | Live forge + cross-code claim only                          | Write identity is claim-bound; stolen join token only adds a seat    | Plan     |
+| #8 no-leak surfaces  | Anon live GM board API + session page **302** (no follow)   | API payload check plus SSR route guard without dashboard HTML scrape | Plan     |
+| Suite packaging      | `abuse-join-identity.test.ts` + shared helpers in `http.ts` | §6.4 keeps matrix thin; one forge implementation                     | Plan     |
+| Closeout             | §6.6 + Phase 3 done                                         | Matches Phase 2 cookbook pattern                                     | Plan     |
+| Test layer           | Vitest preview HTTP                                         | Same harness as play-path; no thin e2e                               | Research |
 
 ## Scope
 
@@ -38,11 +38,11 @@ Owner GM creates live sessions; player clients use cookie jars and forged or cro
 
 ## Phases at a Glance
 
-| Phase | What it delivers | Key risk |
-| ----- | ---------------- | -------- |
+| Phase                  | What it delivers               | Key risk                                   |
+| ---------------------- | ------------------------------ | ------------------------------------------ |
 | 1. Second GM + helpers | B creds, CI user, shared forge | Local dev without B pair skips cross-owner |
-| 2. Abuse suite | Five live #6/#8 cases | Flaky or weak board-unchanged asserts |
-| 3. Cookbook + status | §6.6 + Phase 3 done | Docs drift from actual env names |
+| 2. Abuse suite         | Five live #6/#8 cases          | Flaky or weak board-unchanged asserts      |
+| 3. Cookbook + status   | §6.6 + Phase 3 done            | Docs drift from actual env names           |
 
 **Prerequisites:** Phase 2 play-path helpers (`joinPlayer`, `createActiveSession`); local/CI Supabase + preview for integration.
 

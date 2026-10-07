@@ -80,6 +80,7 @@ Provision a second admin-confirmed GM in CI, document env vars, and centralize f
 **Intent**: Single forge helper and second-credential resolver reused by matrix and abuse suite.
 
 **Contract**:
+
 - `resolveSecondTestCredentials(): { email, password } | null` — reads `TEST_EMAIL_B` / `TEST_PASSWORD_B` only (no SMOKE fallback)
 - `forgePlayerCookie(code, overrides?)` — same well-formed UUID shape as today’s matrix local helper
 - Do not move board assertion oracles into this file
@@ -124,6 +125,7 @@ One Vitest integration file proves Risks #6 and #8 with live sessions and follow
 **Intent**: Cover live-session forged claim, cross-code claim, cross-owner GM APIs, and anonymous live MG no-leak — without duplicating matrix unknown-id-only rows.
 
 **Contract**:
+
 - Gate GM-bootstrap cases with `describe.skipIf(!hasBaseUrl() || !resolveTestCredentials())`; cross-owner block also requires `resolveSecondTestCredentials()`
 - Fresh `createActiveSession` per case; `#6` / `#8` prefixes in test titles
 - File-local `fetchPlayerBoard` / cell oracle pattern from `play-path-claim-undo.test.ts` (extract only if duplication hurts)
@@ -165,6 +167,7 @@ Document abuse coverage for contributors and close the rollout row.
 **Intent**: Replace §6.6 placeholder; record Phase 3 completion and authz gate satisfaction.
 
 **Contract**:
+
 - §6.6: suite path, case list, second-GM env + CI note, rule that matrix stays thin (dedicated file per §6.4)
 - §3 table: Phase 3 Status → `done`; Change folder `testing-abuse-join-identity`
 - §8 freshness ledger / quality-gate rows referencing Phase 3 authz abuse updated as needed
