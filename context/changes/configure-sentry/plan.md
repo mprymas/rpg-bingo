@@ -278,8 +278,8 @@ Tag releases and upload source maps on deploy; add gated probe; document secrets
 
 #### Manual
 
-- [x] 1.4 With DSN in .dev.vars, astro dev/preview starts without Worker boot errors
-- [x] 1.5 Without DSN, app still boots (Sentry inactive)
+- [x] 1.4 With DSN in .dev.vars, astro dev/preview starts without Worker boot errors — 0728c9d
+- [x] 1.5 Without DSN, app still boots (Sentry inactive) — 0728c9d
 
 ### Phase 2: reportError to Sentry-primary
 
@@ -290,8 +290,8 @@ Tag releases and upload source maps on deploy; add gated probe; document secrets
 
 #### Manual
 
-- [x] 2.3 Unexpected soft path with DSN set creates Sentry event with route
-- [x] 2.4 Workers Logs no longer show structured server.error from that path
+- [x] 2.3 Unexpected soft path with DSN set creates Sentry event with route — 0728c9d
+- [x] 2.4 Workers Logs no longer show structured server.error from that path — 0728c9d
 
 ### Phase 3: Client SDK
 
@@ -302,18 +302,18 @@ Tag releases and upload source maps on deploy; add gated probe; document secrets
 
 #### Manual
 
-- [x] 3.3 Client/island error appears as client event when DSN configured
+- [x] 3.3 Client/island error appears as client event when DSN configured — 0728c9d
 
 ### Phase 4: Release, source maps, probe
 
 #### Automated
 
-- [x] 4.1 CI deploy workflow references Sentry release/auth env vars
-- [x] 4.2 Probe route exists and is gated (PROD/non-DEV returns 404)
-- [x] 4.3 npm run build / lint / unit tests still pass
+- [x] 4.1 CI deploy workflow references Sentry release/auth env vars — 0728c9d
+- [x] 4.2 Probe route exists and is gated (PROD/non-DEV returns 404) — 0728c9d
+- [x] 4.3 npm run build / lint / unit tests still pass — 0728c9d
 
 #### Manual
 
-- [x] 4.4 Hit probe in local/dev with DSN creates Sentry Issue
-- [x] 4.5 After deploy with secrets: release visible; stacks unminified or release tagged
-- [x] 4.6 Production probe unreachable (404)
+- [x] 4.4 Hit probe in local/dev with DSN creates Sentry Issue — 0728c9d
+- [x] 4.5 After deploy with secrets: release visible; stacks unminified or release tagged — 0728c9d
+- [x] 4.6 Production probe unreachable (404) — 0728c9d
