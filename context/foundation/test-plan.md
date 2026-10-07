@@ -48,6 +48,7 @@ research's job, see §1 principle #3).
 | 7   | MG undo frees the cell visually but leaves the reward (or ownership) intact                                                                         | Medium | Medium     | PRD FR-012; roadmap S-04 done                                                                                                                           |
 | 8   | Abuse: unauthenticated user reaches MG-protected surfaces (create board, board list, board preview as MG) and sees or acts as MG                    | High   | Medium     | user correction to test plan; PRD Access Control; AGENTS.md PROTECTED_ROUTES + auth smoke                                                               |
 | 9   | MG creates a board with custom phrases marked guaranteed; create succeeds, but one or more guaranteed phrases never appear on the generated board   | High   | Medium     | user concern (test-plan correction); archive S-01 create-session AC (guaranteed customs always appear); PRD FR-004–005; hot-spot dir `src/lib/services` |
+| 10  | Player enters a valid session code and nick on the public join path but never reaches the shared board (stuck on form, bad redirect, empty board)     | High   | Medium     | user correction to test plan (e2e candidate); roadmap S-02 done; PRD FR-002; seed e2e skips home code entry (`/play/{code}?join=1`); hot-spot `src/pages/play`, `src/components` |
 
 ### Risk Response Guidance
 
@@ -62,6 +63,7 @@ research's job, see §1 principle #3).
 | #7   | After undo: cell free, previous reward invalidated, other players’ view consistent                                                                     | "Undo only clears the cell label"                                   | undo side effects on claim + reward                                                                            | integration                                                                             | UI-only undo click without DB assert                                                              |
 | #8   | Unauthenticated request to MG create / list / board-preview surfaces is denied (redirect or 401/403) with no protected board content                   | "Auth-flow smoke ⇒ every MG-protected route is closed"              | PROTECTED_ROUTES / middleware vs create, list, MG preview entry points                                         | route-guard / integration (anonymous GET/POST)                                          | full e2e login theater; kitchen-sink only                                                         |
 | #9   | After successful create with ≥1 guaranteed custom, every guaranteed phrase text appears among persisted board cells (trim/normalize per product rules) | "`guaranteed: true` in request + HTTP 201 ⇒ phrase is on the board" | create command guaranteed flag → persisted board phrase set; how guaranteed vs pool draw is supposed to behave | integration (create → GM board membership) and/or pure unit on generator with fixed RNG | assert only cell count/uniqueness; mirror shuffle internals; oracle = generator’s own output list |
+| #10  | From home (or equivalent): enter valid code → nick → land on shared board with visible free cells/phrases (player identity established)                | "join API 200 ⇒ public UI path works" / seed deep-link covers join  | `JoinSessionForm` → `/play` redirect → nick form → cookie/SSR board; what “board visible” means for the player | thin e2e (browser join path)                                                            | skip code entry (deep-link only); API-only join; kitchen-sink / pixel snapshots                   |
 
 ## 3. Phased Rollout
 
@@ -75,6 +77,7 @@ orchestrator updates Status as artifacts appear on disk.
 | 2   | Play-path claim & undo             | Protect unique claim, reward reveal, undo invalidation, rejoin without cache clear                                                                        | #3, #4, #5, #7                    | integration (+ optional thin e2e if research requires UI) | done        | testing-play-path-claim-undo             |
 | 3   | Abuse & join identity              | Unauthorized claim/undo and invalid code denied; unauthenticated access to MG create/list/preview denied                                                  | #6, #8                            | API authz / integration, route-guard                      | done        | testing-abuse-join-identity              |
 | 4   | Quality-gates wiring               | Extend smoke/CI so regressions fail the PR; document cookbook                                                                                             | cross-cutting (locks #1–#9 floor) | smoke expansion, CI gates, cookbook                       | done        | testing-runner-bootstrap-board-integrity |
+| 5   | Player public join path (e2e)      | Prove code → nick → shared board in the browser; join API alone does not cover the public UI path                                                         | #10                               | thin e2e                                                  | done        | — (e2e-only; `tests/e2e/public-join-path.spec.ts`) |
 
 ## 4. Stack
 
@@ -87,8 +90,8 @@ plus the MCP/tools actually exposed in the current session.
 | ------------------- | ----------------------------------------------------------- | ------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | unit + integration  | Vitest (`vitest.config.ts` projects `unit` / `integration`) | ^5.0.3  | Scripts: `npm run test:unit`, `npm run test:integration`, `npm test`. Naming: `*.test.ts`. Unit: `src/**/*.test.ts` (and `tests/unit/` if needed). Integration: `tests/integration/**/*.test.ts`; needs preview URL (`PREVIEW_BASE_URL` preferred — Vite may overwrite `BASE_URL`) |
 | API / HTTP contract | Vitest integration + `tests/helpers/http.ts`                | same    | Assert status + side effects / error shape; no full-body snapshots. Helpers mirror smoke cookie-jar + Origin                                                                                                                                                                       |
-| e2e                 | none — Phase 2 research: not required for #4/#5             | —       | Cookie/SSR recovery covers claim reveal + rejoin; add Playwright only if a UI-only failure mode appears later                                                                                                                                                                      |
-| Existing smoke      | `scripts/smoke.mjs` via `npm run smoke`                     | n/a     | Auth-flow smoke; CI `smoke` job runs smoke then `test:integration` against preview + local Supabase                                                                                                                                                                                |
+| e2e                 | Playwright (`playwright.config.ts`, `tests/e2e/`)           | 1.63.0  | Seed covers #4 claim→reward UI; `public-join-path.spec.ts` covers #10 (home code→nick→board). Phase 2: thin e2e not required for #5 rejoin (cookie/SSR). Auth via `storageState` (`tests/e2e/auth.setup.ts`); credentials `E2E_USERNAME` / `E2E_PASSWORD`. Script: `npm run test:e2e` |
+| Existing smoke      | `scripts/smoke.mjs` via `npm run smoke`                     | n/a     | Auth-flow smoke; CI `smoke` job runs smoke → `test:integration` → `test:e2e` against preview + local Supabase                                                                                                                                                                      |
 | accessibility       | none planned                                                | —       | PRD non-goal: full WCAG AA out of MVP                                                                                                                                                                                                                                              |
 | AI-native           | none planned                                                | —       | Cost × signal: deterministic integration preferred; browser MCP is manual only                                                                                                                                                                                                     |
 
@@ -112,7 +115,8 @@ phase lands; before that, the gate is `planned`.
 | unit + integration suite                    | local + CI (`test:unit` in `ci`; `test:integration` in `smoke`) | required (today)          | board integrity + guaranteed-phrase membership + HTTP success-contract regressions |
 | play-path integration (+ thin e2e if added) | local + CI                                                      | required after §3 Phase 2 | claim race, undo, rejoin stuck-state                                               |
 | authz / abuse API checks                    | local + CI (`test:integration` abuse suite)                     | required (today)          | unauthorized claim/join; unauthenticated MG create/list/preview; cross-owner GM  |
-| expanded smoke / CI test job wiring         | CI on PR (`smoke` then Vitest integration)                      | required (today)          | floor stays green on every PR                                                      |
+| thin Playwright e2e (#4 seed + #10 join)    | local + CI (`test:e2e` in `smoke`; reuse preview via `E2E_REUSE_SERVER=1`) | required (today) | public join UI path; claim→reward UI                                                                               |
+| expanded smoke / CI test job wiring         | CI on PR (`smoke` → Vitest integration → Playwright e2e)        | required (today)          | floor stays green on every PR                                                      |
 
 ## 6. Cookbook Patterns
 
@@ -144,9 +148,18 @@ References: `tests/integration/create-session-board.test.ts`, `tests/integration
 
 ### 6.3 Adding an e2e test
 
-**Phase 2 research verdict:** thin e2e is **not required** for Risks #4/#5 on the current architecture — player identity is the httpOnly `rpg_player` cookie; board recovery is SSR/API with the cookie jar (no app-level `localStorage` board cache). Cover claim reveal and rejoin in Vitest integration (§6.5).
+**Phase 2 research verdict:** thin e2e is **not required** for Risk #5 on the current architecture — player identity is the httpOnly `rpg_player` cookie; board recovery is SSR/API with the cookie jar (no app-level `localStorage` board cache). Cover rejoin in Vitest integration (§6.5).
 
-Add Playwright only if a later UI-only failure mode appears that HTTP + follow-up board GET cannot catch. Never kitchen-sink / pixel snapshots for play-path.
+**In place:**
+- `tests/e2e/seed.spec.ts` — Risk #4 (claim free cell → reward visible) via deep-link join (`/play/{code}?join=1`). Does **not** cover the public code-entry path.
+- `tests/e2e/public-join-path.spec.ts` — Risk #10 (Phase 5): home `JoinSessionForm` (session code) → nick → shared board with visible cells/phrases. Do not skip code entry with a deep link; do not treat join-API integration as sufficient for this risk. Never kitchen-sink / pixel snapshots.
+
+**How to add:**
+1. Put the file under `tests/e2e/<name>.spec.ts`. Name the test after the risk.
+2. Auth for GM setup: project `setup` + `storageState` (`tests/e2e/auth.setup.ts`); credentials `E2E_USERNAME` / `E2E_PASSWORD` (same account as `SMOKE_*` is fine). For a public player path, `clearCookies()` before hitting `/` so home stays unauthenticated.
+3. Prefer `getByRole` / `getByLabel` / `getByText`. Wait on URL / visibility / island hydration — never `waitForTimeout`.
+4. Use unique timestamped test data. Orphan sessions are acceptable when the product has no session-delete UI (same as seed).
+5. Run: `npm run test:e2e` (or a single file). Local reuse of an already-running preview is automatic outside CI; CI sets `E2E_REUSE_SERVER=1` after the smoke job’s preview is up.
 
 ### 6.4 Adding a test for a new API endpoint
 
@@ -208,8 +221,8 @@ contributors should respect these unless the underlying assumption changes.
 
 ## 8. Freshness Ledger
 
-- Strategy (§1–§5) last reviewed: 2026-10-07 (Phase 3 status → done; cookbook §6.6 abuse/join identity filled; §5 authz gate required via integration abuse suite; Phase 2: §6.3/§6.5 claim-undo-rejoin; thin e2e not required for #4/#5)
-- Stack versions last verified: 2026-10-07 (Vitest ^5.0.3; e2e still none — Phase 2 research)
+- Strategy (§1–§5) last reviewed: 2026-10-07 (Phase 5 done: #10 public-join e2e + CI `test:e2e` in smoke job; §4/§5/§6.3 updated)
+- Stack versions last verified: 2026-10-07 (Vitest ^5.0.3; Playwright 1.63.0 seed #4 + public-join #10; CI e2e gate)
 - AI-native tool references last verified: 2026-10-06 (none planned)
 
 Refresh (`/10x-test-plan --refresh`) when:

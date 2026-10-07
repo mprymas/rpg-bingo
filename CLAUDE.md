@@ -12,6 +12,7 @@ This file provides guidance to AI Agent when working with code in this repositor
 - `npm run lint:fix` — auto-fix lint issues
 - `npm run format` — Prettier (includes prettier-plugin-astro + prettier-plugin-tailwindcss)
 - `npm run smoke` — dependency-free auth-flow smoke test (`scripts/smoke.mjs`) against a running server, `BASE_URL` env (default `http://localhost:4321`). Run after dependency upgrades; CI runs it against the production preview with a local Supabase.
+- `npm run test:e2e` — Playwright (`tests/e2e/`); needs `E2E_USERNAME` / `E2E_PASSWORD`. CI `smoke` job runs it after integration (reuses preview via `E2E_REUSE_SERVER=1`).
 
 Pre-commit hooks: husky + lint-staged runs `eslint --fix` on `*.{ts,tsx,astro}` and `prettier --write` on `*.{json,css,md}`.
 
@@ -70,4 +71,4 @@ Vintage Paper dark theme via the existing shadcn contract (dark-only: `<html cla
 
 ## CI
 
-GitHub Actions workflow (`.github/workflows/ci.yml`), on every push and PR to master: `ci` (lint, `astro check`, build; needs `SUPABASE_URL`/`SUPABASE_KEY` repo secrets) and `smoke` (local Supabase + production preview + `npm run smoke`). On `push` to `master` only, `deploy` runs after both (`cloudflare/wrangler-action@v4`; needs `CLOUDFLARE_API_TOKEN` and `CLOUDFLARE_ACCOUNT_ID` repo secrets). Workers Builds git integration must stay off for this repo.
+GitHub Actions workflow (`.github/workflows/ci.yml`), on every push and PR to master: `ci` (lint, `astro check`, unit, build; needs `SUPABASE_URL`/`SUPABASE_KEY` repo secrets) and `smoke` (local Supabase + production preview + `npm run smoke` → `test:integration` → `test:e2e`). On `push` to `master` only, `deploy` runs after both (`cloudflare/wrangler-action@v4`; needs `CLOUDFLARE_API_TOKEN` and `CLOUDFLARE_ACCOUNT_ID` repo secrets). Workers Builds git integration must stay off for this repo.

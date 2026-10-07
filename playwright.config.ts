@@ -35,7 +35,8 @@ export default defineConfig({
     // ASTRO_PREVIEW_BACKGROUND keeps astro preview in the foreground under AI agents (Astro 7).
     command: `npm run build && npm run preview -- --port ${PORT}`,
     url: baseURL,
-    reuseExistingServer: !process.env.CI,
+    // CI smoke job already runs preview on this port — set E2E_REUSE_SERVER=1 there.
+    reuseExistingServer: !process.env.CI || process.env.E2E_REUSE_SERVER === "1",
     timeout: 180_000,
     env: { ASTRO_PREVIEW_BACKGROUND: "1" },
   },

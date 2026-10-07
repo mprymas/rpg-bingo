@@ -25,7 +25,7 @@ Formatting: @.prettierrc.json. Typecheck paths: @tsconfig.json. Install new shad
 
 ## Testing
 
-Vitest: `npm run test:unit` (pure modules under `src/**/*.test.ts`) and `npm run test:integration` (preview HTTP tests under `tests/integration/`, needs `PREVIEW_BASE_URL`/`BASE_URL` + smoke/test credentials). Auth-flow smoke: `npm run smoke` (@scripts/smoke.mjs) against a running server. CI `ci` job runs unit; `smoke` job runs smoke then integration against local Supabase + preview. Cookbook: @context/foundation/test-plan.md §6. No Playwright e2e yet (test-plan Phase 2). Re-run smoke after dependency upgrades.
+Vitest: `npm run test:unit` (pure modules under `src/**/*.test.ts`) and `npm run test:integration` (preview HTTP tests under `tests/integration/`, needs `PREVIEW_BASE_URL`/`BASE_URL` + smoke/test credentials). Auth-flow smoke: `npm run smoke` (@scripts/smoke.mjs) against a running server. Playwright: `npm run test:e2e` (`tests/e2e/`, needs `E2E_USERNAME`/`E2E_PASSWORD`). CI `ci` job runs unit; `smoke` job runs smoke → integration → e2e against local Supabase + preview. Cookbook: @context/foundation/test-plan.md §6. Re-run smoke after dependency upgrades.
 
 ## Commits and pull requests
 

@@ -79,6 +79,14 @@ jobs:
           BASE_URL=http://localhost:4321 \
           PREVIEW_BASE_URL=http://localhost:4321 \
           npm run test:integration
+      - name: Install Playwright Chromium
+        run: npx playwright install chromium --with-deps
+      - name: Run Playwright e2e against production preview
+        run: |
+          E2E_USERNAME=mg.manual@rpgbingo.test \
+          E2E_PASSWORD='Manual-Test-Passw0rd!' \
+          E2E_REUSE_SERVER=1 \
+          npm run test:e2e
       - if: always()
         run: |
           if [ -x node_modules/.bin/supabase ]; then
