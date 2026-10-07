@@ -242,9 +242,9 @@ Document the play-path pattern for future contributors and close the rollout row
 
 #### Automated
 
-- [x] 1.1 Seed SQL is valid SQL with six explicit reward ids matching the slug map keys
-- [x] 1.2 `rewardIdForSlug('inspiration')` returns the seed UUID for `inspiration`
-- [x] 1.3 CI workflow YAML includes a local seed step after `supabase start`
+- [x] 1.1 Seed SQL is valid SQL with six explicit reward ids matching the slug map keys — f326073
+- [x] 1.2 `rewardIdForSlug('inspiration')` returns the seed UUID for `inspiration` — f326073
+- [x] 1.3 CI workflow YAML includes a local seed step after `supabase start` — f326073
 
 #### Manual
 
@@ -254,8 +254,8 @@ Document the play-path pattern for future contributors and close the rollout row
 
 #### Automated
 
-- [ ] 2.1 Helpers export and typecheck with existing `HttpClient` patterns
-- [ ] 2.2 Unit-free: no new product runtime code required; `npm run lint` / project typecheck paths that include `tests/helpers` stay clean if already gated
+- [x] 2.1 Helpers export and typecheck with existing `HttpClient` patterns
+- [x] 2.2 Unit-free: no new product runtime code required; `npm run lint` / project typecheck paths that include `tests/helpers` stay clean if already gated
 
 ### Phase 3: Play-path integration suite
 

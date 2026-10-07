@@ -189,3 +189,59 @@ export function createHttpClient(baseUrl: string): HttpClient {
     },
   };
 }
+
+export interface JoinPlayerInput {
+  code: string;
+  nick: string;
+}
+
+/**
+ * Form-join a player into a session (`POST /api/play/join`).
+ * Asserts 302 (smoke contract); the client's jar/`Origin` store `rpg_player` from Set-Cookie.
+ * For dual-player / race cases, prefer two `createHttpClient()` instances over
+ * `deleteCookie("rpg_player")` on a single client.
+ */
+export async function joinPlayer(client: HttpClient, { code, nick }: JoinPlayerInput): Promise<HttpResponse> {
+  const response = await client.request("/api/play/join", {
+    method: "POST",
+    form: { code, nick },
+  });
+  if (response.status !== 302) {
+    throw new Error(`joinPlayer expected 302, got ${response.status}`);
+  }
+  return response;
+}
+
+/** Create-session JSON body (authenticated GM). */
+export interface CreateActiveSessionBody {
+  size: 3 | 4 | 5;
+  customPhrases: { text: string; guaranteed: boolean }[];
+  rewards: { rewardId: string; count: number }[];
+}
+
+export interface CreatedSession {
+  id: string;
+  code: string;
+}
+
+/**
+ * Authenticated GM session create (`POST /api/sessions`).
+ * Asserts 201 and returns `{ id, code }` strings. Caller must have `signIn` on `gmClient` first.
+ */
+export async function createActiveSession(
+  gmClient: HttpClient,
+  body: CreateActiveSessionBody,
+): Promise<CreatedSession> {
+  const response = await gmClient.request("/api/sessions", {
+    method: "POST",
+    json: body,
+  });
+  if (response.status !== 201) {
+    throw new Error(`createActiveSession expected 201, got ${response.status}`);
+  }
+  const payload = response.body as { id?: unknown; code?: unknown };
+  if (typeof payload.id !== "string" || typeof payload.code !== "string") {
+    throw new Error("createActiveSession response missing id/code strings");
+  }
+  return { id: payload.id, code: payload.code };
+}
