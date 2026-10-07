@@ -1,7 +1,7 @@
 ---
 change_id: testing-play-path-claim-undo
 title: Play-path claim & undo test coverage
-status: implementing
+status: implemented
 created: 2026-10-07
 updated: 2026-10-07
 archived_at: null

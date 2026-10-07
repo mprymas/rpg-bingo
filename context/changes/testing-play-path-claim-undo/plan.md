@@ -248,7 +248,7 @@ Document the play-path pattern for future contributors and close the rollout row
 
 #### Manual
 
-- [ ] 1.4 On a fresh local Supabase, after seed, creating a session with `rewardIdForSlug('inspiration')` succeeds (not UNKNOWN_REWARD)
+- [x] 1.4 On a fresh local Supabase, after seed, creating a session with `rewardIdForSlug('inspiration')` succeeds (not UNKNOWN_REWARD)
 
 ### Phase 2: Play-path helpers
 
@@ -267,14 +267,14 @@ Document the play-path pattern for future contributors and close the rollout row
 
 #### Manual
 
-- [ ] 3.4 Spot-check one parallel claim and one undo+reclaim against local preview if CI is unavailable
+- [x] 3.4 Spot-check one parallel claim and one undo+reclaim against local preview if CI is unavailable
 
 ### Phase 4: Cookbook + Phase 2 status
 
 #### Automated
 
-- [x] 4.1 Markdown sections exist: §6.5 describes claim/undo/rejoin steps; Phase 2 row status is `done`
+- [x] 4.1 Markdown sections exist: §6.5 describes claim/undo/rejoin steps; Phase 2 row status is `done` — dace347
 
 #### Manual
 
-- [ ] 4.2 A new contributor can follow §6.5 without reading the planning chat
+- [x] 4.2 A new contributor can follow §6.5 without reading the planning chat
