@@ -285,8 +285,8 @@ Tag releases and upload source maps on deploy; add gated probe; document secrets
 
 #### Automated
 
-- [x] 2.1 npm run test:unit passes for report-error tests
-- [x] 2.2 Call-site filters unchanged (mapped 4xx stay quiet)
+- [x] 2.1 npm run test:unit passes for report-error tests — f038948
+- [x] 2.2 Call-site filters unchanged (mapped 4xx stay quiet) — f038948
 
 #### Manual
 
@@ -297,8 +297,8 @@ Tag releases and upload source maps on deploy; add gated probe; document secrets
 
 #### Automated
 
-- [ ] 3.1 npm run build includes client Sentry init without Astro server SDK
-- [ ] 3.2 Lint / astro check pass
+- [x] 3.1 npm run build includes client Sentry init without Astro server SDK
+- [x] 3.2 Lint / astro check pass
 
 #### Manual
 
