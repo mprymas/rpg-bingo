@@ -1,4 +1,5 @@
 import type { APIRoute } from "astro";
+import { reportError } from "@/lib/report-error";
 import { isAllowedRequestOrigin } from "@/lib/request-origin";
 import { sessionUndoClaimBodySchema } from "@/lib/schemas/session-undo-claim";
 import { UndoBoardCellError, undoBoardCell } from "@/lib/services/sessions.service";
@@ -66,6 +67,12 @@ export const POST: APIRoute = async (context) => {
           return json({ error: "Nieprawidłowa pozycja" }, 400);
       }
     }
+    reportError(error, {
+      route: "POST /api/sessions/[id]/undo-claim",
+      httpStatus: 500,
+      sessionId: id,
+      position: parsed.data.position,
+    });
     return json({ error: "Nie udało się cofnąć oznaczenia" }, 500);
   }
 };

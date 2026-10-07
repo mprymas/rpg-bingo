@@ -220,16 +220,16 @@ Close Auth soft-identity blindness for logging only; UX stays soft.
 
 #### Automated
 
-- [x] 1.1 Unit tests pass for reportError payload/extraction
-- [x] 1.2 Lint/typecheck clean for the new helper module
+- [x] 1.1 Unit tests pass for reportError payload/extraction — 40dc7f2
+- [x] 1.2 Lint/typecheck clean for the new helper module — 40dc7f2
 
 ### Phase 2: Wire API + SSR unexpected catches
 
 #### Automated
 
-- [ ] 2.1 Unit tests still pass
-- [ ] 2.2 Lint passes
-- [ ] 2.3 Integration regression green (unchanged HTTP contracts)
+- [x] 2.1 Unit tests still pass
+- [x] 2.2 Lint passes
+- [x] 2.3 Integration regression green (unchanged HTTP contracts)
 
 #### Manual
 

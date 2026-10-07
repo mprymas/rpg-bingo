@@ -1,5 +1,6 @@
 import type { APIRoute } from "astro";
 import { PLAYER_COOKIE_NAME, readPlayerIdentity } from "@/lib/player-cookie";
+import { reportError } from "@/lib/report-error";
 import { isAllowedRequestOrigin } from "@/lib/request-origin";
 import { playClaimBodySchema } from "@/lib/schemas/play-claim";
 import { ClaimBoardCellError, claimBoardCell } from "@/lib/services/sessions.service";
@@ -75,6 +76,12 @@ export const POST: APIRoute = async (context) => {
           return json({ error: "Nieprawidłowa pozycja" }, 400);
       }
     }
+    reportError(error, {
+      route: "POST /api/play/claim",
+      httpStatus: 500,
+      sessionCode: code,
+      position,
+    });
     return json({ error: "Nie udało się zająć pola" }, 500);
   }
 };

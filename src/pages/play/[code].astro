@@ -3,6 +3,7 @@ import Layout from "@/layouts/Layout.astro";
 import JoinNickForm from "@/components/play/JoinNickForm";
 import PlayerBoard from "@/components/play/PlayerBoard";
 import { PLAYER_COOKIE_NAME, readLastNick, readPlayerIdentity } from "@/lib/player-cookie";
+import { reportError } from "@/lib/report-error";
 import { SESSION_CODE_PATTERN } from "@/lib/services/session-code";
 import { getActiveBoardByCode } from "@/lib/services/sessions.service";
 import { createClient } from "@/lib/supabase";
@@ -46,7 +47,8 @@ if (!SESSION_CODE_PATTERN.test(code)) {
       notFound = true;
       Astro.response.status = 404;
     }
-  } catch {
+  } catch (error) {
+    reportError(error, { route: "/play/[code]", httpStatus: 503, sessionCode: code });
     loadError = "Nie udało się wczytać sesji";
     Astro.response.status = 503;
   }

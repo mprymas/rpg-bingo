@@ -1,5 +1,6 @@
 import type { APIRoute } from "astro";
 import { PLAYER_COOKIE_NAME, readPlayerIdentity, writePlayerIdentity } from "@/lib/player-cookie";
+import { reportError } from "@/lib/report-error";
 import { isAllowedRequestOrigin } from "@/lib/request-origin";
 import { playJoinCodeSchema, playJoinNickSchema } from "@/lib/schemas/play-join";
 import { getActiveBoardByCode, JoinSessionPlayerError, joinSessionPlayer } from "@/lib/services/sessions.service";
@@ -45,7 +46,8 @@ export const POST: APIRoute = async (context) => {
     if (!board) {
       return context.redirect(`/play/${code}`);
     }
-  } catch {
+  } catch (error) {
+    reportError(error, { route: "POST /api/play/join", sessionCode: code });
     return context.redirect(`/play/${code}`);
   }
 
@@ -73,6 +75,7 @@ export const POST: APIRoute = async (context) => {
         return context.redirect(`/play/${code}?join=1&error=nick`);
       }
     }
+    reportError(error, { route: "POST /api/play/join", sessionCode: code });
     return context.redirect(`/play/${code}?join=1`);
   }
 

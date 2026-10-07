@@ -2,6 +2,7 @@
 import Layout from "@/layouts/Layout.astro";
 import GmBoard from "@/components/sessions/GmBoard";
 import { Badge } from "@/components/ui/badge";
+import { reportError } from "@/lib/report-error";
 import { createClient } from "@/lib/supabase";
 import { getSessionWithCells } from "@/lib/services/sessions.service";
 import type { SessionWithCells } from "@/types";
@@ -33,7 +34,8 @@ if (!UUID_RE.test(id)) {
       notFound = true;
       Astro.response.status = 404;
     }
-  } catch {
+  } catch (error) {
+    reportError(error, { route: "/sessions/[id]", httpStatus: 503, sessionId: id });
     loadError = "Nie udało się wczytać sesji";
     Astro.response.status = 503;
   }

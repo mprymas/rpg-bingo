@@ -1,4 +1,5 @@
 import type { APIRoute } from "astro";
+import { reportError } from "@/lib/report-error";
 import { playJoinCodeSchema } from "@/lib/schemas/play-join";
 import { getActiveBoardByCode } from "@/lib/services/sessions.service";
 import { createClient } from "@/lib/supabase";
@@ -29,7 +30,12 @@ export const GET: APIRoute = async (context) => {
       return json({ error: "Nie znaleziono sesji" }, 404);
     }
     return json(board, 200);
-  } catch {
+  } catch (error) {
+    reportError(error, {
+      route: "GET /api/play/board",
+      httpStatus: 500,
+      sessionCode: codeParsed.data,
+    });
     return json({ error: "Nie udało się wczytać planszy" }, 500);
   }
 };

@@ -1,6 +1,7 @@
 ---
 import Layout from "@/layouts/Layout.astro";
 import DashboardPanel from "@/components/dashboard/DashboardPanel.astro";
+import { reportError } from "@/lib/report-error";
 import { createClient } from "@/lib/supabase";
 import { listSessionsForGm } from "@/lib/services/sessions.service";
 import type { Session } from "@/types";
@@ -19,7 +20,8 @@ let sessions: Session[] = [];
 let listError: string | null = null;
 try {
   sessions = await listSessionsForGm(supabase, user.id);
-} catch {
+} catch (error) {
+  reportError(error, { route: "/dashboard", httpStatus: 503 });
   listError = "Nie udało się wczytać sesji";
   Astro.response.status = 503;
 }

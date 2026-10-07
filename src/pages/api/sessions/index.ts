@@ -1,4 +1,5 @@
 import type { APIRoute } from "astro";
+import { reportError } from "@/lib/report-error";
 import { createSessionSchema } from "@/lib/schemas/session";
 import { BoardGenerationError } from "@/lib/services/board-generator";
 import { createSession, SessionServiceError } from "@/lib/services/sessions.service";
@@ -76,6 +77,7 @@ export const POST: APIRoute = async (context) => {
         headers: { "Content-Type": "application/json" },
       });
     }
+    reportError(error, { route: "POST /api/sessions", httpStatus: 500 });
     return new Response(JSON.stringify({ error: "Nie udało się utworzyć sesji" }), {
       status: 500,
       headers: { "Content-Type": "application/json" },
