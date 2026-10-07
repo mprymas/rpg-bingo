@@ -233,7 +233,7 @@ Document abuse coverage for contributors and close the rollout row.
 
 #### Manual
 
-- [x] 1.5 Locally, two clients can sign in with A and B credentials
+- [x] 1.5 Locally, two clients can sign in with A and B credentials — 867c5b1
 
 ### Phase 2: Abuse integration suite
 
@@ -248,7 +248,7 @@ Document abuse coverage for contributors and close the rollout row.
 
 #### Manual
 
-- [x] 2.7 Spot-check that a deliberately wrong assert fails the live case, then restore
+- [x] 2.7 Spot-check that a deliberately wrong assert fails the live case, then restore — 867c5b1
 
 ### Phase 3: Cookbook + status
 
@@ -259,4 +259,4 @@ Document abuse coverage for contributors and close the rollout row.
 
 #### Manual
 
-- [x] 3.3 §6.6 alone is enough to run the suite
+- [x] 3.3 §6.6 alone is enough to run the suite — 867c5b1
