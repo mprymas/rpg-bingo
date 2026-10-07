@@ -272,9 +272,9 @@ Tag releases and upload source maps on deploy; add gated probe; document secrets
 
 #### Automated
 
-- [x] 1.1 npm run build succeeds with Wrangler main pointing at the Sentry entry
-- [x] 1.2 npm run lint and npx astro check pass
-- [x] 1.3 No hardcoded ingest DSN URL in tracked files
+- [x] 1.1 npm run build succeeds with Wrangler main pointing at the Sentry entry — 3087d6d
+- [x] 1.2 npm run lint and npx astro check pass — 3087d6d
+- [x] 1.3 No hardcoded ingest DSN URL in tracked files — 3087d6d
 
 #### Manual
 
@@ -285,8 +285,8 @@ Tag releases and upload source maps on deploy; add gated probe; document secrets
 
 #### Automated
 
-- [ ] 2.1 npm run test:unit passes for report-error tests
-- [ ] 2.2 Call-site filters unchanged (mapped 4xx stay quiet)
+- [x] 2.1 npm run test:unit passes for report-error tests
+- [x] 2.2 Call-site filters unchanged (mapped 4xx stay quiet)
 
 #### Manual
 

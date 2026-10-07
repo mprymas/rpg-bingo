@@ -1,35 +1,47 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { reportError } from "@/lib/report-error";
 
+const sentryMocks = vi.hoisted(() => {
+  const setTag = vi.fn();
+  const setExtra = vi.fn();
+  const captureException = vi.fn();
+  const withScope = vi.fn((callback: (scope: { setTag: typeof setTag; setExtra: typeof setExtra }) => void) => {
+    callback({ setTag, setExtra });
+  });
+  return { setTag, setExtra, captureException, withScope };
+});
+
+vi.mock("@sentry/cloudflare", () => ({
+  withScope: sentryMocks.withScope,
+  captureException: sentryMocks.captureException,
+}));
+
+function tagMap(): Record<string, string> {
+  const entries: [string, string][] = sentryMocks.setTag.mock.calls.map((call) => {
+    const [key, value] = call as [string, string];
+    return [key, value];
+  });
+  return Object.fromEntries(entries);
+}
+
 describe("reportError", () => {
   afterEach(() => {
-    vi.restoreAllMocks();
+    vi.clearAllMocks();
   });
 
-  it("emits event, route, name, message, and stack for a plain Error", () => {
-    const spy = vi.spyOn(console, "error").mockImplementation(() => undefined);
+  it("captures route, name, message, and stack for a plain Error", () => {
     const error = new Error("boom");
 
     reportError(error, { route: "POST /api/sessions" });
 
-    expect(spy).toHaveBeenCalledTimes(1);
-    const payload = spy.mock.calls[0]?.[0] as Record<string, unknown>;
-    expect(payload).toMatchObject({
-      event: "server.error",
-      route: "POST /api/sessions",
-      name: "Error",
-      message: "boom",
-    });
-    expect(typeof payload.stack).toBe("string");
-    expect(payload.code).toBeUndefined();
-    expect(payload.supabaseCode).toBeUndefined();
-    expect(payload.httpStatus).toBeUndefined();
-    expect(payload.sessionId).toBeUndefined();
+    expect(sentryMocks.withScope).toHaveBeenCalledTimes(1);
+    expect(sentryMocks.captureException).toHaveBeenCalledTimes(1);
+    expect(sentryMocks.captureException).toHaveBeenCalledWith(error);
+    expect(tagMap()).toEqual({ route: "POST /api/sessions" });
+    expect(sentryMocks.setExtra).not.toHaveBeenCalled();
   });
 
   it("extracts domain code from an Error subclass with code", () => {
-    const spy = vi.spyOn(console, "error").mockImplementation(() => undefined);
-
     class DomainError extends Error {
       readonly code = "CODE_COLLISION";
       constructor() {
@@ -38,38 +50,32 @@ describe("reportError", () => {
       }
     }
 
-    reportError(new DomainError(), { route: "POST /api/sessions", httpStatus: 500 });
+    const error = new DomainError();
+    reportError(error, { route: "POST /api/sessions", httpStatus: 500 });
 
-    expect(spy).toHaveBeenCalledWith(
-      expect.objectContaining({
-        event: "server.error",
-        route: "POST /api/sessions",
-        name: "SessionServiceError",
-        code: "CODE_COLLISION",
-        httpStatus: 500,
-      }),
-    );
-    const payload = spy.mock.calls[0]?.[0] as Record<string, unknown>;
-    expect(payload.supabaseCode).toBeUndefined();
+    expect(sentryMocks.captureException).toHaveBeenCalledWith(error);
+    expect(tagMap()).toMatchObject({
+      route: "POST /api/sessions",
+      code: "CODE_COLLISION",
+      httpStatus: "500",
+    });
+    expect(tagMap().supabaseCode).toBeUndefined();
   });
 
   it("extracts domain code from a plain object with code", () => {
-    const spy = vi.spyOn(console, "error").mockImplementation(() => undefined);
-
     reportError({ code: "SESSION_NOT_FOUND", message: "missing" }, { route: "POST /api/play/join" });
 
-    expect(spy).toHaveBeenCalledWith(
-      expect.objectContaining({
-        event: "server.error",
-        route: "POST /api/play/join",
-        code: "SESSION_NOT_FOUND",
-        message: "missing",
-      }),
-    );
+    expect(sentryMocks.captureException).toHaveBeenCalledTimes(1);
+    const captured = sentryMocks.captureException.mock.calls[0]?.[0] as Error;
+    expect(captured).toBeInstanceOf(Error);
+    expect(captured.message).toBe("missing");
+    expect(tagMap()).toMatchObject({
+      route: "POST /api/play/join",
+      code: "SESSION_NOT_FOUND",
+    });
   });
 
   it("maps Auth-shaped code to supabaseCode", () => {
-    const spy = vi.spyOn(console, "error").mockImplementation(() => undefined);
     const authError = Object.assign(new Error("Invalid login"), {
       name: "AuthApiError",
       code: "invalid_credentials",
@@ -79,13 +85,12 @@ describe("reportError", () => {
 
     reportError(authError, { route: "POST /api/auth/signin" });
 
-    const payload = spy.mock.calls[0]?.[0] as Record<string, unknown>;
-    expect(payload.supabaseCode).toBe("invalid_credentials");
-    expect(payload.code).toBeUndefined();
+    expect(sentryMocks.captureException).toHaveBeenCalledWith(authError);
+    expect(tagMap().supabaseCode).toBe("invalid_credentials");
+    expect(tagMap().code).toBeUndefined();
   });
 
   it("maps PostgREST-shaped code to supabaseCode", () => {
-    const spy = vi.spyOn(console, "error").mockImplementation(() => undefined);
     const pgError = Object.assign(new Error("JWT expired"), {
       name: "PostgrestError",
       code: "PGRST301",
@@ -95,14 +100,12 @@ describe("reportError", () => {
 
     reportError(pgError, { route: "GET /api/play/board" });
 
-    const payload = spy.mock.calls[0]?.[0] as Record<string, unknown>;
-    expect(payload.supabaseCode).toBe("PGRST301");
-    expect(payload.code).toBeUndefined();
+    expect(sentryMocks.captureException).toHaveBeenCalledWith(pgError);
+    expect(tagMap().supabaseCode).toBe("PGRST301");
+    expect(tagMap().code).toBeUndefined();
   });
 
   it("includes optional context scalars when provided", () => {
-    const spy = vi.spyOn(console, "error").mockImplementation(() => undefined);
-
     reportError(new Error("x"), {
       route: "POST /api/play/claim",
       httpStatus: 500,
@@ -111,83 +114,78 @@ describe("reportError", () => {
       position: 4,
     });
 
-    expect(spy).toHaveBeenCalledWith(
-      expect.objectContaining({
-        event: "server.error",
-        route: "POST /api/play/claim",
-        httpStatus: 500,
-        sessionId: "sess-1",
-        sessionCode: "ABCD12",
-        position: 4,
-      }),
-    );
+    expect(tagMap()).toEqual({
+      route: "POST /api/play/claim",
+      httpStatus: "500",
+      sessionId: "sess-1",
+      sessionCode: "ABCD12",
+      position: "4",
+    });
   });
 
   it("omits optional context scalars when absent", () => {
-    const spy = vi.spyOn(console, "error").mockImplementation(() => undefined);
-
     reportError(new Error("x"), { route: "/dashboard" });
 
-    const payload = spy.mock.calls[0]?.[0] as Record<string, unknown>;
-    expect(payload).toEqual(
-      expect.objectContaining({
-        event: "server.error",
-        route: "/dashboard",
-      }),
-    );
-    expect("httpStatus" in payload).toBe(false);
-    expect("sessionId" in payload).toBe(false);
-    expect("sessionCode" in payload).toBe(false);
-    expect("position" in payload).toBe(false);
+    expect(tagMap()).toEqual({ route: "/dashboard" });
+    expect(Object.keys(tagMap())).not.toContain("httpStatus");
+    expect(Object.keys(tagMap())).not.toContain("sessionId");
+    expect(Object.keys(tagMap())).not.toContain("sessionCode");
+    expect(Object.keys(tagMap())).not.toContain("position");
   });
 
   it("handles non-Error string throwables", () => {
-    const spy = vi.spyOn(console, "error").mockImplementation(() => undefined);
-
     reportError("raw failure", { route: "GET /sessions/1" });
 
-    expect(spy).toHaveBeenCalledWith({
-      event: "server.error",
-      route: "GET /sessions/1",
-      message: "raw failure",
-    });
+    const captured = sentryMocks.captureException.mock.calls[0]?.[0] as Error;
+    expect(captured).toBeInstanceOf(Error);
+    expect(captured.message).toBe("raw failure");
+    expect(tagMap()).toEqual({ route: "GET /sessions/1" });
   });
 
   it("handles non-Error number throwables", () => {
-    const spy = vi.spyOn(console, "error").mockImplementation(() => undefined);
-
     reportError(42, { route: "GET /play/board" });
 
-    expect(spy).toHaveBeenCalledWith({
-      event: "server.error",
-      route: "GET /play/board",
-      message: "42",
-    });
+    const captured = sentryMocks.captureException.mock.calls[0]?.[0] as Error;
+    expect(captured).toBeInstanceOf(Error);
+    expect(captured.message).toBe("42");
+    expect(tagMap()).toEqual({ route: "GET /play/board" });
   });
 
   it("serializes Error.cause when present", () => {
-    const spy = vi.spyOn(console, "error").mockImplementation(() => undefined);
     const cause = new Error("root");
     const error = new Error("wrapped", { cause });
 
     reportError(error, { route: "POST /api/play/claim" });
 
-    const payload = spy.mock.calls[0]?.[0] as Record<string, unknown>;
-    expect(payload.cause).toMatchObject({
-      name: "Error",
-      message: "root",
-    });
-    expect(typeof (payload.cause as { stack?: string }).stack).toBe("string");
+    expect(sentryMocks.captureException).toHaveBeenCalledWith(error);
+    expect(sentryMocks.setExtra).toHaveBeenCalledWith(
+      "cause",
+      expect.objectContaining({
+        name: "Error",
+        message: "root",
+      }),
+    );
+    const causeExtra = sentryMocks.setExtra.mock.calls[0]?.[1] as { stack?: string };
+    expect(typeof causeExtra.stack).toBe("string");
   });
 
   it("does not throw when given a pathological value", () => {
-    const spy = vi.spyOn(console, "error").mockImplementation(() => undefined);
     const circular: Record<string, unknown> = {};
     circular.self = circular;
 
     expect(() => {
       reportError(circular, { route: "/x" });
     }).not.toThrow();
-    expect(spy).toHaveBeenCalled();
+    expect(sentryMocks.captureException).toHaveBeenCalled();
+  });
+
+  it("does not throw when Sentry capture fails", () => {
+    sentryMocks.captureException.mockImplementation(() => {
+      throw new Error("sentry unavailable");
+    });
+
+    expect(() => {
+      reportError(new Error("x"), { route: "/x" });
+    }).not.toThrow();
   });
 });

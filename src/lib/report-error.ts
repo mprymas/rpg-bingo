@@ -1,3 +1,5 @@
+import * as Sentry from "@sentry/cloudflare";
+
 export interface ReportErrorContext {
   route: string;
   httpStatus?: number;
@@ -120,42 +122,52 @@ function extractErrorFields(error: unknown): ExtractedErrorFields {
   return fields;
 }
 
+/** Turn non-Error throwables into an Error Sentry can group while keeping extracted fields. */
+function toCapturable(error: unknown, extracted: ExtractedErrorFields): Error {
+  if (error instanceof Error) return error;
+
+  const wrapped = new Error(extracted.message ?? "Non-Error thrown");
+  if (extracted.name !== undefined) wrapped.name = extracted.name;
+  if (extracted.stack !== undefined) wrapped.stack = extracted.stack;
+  return wrapped;
+}
+
 /**
- * Emit one structured console.error object for Workers Logs.
- * Never throws.
+ * Report an unexpected soft-catch error to Sentry.
+ * Never throws. Safe when DSN is unset (SDK no-ops).
  */
 export function reportError(error: unknown, context: ReportErrorContext): void {
   try {
     const extracted = extractErrorFields(error);
-    const payload: Record<string, unknown> = {
-      event: "server.error",
-      route: context.route,
-    };
 
-    if (extracted.name !== undefined) payload.name = extracted.name;
-    if (extracted.message !== undefined) payload.message = extracted.message;
-    if (extracted.stack !== undefined) payload.stack = extracted.stack;
-    if (extracted.code !== undefined) payload.code = extracted.code;
-    if (extracted.supabaseCode !== undefined) payload.supabaseCode = extracted.supabaseCode;
-    if (extracted.cause !== undefined) payload.cause = extracted.cause;
+    Sentry.withScope((scope) => {
+      scope.setTag("route", context.route);
 
-    if (context.httpStatus !== undefined) payload.httpStatus = context.httpStatus;
-    if (context.sessionId !== undefined) payload.sessionId = context.sessionId;
-    if (context.sessionCode !== undefined) payload.sessionCode = context.sessionCode;
-    if (context.position !== undefined) payload.position = context.position;
+      if (context.httpStatus !== undefined) {
+        scope.setTag("httpStatus", String(context.httpStatus));
+      }
+      if (context.sessionId !== undefined) {
+        scope.setTag("sessionId", context.sessionId);
+      }
+      if (context.sessionCode !== undefined) {
+        scope.setTag("sessionCode", context.sessionCode);
+      }
+      if (context.position !== undefined) {
+        scope.setTag("position", String(context.position));
+      }
+      if (extracted.code !== undefined) {
+        scope.setTag("code", extracted.code);
+      }
+      if (extracted.supabaseCode !== undefined) {
+        scope.setTag("supabaseCode", extracted.supabaseCode);
+      }
+      if (extracted.cause !== undefined) {
+        scope.setExtra("cause", extracted.cause);
+      }
 
-    // eslint-disable-next-line no-console -- intentional Workers Logs transport
-    console.error(payload);
+      Sentry.captureException(toCapturable(error, extracted));
+    });
   } catch {
-    try {
-      // eslint-disable-next-line no-console -- intentional Workers Logs transport
-      console.error({
-        event: "server.error",
-        route: context.route,
-        message: "reportError failed while building payload",
-      });
-    } catch {
-      // swallow — helper must never throw
-    }
+    // swallow — helper must never throw
   }
 }
