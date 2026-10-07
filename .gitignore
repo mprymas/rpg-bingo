@@ -30,3 +30,11 @@ pnpm-debug.log*
 10x*
 .cursor/prompts/m*l*
 .cursor/prompts/skill-explainer.md
+
+# Playwright
+playwright/.auth/
+test-results/
+playwright-report/
+blob-report/
+playwright/.cache/
+.playwright-cli/
