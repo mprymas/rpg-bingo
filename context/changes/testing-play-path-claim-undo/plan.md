@@ -254,16 +254,16 @@ Document the play-path pattern for future contributors and close the rollout row
 
 #### Automated
 
-- [x] 2.1 Helpers export and typecheck with existing `HttpClient` patterns
-- [x] 2.2 Unit-free: no new product runtime code required; `npm run lint` / project typecheck paths that include `tests/helpers` stay clean if already gated
+- [x] 2.1 Helpers export and typecheck with existing `HttpClient` patterns — 27804f7
+- [x] 2.2 Unit-free: no new product runtime code required; `npm run lint` / project typecheck paths that include `tests/helpers` stay clean if already gated — 27804f7
 
 ### Phase 3: Play-path integration suite
 
 #### Automated
 
-- [ ] 3.1 `PREVIEW_BASE_URL=<preview> npm run test:integration` includes and passes the new play-path cases against seeded local Supabase
-- [ ] 3.2 Race case uses parallel dual-client claims (not sequential-only)
-- [ ] 3.3 #4 case fails if catalog missing / wrong slug map (no silent skip of reward reveal)
+- [x] 3.1 `PREVIEW_BASE_URL=<preview> npm run test:integration` includes and passes the new play-path cases against seeded local Supabase
+- [x] 3.2 Race case uses parallel dual-client claims (not sequential-only)
+- [x] 3.3 #4 case fails if catalog missing / wrong slug map (no silent skip of reward reveal)
 
 #### Manual
 

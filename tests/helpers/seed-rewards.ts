@@ -1,23 +1,88 @@
 /**
- * Fixed catalog reward ids mirroring supabase/seed.sql.
- * Use slug as the primary handle in create bodies; never hardcode UUIDs at call sites.
+ * Resolve catalog reward ids by slug from the signed-in create-session page.
+ * Create API accepts UUID `rewardId` only; slugs are the stable test handle.
+ * Parses Astro island props on GET /sessions/new (no rewards REST API, no Supabase in tests).
  */
 
-const SEED_REWARD_IDS = {
-  inspiration: "ae52e490-555f-4f60-8313-1e26cc9ee71a",
-  item: "5dc80d76-2947-4f78-84a0-f0cbc1c7bddf",
-  "side-quest": "cc7aa51f-cfdd-4454-89c5-30dcc9759a2f",
-  clue: "44185abe-9d08-4b3a-bd85-3beba1dfaf25",
-  "npc-help": "848e72a5-b072-40b1-9113-28cf0f9c3243",
-  experience: "cc7e81db-165e-4de0-ada8-7839a84d0a19",
-} as const;
+import type { HttpClient } from "./http";
 
-export type SeedRewardSlug = keyof typeof SEED_REWARD_IDS;
+interface CatalogReward {
+  id: string;
+  slug: string;
+  label?: string;
+  description?: string;
+}
 
-export function rewardIdForSlug(slug: string): string {
-  const id = SEED_REWARD_IDS[slug as SeedRewardSlug];
-  if (!id) {
-    throw new Error(`Unknown seed reward slug: ${slug}`);
+/** Astro serializes island props as [typeTag, value] tuples (0 = plain). */
+function reviveAstroValue(raw: unknown): unknown {
+  if (!Array.isArray(raw) || raw.length !== 2 || typeof raw[0] !== "number") {
+    if (Array.isArray(raw)) return raw.map(reviveAstroValue);
+    if (raw && typeof raw === "object") {
+      return Object.fromEntries(
+        Object.entries(raw as Record<string, unknown>).map(([k, v]) => [k, reviveAstroValue(v)]),
+      );
+    }
+    return raw;
   }
-  return id;
+  const [type, value] = raw as [number, unknown];
+  if (type === 0) {
+    if (value && typeof value === "object") return reviveAstroValue(value);
+    return value;
+  }
+  if (type === 1 && Array.isArray(value)) return value.map(reviveAstroValue);
+  return value;
+}
+
+function decodeHtmlEntities(escaped: string): string {
+  return escaped
+    .replace(/&quot;/g, '"')
+    .replace(/&#34;/g, '"')
+    .replace(/&amp;/g, "&")
+    .replace(/&#39;/g, "'")
+    .replace(/&lt;/g, "<")
+    .replace(/&gt;/g, ">");
+}
+
+function extractIslandPropsJson(html: string): string {
+  const match = /<astro-island\b[^>]*\bprops="([^"]+)"/i.exec(html);
+  if (!match?.[1]) {
+    throw new Error("Could not find astro-island props on /sessions/new (catalog unavailable?)");
+  }
+  return decodeHtmlEntities(match[1]);
+}
+
+function catalogFromIslandProps(propsJson: string): CatalogReward[] {
+  const revived = reviveAstroValue(JSON.parse(propsJson)) as { rewards?: unknown };
+  if (!Array.isArray(revived.rewards)) {
+    throw new Error("astro-island props on /sessions/new missing rewards array");
+  }
+  const catalog: CatalogReward[] = [];
+  for (const row of revived.rewards) {
+    if (!row || typeof row !== "object") continue;
+    const { id, slug } = row as Record<string, unknown>;
+    if (typeof id === "string" && typeof slug === "string") {
+      catalog.push({ id, slug });
+    }
+  }
+  return catalog;
+}
+
+/**
+ * Look up a live catalog reward UUID by slug via signed-in GET /sessions/new.
+ * Throws if the slug is missing (no silent skip for Risk #4).
+ */
+export async function rewardIdForSlug(client: HttpClient, slug: string): Promise<string> {
+  const page = await client.request("/sessions/new");
+  if (page.status !== 200) {
+    throw new Error(`rewardIdForSlug: GET /sessions/new expected 200, got ${page.status}`);
+  }
+  if (typeof page.body !== "string") {
+    throw new Error("rewardIdForSlug: /sessions/new body was not HTML text");
+  }
+  const catalog = catalogFromIslandProps(extractIslandPropsJson(page.body));
+  const match = catalog.find((r) => r.slug === slug);
+  if (!match) {
+    throw new Error(`Unknown catalog reward slug: ${slug}`);
+  }
+  return match.id;
 }
