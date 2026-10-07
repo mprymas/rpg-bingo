@@ -155,7 +155,15 @@ export function createHttpClient(baseUrl: string): HttpClient {
       const [name, ...rest] = pair.split("=");
       const expired = attrs.some((a) => /max-age=0/i.test(a.trim()));
       if (expired) jar.delete(name.trim());
-      else jar.set(name.trim(), rest.join("="));
+      else {
+        let value = rest.join("=");
+        try {
+          value = decodeURIComponent(value);
+        } catch {
+          /* keep raw value */
+        }
+        jar.set(name.trim(), value);
+      }
     }
   }
 

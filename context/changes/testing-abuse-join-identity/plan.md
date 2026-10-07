@@ -226,10 +226,10 @@ Document abuse coverage for contributors and close the rollout row.
 
 #### Automated
 
-- [x] 1.1 Second-creds helper and `forgePlayerCookie` export and typecheck with existing HttpClient patterns
-- [x] 1.2 Matrix imports shared forge (no local duplicate)
-- [x] 1.3 CI creates second admin user and exports TEST_EMAIL_B / TEST_PASSWORD_B to integration
-- [x] 1.4 .env.example documents the B credential pair
+- [x] 1.1 Second-creds helper and `forgePlayerCookie` export and typecheck with existing HttpClient patterns — c353fd1
+- [x] 1.2 Matrix imports shared forge (no local duplicate) — c353fd1
+- [x] 1.3 CI creates second admin user and exports TEST_EMAIL_B / TEST_PASSWORD_B to integration — c353fd1
+- [x] 1.4 .env.example documents the B credential pair — c353fd1
 
 #### Manual
 
@@ -239,12 +239,12 @@ Document abuse coverage for contributors and close the rollout row.
 
 #### Automated
 
-- [ ] 2.1 Suite file `tests/integration/abuse-join-identity.test.ts` exists with #6/#8 cases
-- [ ] 2.2 Live forge claim → 401 + board unchanged
-- [ ] 2.3 Cross-code claim → 401 + board unchanged
-- [ ] 2.4 Cross-owner board/undo → 404; owner board still 200
-- [ ] 2.5 Anon live GM board → 401 without protected payload; anon GET /sessions/{id} → 302 sign-in
-- [ ] 2.6 `npm run test:integration` greens with preview URL + both creds (CI included)
+- [x] 2.1 Suite file `tests/integration/abuse-join-identity.test.ts` exists with #6/#8 cases
+- [x] 2.2 Live forge claim → 401 + board unchanged
+- [x] 2.3 Cross-code claim → 401 + board unchanged
+- [x] 2.4 Cross-owner board/undo → 404; owner board still 200
+- [x] 2.5 Anon live GM board → 401 without protected payload; anon GET /sessions/{id} → 302 sign-in
+- [x] 2.6 `npm run test:integration` greens with preview URL + both creds (CI included)
 
 #### Manual
 
