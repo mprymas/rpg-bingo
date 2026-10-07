@@ -227,9 +227,9 @@ Close Auth soft-identity blindness for logging only; UX stays soft.
 
 #### Automated
 
-- [x] 2.1 Unit tests still pass
-- [x] 2.2 Lint passes
-- [x] 2.3 Integration regression green (unchanged HTTP contracts)
+- [x] 2.1 Unit tests still pass — c4799d0
+- [x] 2.2 Lint passes — c4799d0
+- [x] 2.3 Integration regression green (unchanged HTTP contracts) — c4799d0
 
 #### Manual
 
@@ -240,7 +240,7 @@ Close Auth soft-identity blindness for logging only; UX stays soft.
 
 #### Automated
 
-- [ ] 3.1 Lint + unit tests pass
+- [x] 3.1 Lint + unit tests pass
 
 #### Manual
 
