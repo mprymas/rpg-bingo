@@ -239,12 +239,12 @@ Document abuse coverage for contributors and close the rollout row.
 
 #### Automated
 
-- [x] 2.1 Suite file `tests/integration/abuse-join-identity.test.ts` exists with #6/#8 cases
-- [x] 2.2 Live forge claim → 401 + board unchanged
-- [x] 2.3 Cross-code claim → 401 + board unchanged
-- [x] 2.4 Cross-owner board/undo → 404; owner board still 200
-- [x] 2.5 Anon live GM board → 401 without protected payload; anon GET /sessions/{id} → 302 sign-in
-- [x] 2.6 `npm run test:integration` greens with preview URL + both creds (CI included)
+- [x] 2.1 Suite file `tests/integration/abuse-join-identity.test.ts` exists with #6/#8 cases — ed6a7da
+- [x] 2.2 Live forge claim → 401 + board unchanged — ed6a7da
+- [x] 2.3 Cross-code claim → 401 + board unchanged — ed6a7da
+- [x] 2.4 Cross-owner board/undo → 404; owner board still 200 — ed6a7da
+- [x] 2.5 Anon live GM board → 401 without protected payload; anon GET /sessions/{id} → 302 sign-in — ed6a7da
+- [x] 2.6 `npm run test:integration` greens with preview URL + both creds (CI included) — ed6a7da
 
 #### Manual
 
@@ -254,8 +254,8 @@ Document abuse coverage for contributors and close the rollout row.
 
 #### Automated
 
-- [ ] 3.1 test-plan.md §6.6 documents suite, cases, second GM, matrix boundary
-- [ ] 3.2 Phase 3 rollout status / ledger marked done
+- [x] 3.1 test-plan.md §6.6 documents suite, cases, second GM, matrix boundary
+- [x] 3.2 Phase 3 rollout status / ledger marked done
 
 #### Manual
 

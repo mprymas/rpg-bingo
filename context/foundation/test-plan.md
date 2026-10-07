@@ -73,7 +73,7 @@ orchestrator updates Status as artifacts appear on disk.
 | --- | ---------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------- | --------------------------------------------------------- | ----------- | ---------------------------------------- |
 | 1   | Runner bootstrap + board integrity | Install cheapest runner; prove create never ships invalid boards; prove guaranteed customs appear on success; lock non-success HTTP contract on core APIs | #1, #2, #9                        | runner setup, integration, contract                       | done        | testing-runner-bootstrap-board-integrity |
 | 2   | Play-path claim & undo             | Protect unique claim, reward reveal, undo invalidation, rejoin without cache clear                                                                        | #3, #4, #5, #7                    | integration (+ optional thin e2e if research requires UI) | done        | testing-play-path-claim-undo             |
-| 3   | Abuse & join identity              | Unauthorized claim/undo and invalid code denied; unauthenticated access to MG create/list/preview denied                                                  | #6, #8                            | API authz / integration, route-guard                      | not started | —                                        |
+| 3   | Abuse & join identity              | Unauthorized claim/undo and invalid code denied; unauthenticated access to MG create/list/preview denied                                                  | #6, #8                            | API authz / integration, route-guard                      | done        | testing-abuse-join-identity              |
 | 4   | Quality-gates wiring               | Extend smoke/CI so regressions fail the PR; document cookbook                                                                                             | cross-cutting (locks #1–#9 floor) | smoke expansion, CI gates, cookbook                       | done        | testing-runner-bootstrap-board-integrity |
 
 ## 4. Stack
@@ -111,7 +111,7 @@ phase lands; before that, the gate is `planned`.
 | `npm run smoke`                             | CI (`smoke` job) + local against running server                 | required (today)          | auth-flow / environment wiring breaks                                              |
 | unit + integration suite                    | local + CI (`test:unit` in `ci`; `test:integration` in `smoke`) | required (today)          | board integrity + guaranteed-phrase membership + HTTP success-contract regressions |
 | play-path integration (+ thin e2e if added) | local + CI                                                      | required after §3 Phase 2 | claim race, undo, rejoin stuck-state                                               |
-| authz / abuse API checks                    | local + CI                                                      | required after §3 Phase 3 | unauthorized claim/join; unauthenticated MG create/list/preview                    |
+| authz / abuse API checks                    | local + CI (`test:integration` abuse suite)                     | required (today)          | unauthorized claim/join; unauthenticated MG create/list/preview; cross-owner GM  |
 | expanded smoke / CI test job wiring         | CI on PR (`smoke` then Vitest integration)                      | required (today)          | floor stays green on every PR                                                      |
 
 ## 6. Cookbook Patterns
@@ -179,7 +179,23 @@ Add Playwright only if a later UI-only failure mode appears that HTTP + follow-u
 
 ### 6.6 Per-rollout-phase notes
 
-(Filled as phases ship.)
+**Abuse / join identity (Phase 3 — in place):**
+
+1. Add or extend cases in `tests/integration/abuse-join-identity.test.ts` — **not** by bloating `tests/integration/http-contract-matrix.test.ts`. The matrix keeps thin status-contract rows for unknown ids and anon guards (§6.4); live-session forged identity, cross-code claim, cross-owner GM, and “no protected board payload” on **live** session ids belong in this dedicated file.
+2. Gate the suite with `describe.skipIf(!hasBaseUrl() || !resolveTestCredentials())`. Primary GM signs in via `resolveTestCredentials()` (`TEST_*` or `SMOKE_*`).
+3. Bootstrap with `createActiveSession(gm, …)` and player flows with `joinPlayer` / per-player `createHttpClient` jars (same helpers as §6.5). For forged cookies use `forgePlayerCookie(code, overrides?)` from `tests/helpers/http.ts` (well-formed UUIDs; optional overrides for cross-code reuse of session A tokens).
+4. **Cases (Risks #6 / #8):**
+   - **#6 forged player on live session:** attacker jar with `forgePlayerCookie(code)` → `POST /api/play/claim` → **401** + `{ error }`; follow-up anonymous `GET /api/play/board` shows cell still free.
+   - **#6 cross-code claim:** join session A, copy identity from `rpg_player`, forge cookie for session B with A’s `playerId` / `claimToken` → claim on B → **401**; B board unchanged.
+   - **#6 cross-owner GM** (nested `describe.skipIf(!resolveSecondTestCredentials())`): second GM signs in with `TEST_EMAIL_B` / `TEST_PASSWORD_B` only → owner’s live `GET /api/sessions/{id}/board` and `POST …/undo-claim` → **404** + error body; owner GM board still **200** with cells.
+   - **#8 anonymous live GM board API:** after owner creates session, anon `GET /api/sessions/{id}/board` → **401**; body must not expose `cells` / `code` / `players` or session code / sample phrases.
+   - **#8 anonymous session page:** anon `GET /sessions/{id}` → **302** with `Location: /auth/signin`.
+5. Assert **HTTP status**, **error body** (`error` string non-empty), and **side effects** (board GET / occupancy). Do not snapshot full bodies; do not treat JSON as success.
+6. **Second GM env:** copy `TEST_EMAIL_B` / `TEST_PASSWORD_B` from `.env.example` for local cross-owner cases. Without them, cross-owner nested tests skip; forged-cookie and anon cases still run.
+7. **CI:** the `smoke` job admin-provisions a second user (`mg.other@rpgbingo.test`) and passes `TEST_EMAIL_B` / `TEST_PASSWORD_B` into `npm run test:integration`. `npm run smoke` stays **single-GM** (primary smoke user only).
+8. Run: `PREVIEW_BASE_URL=http://localhost:4321 npm run test:integration` (or filter `abuse-join-identity`).
+
+Reference: `tests/integration/abuse-join-identity.test.ts` (Risks #6/#8).
 
 ## 7. What We Deliberately Don't Test
 
@@ -192,7 +208,7 @@ contributors should respect these unless the underlying assumption changes.
 
 ## 8. Freshness Ledger
 
-- Strategy (§1–§5) last reviewed: 2026-10-07 (Phase 2 status → done; cookbook §6.3/§6.5 claim-undo-rejoin filled; thin e2e not required for #4/#5)
+- Strategy (§1–§5) last reviewed: 2026-10-07 (Phase 3 status → done; cookbook §6.6 abuse/join identity filled; §5 authz gate required via integration abuse suite; Phase 2: §6.3/§6.5 claim-undo-rejoin; thin e2e not required for #4/#5)
 - Stack versions last verified: 2026-10-07 (Vitest ^5.0.3; e2e still none — Phase 2 research)
 - AI-native tool references last verified: 2026-10-06 (none planned)
 
