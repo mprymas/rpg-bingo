@@ -254,8 +254,8 @@ Document abuse coverage for contributors and close the rollout row.
 
 #### Automated
 
-- [x] 3.1 test-plan.md §6.6 documents suite, cases, second GM, matrix boundary
-- [x] 3.2 Phase 3 rollout status / ledger marked done
+- [x] 3.1 test-plan.md §6.6 documents suite, cases, second GM, matrix boundary — 52b2619
+- [x] 3.2 Phase 3 rollout status / ledger marked done — 52b2619
 
 #### Manual
 

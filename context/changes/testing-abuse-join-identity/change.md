@@ -1,7 +1,7 @@
 ---
 change_id: testing-abuse-join-identity
 title: Abuse & join identity test coverage
-status: implementing
+status: implemented
 created: 2026-10-07
 updated: 2026-10-07
 archived_at: null
