@@ -1,4 +1,5 @@
 // @ts-check
+import process from "node:process";
 import { defineConfig, envField } from "astro/config";
 
 import react from "@astrojs/react";
@@ -14,7 +15,22 @@ export default defineConfig({
     react(),
     sitemap(),
     // Client SDK only; server init is owned by sentry.server.config.ts (Worker withSentry wrap).
-    sentry({ enabled: { client: true, server: false } }),
+    // Source-map upload runs on production builds when SENTRY_AUTH_TOKEN is set; release from SENTRY_RELEASE.
+    sentry({
+      enabled: { client: true, server: false },
+      org: process.env.SENTRY_ORG,
+      project: process.env.SENTRY_PROJECT,
+      authToken: process.env.SENTRY_AUTH_TOKEN,
+      telemetry: false,
+      // Astro's typed options omit build-time `release`; pass name so uploaded maps match CI github.sha.
+      ...(process.env.SENTRY_RELEASE
+        ? {
+            unstable_sentryVitePluginOptions: {
+              release: { name: process.env.SENTRY_RELEASE },
+            },
+          }
+        : {}),
+    }),
   ],
   vite: {
     plugins: [tailwindcss()],

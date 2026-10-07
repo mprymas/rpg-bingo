@@ -107,10 +107,18 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci
+      # Build uploads source maps when SENTRY_AUTH_TOKEN is present; release = github.sha.
+      # Production runtime DSN: set Workers Secrets manually (needs approval), e.g.
+      #   npx wrangler secret put SENTRY_DSN
+      # Optional: SENTRY_ENVIRONMENT, SENTRY_RELEASE (same SHA) via secret put / vars.
       - run: npm run build
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}
+          SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
+          SENTRY_ORG: ${{ secrets.SENTRY_ORG }}
+          SENTRY_PROJECT: ${{ secrets.SENTRY_PROJECT }}
+          SENTRY_RELEASE: ${{ github.sha }}
       - uses: cloudflare/wrangler-action@v4
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
