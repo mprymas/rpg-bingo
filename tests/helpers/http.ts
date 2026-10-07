@@ -106,6 +106,40 @@ export function resolveTestCredentials(): { email: string; password: string } | 
   return { email, password };
 }
 
+/** Second GM for cross-owner integration cases; reads TEST_EMAIL_B / TEST_PASSWORD_B only. */
+export function resolveSecondTestCredentials(): { email: string; password: string } | null {
+  const email = envValue("TEST_EMAIL_B").trim();
+  const password = envValue("TEST_PASSWORD_B").trim();
+  if (!email || !password) return null;
+  return { email, password };
+}
+
+export interface ForgePlayerCookieOverrides {
+  lastNick?: string;
+  playerId?: string;
+  claimToken?: string;
+  nick?: string;
+  color?: number;
+  seen?: number;
+}
+
+/** JSON cookie value for `rpg_player` with well-formed UUID playerId / claimToken (abuse/matrix tests). */
+export function forgePlayerCookie(code: string, overrides?: ForgePlayerCookieOverrides): string {
+  const nick = overrides?.nick ?? "Contract";
+  return JSON.stringify({
+    lastNick: overrides?.lastNick ?? nick,
+    byCode: {
+      [code]: {
+        playerId: overrides?.playerId ?? "11111111-1111-4111-8111-111111111111",
+        claimToken: overrides?.claimToken ?? "22222222-2222-4222-8222-222222222222",
+        nick,
+        color: overrides?.color ?? 1,
+        seen: overrides?.seen ?? Date.now(),
+      },
+    },
+  });
+}
+
 export function createHttpClient(baseUrl: string): HttpClient {
   const normalized = normalizeBaseUrl(baseUrl);
   const origin = new URL(normalized).origin;

@@ -56,6 +56,14 @@ jobs:
             -H "Authorization: Bearer $SERVICE_ROLE_KEY" \
             -H "Content-Type: application/json" \
             -d '{"email":"mg.manual@rpgbingo.test","password":"Manual-Test-Passw0rd!","email_confirm":true}'
+      - name: Create second integration GM
+        run: |
+          source supabase.env
+          curl -sf -X POST "$API_URL/auth/v1/admin/users" \
+            -H "apikey: $SERVICE_ROLE_KEY" \
+            -H "Authorization: Bearer $SERVICE_ROLE_KEY" \
+            -H "Content-Type: application/json" \
+            -d '{"email":"mg.other@rpgbingo.test","password":"Other-Test-Passw0rd!","email_confirm":true}'
       - name: Run smoke test against production preview
         run: |
           npm run preview -- --port 4321 &
@@ -65,6 +73,8 @@ jobs:
         run: |
           SMOKE_EMAIL=mg.manual@rpgbingo.test \
           SMOKE_PASSWORD='Manual-Test-Passw0rd!' \
+          TEST_EMAIL_B=mg.other@rpgbingo.test \
+          TEST_PASSWORD_B='Other-Test-Passw0rd!' \
           BASE_URL=http://localhost:4321 \
           PREVIEW_BASE_URL=http://localhost:4321 \
           npm run test:integration

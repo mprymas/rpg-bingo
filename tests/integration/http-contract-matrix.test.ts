@@ -1,6 +1,13 @@
 import { beforeAll, describe, expect, it } from "vitest";
 import { PLAYER_COOKIE_NAME } from "@/lib/player-cookie";
-import { createHttpClient, hasBaseUrl, resolveTestCredentials, requireBaseUrl, type HttpClient } from "../helpers/http";
+import {
+  createHttpClient,
+  forgePlayerCookie,
+  hasBaseUrl,
+  resolveTestCredentials,
+  requireBaseUrl,
+  type HttpClient,
+} from "../helpers/http";
 
 /** Valid UUID that is not expected to exist as a session. */
 const UNKNOWN_SESSION_ID = "00000000-0000-4000-8000-000000000001";
@@ -16,21 +23,6 @@ function assertErrorBody(body: unknown) {
   const error = body.error;
   expect(typeof error).toBe("string");
   expect((error as string).trim().length).toBeGreaterThan(0);
-}
-
-function forgePlayerCookie(code: string): string {
-  return JSON.stringify({
-    lastNick: "Contract",
-    byCode: {
-      [code]: {
-        playerId: "11111111-1111-4111-8111-111111111111",
-        claimToken: "22222222-2222-4222-8222-222222222222",
-        nick: "Contract",
-        color: 1,
-        seen: Date.now(),
-      },
-    },
-  });
 }
 
 describe.skipIf(!hasBaseUrl())("HTTP contract matrix — unauthenticated / public failures", () => {
