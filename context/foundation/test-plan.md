@@ -174,7 +174,7 @@ Add Playwright only if a later UI-only failure mode appears that HTTP + follow-u
 5. **Reward reveal (#4):** free mystery cell (`hasReward` true, `reward` null) → claim 200 with non-null `reward.label` → `GET /api/play/board` persists claim + reward (optional HTML `/play/{code}` contains phrase).
 6. **Rejoin (#5):** keep the same cookie jar; claim → board GET → same-nick `joinPlayer` again → claim/board still authorized (no cookie clear / cache wipe).
 7. **Undo (#7):** player claim → GM `POST /api/sessions/{id}/undo-claim` → occupancy null, player board mystery restored (`hasReward` true, `reward` null); GM board may still show `reward_id` → player reclaim 200 with reward again.
-8. Gate with `describe.skipIf(!hasBaseUrl() || !resolveTestCredentials())`. Local/CI: seeded catalog via `supabase/seed.sql` (CI applies after start with `npx supabase db query --local -f supabase/seed.sql`). Never hosted `db reset`.
+8. Gate with `describe.skipIf(!hasBaseUrl() || !resolveTestCredentials())`. Local/CI: seeded catalog via `supabase/seed.sql` (CI applies after start with `npx supabase db reset --local`). Never hosted `db reset`.
 9. Reference: `tests/integration/play-path-claim-undo.test.ts` (Risks #3/#4/#5/#7).
 
 ### 6.6 Per-rollout-phase notes

@@ -39,9 +39,10 @@ jobs:
           npx supabase start -x studio,imgproxy,mailpit,edge-runtime,logflare,vector,realtime,storage-api,postgres-meta,supavisor
           npx supabase status -o env | grep -E '^(API_URL|ANON_KEY|SERVICE_ROLE_KEY)=' > supabase.env
       # CLI ~2.117: `supabase seed` only has `buckets` (storage). [db.seed] sql_paths run on
-      # `db reset`, not reliably on `start`. Apply seed.sql locally via db query — never --linked.
+      # `db reset`, not reliably on `start`. `db query` cannot run multi-statement seed.sql
+      # (prepared statement). Reset local DB so migrations + seed.sql apply — never --linked.
       - name: Seed local catalog
-        run: npx supabase db query --local -f supabase/seed.sql
+        run: npx supabase db reset --local
       - name: Configure secrets for build and preview
         run: |
           source supabase.env

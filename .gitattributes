@@ -1,0 +1,2 @@
+# Checkout as CRLF everywhere (Windows + Linux CI) so Prettier/ESLint stay aligned.
+* text=auto eol=crlf
