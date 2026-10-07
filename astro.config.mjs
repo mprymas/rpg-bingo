@@ -20,6 +20,9 @@ export default defineConfig({
     schema: {
       SUPABASE_URL: envField.string({ context: "server", access: "secret", optional: true }),
       SUPABASE_KEY: envField.string({ context: "server", access: "secret", optional: true }),
+      SENTRY_DSN: envField.string({ context: "server", access: "secret", optional: true }),
+      SENTRY_ENVIRONMENT: envField.string({ context: "server", access: "secret", optional: true }),
+      SENTRY_RELEASE: envField.string({ context: "server", access: "secret", optional: true }),
     },
   },
 });
