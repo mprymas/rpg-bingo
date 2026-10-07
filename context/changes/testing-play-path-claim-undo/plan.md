@@ -261,9 +261,9 @@ Document the play-path pattern for future contributors and close the rollout row
 
 #### Automated
 
-- [x] 3.1 `PREVIEW_BASE_URL=<preview> npm run test:integration` includes and passes the new play-path cases against seeded local Supabase
-- [x] 3.2 Race case uses parallel dual-client claims (not sequential-only)
-- [x] 3.3 #4 case fails if catalog missing / wrong slug map (no silent skip of reward reveal)
+- [x] 3.1 `PREVIEW_BASE_URL=<preview> npm run test:integration` includes and passes the new play-path cases against seeded local Supabase — b4b0e19
+- [x] 3.2 Race case uses parallel dual-client claims (not sequential-only) — b4b0e19
+- [x] 3.3 #4 case fails if catalog missing / wrong slug map (no silent skip of reward reveal) — b4b0e19
 
 #### Manual
 
@@ -273,7 +273,7 @@ Document the play-path pattern for future contributors and close the rollout row
 
 #### Automated
 
-- [ ] 4.1 Markdown sections exist: §6.5 describes claim/undo/rejoin steps; Phase 2 row status is `done`
+- [x] 4.1 Markdown sections exist: §6.5 describes claim/undo/rejoin steps; Phase 2 row status is `done`
 
 #### Manual
 
