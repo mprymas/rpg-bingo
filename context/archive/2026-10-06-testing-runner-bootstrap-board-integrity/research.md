@@ -43,13 +43,13 @@ There is **no** unit/integration runner in `package.json`; the only automated be
 
 **Entry chain (inspected)**
 
-| Layer | Anchor |
-|-------|--------|
+| Layer            | Anchor                                                              |
+| ---------------- | ------------------------------------------------------------------- |
 | Form → POST body | `NewSessionForm.tsx:85-96` (filters empty custom texts before POST) |
-| Client | `useCreateSession.ts:13-22` |
-| API | `src/pages/api/sessions/index.ts:20-83` |
-| Service | `sessions.service.ts:72-142` |
-| Generator | `board-generator.ts:49-125` |
+| Client           | `useCreateSession.ts:13-22`                                         |
+| API              | `src/pages/api/sessions/index.ts:20-83`                             |
+| Service          | `sessions.service.ts:72-142`                                        |
+| Generator        | `board-generator.ts:49-125`                                         |
 
 **Persisted shape.** Inserted cell rows are `{ session_id, position, phrase, reward_id }` (`sessions.service.ts:126-133`). Expected cell count used in app code is `size * size` (generator `board-generator.ts:57`; zod `session.ts:30`; GM SSR `sessions/[id].astro:50-51`). Allowed sizes are 3|4|5 (`session.ts:19`; DB `sessions.size BETWEEN 3 AND 5` at migration `:8`) → expected counts **9, 16, or 25** when the board is complete.
 
@@ -77,26 +77,26 @@ There is **no** unit/integration runner in `package.json`; the only automated be
 
 **JSON endpoints (inspected status mapping)**
 
-| Route | Success | Failure statuses observed in handlers |
-|-------|---------|----------------------------------------|
-| `POST /api/sessions` | **201** `{ id, code }` | **401, 400, 500** (`index.ts:21-82`) |
-| `POST /api/play/claim` | **200** `{ cell }` | **403, 400, 401, 409, 404, 500** |
-| `GET /api/play/board` | **200** board DTO | **400, 404, 500** |
-| `GET /api/sessions/[id]/board` | **200** | **401, 404, 500** |
-| `POST /api/sessions/[id]/undo-claim` | **200** `{ cell }` | **403, 401, 404, 400, 500** |
-| `POST /api/play/join` | **302** → play board | Many failures **302** with query/`/play`; also **403/500** text |
+| Route                                | Success                | Failure statuses observed in handlers                           |
+| ------------------------------------ | ---------------------- | --------------------------------------------------------------- |
+| `POST /api/sessions`                 | **201** `{ id, code }` | **401, 400, 500** (`index.ts:21-82`)                            |
+| `POST /api/play/claim`               | **200** `{ cell }`     | **403, 400, 401, 409, 404, 500**                                |
+| `GET /api/play/board`                | **200** board DTO      | **400, 404, 500**                                               |
+| `GET /api/sessions/[id]/board`       | **200**                | **401, 404, 500**                                               |
+| `POST /api/sessions/[id]/undo-claim` | **200** `{ cell }`     | **403, 401, 404, 400, 500**                                     |
+| `POST /api/play/join`                | **302** → play board   | Many failures **302** with query/`/play`; also **403/500** text |
 
 Local `json(body, status)` helpers live **inside** route files; no shared `src/lib` response helper was found in the inspected grep.
 
 **Client gates**
 
-| Client | Gate | Anchor |
-|--------|------|--------|
-| Create | `response.status === 201` then navigate | `useCreateSession.ts:19-22` |
-| Player claim | `409` + conflict shape **or** `response.ok` + success shape | `PlayerBoard.tsx:187-196` |
-| Player/GM poll | `response.ok` + board shape; else no update | `PlayerBoard.tsx:128-134`, `GmBoard.tsx:123-137` |
-| GM undo | `response.ok` **and** undo success shape | `GmBoard.tsx:184-195` |
-| Join form | native form POST; no status check | `JoinNickForm.tsx:17-27` |
+| Client         | Gate                                                        | Anchor                                           |
+| -------------- | ----------------------------------------------------------- | ------------------------------------------------ |
+| Create         | `response.status === 201` then navigate                     | `useCreateSession.ts:19-22`                      |
+| Player claim   | `409` + conflict shape **or** `response.ok` + success shape | `PlayerBoard.tsx:187-196`                        |
+| Player/GM poll | `response.ok` + board shape; else no update                 | `PlayerBoard.tsx:128-134`, `GmBoard.tsx:123-137` |
+| GM undo        | `response.ok` **and** undo success shape                    | `GmBoard.tsx:184-195`                            |
+| Join form      | native form POST; no status check                           | `JoinNickForm.tsx:17-27`                         |
 
 On the inspected JSON mutation/poll clients, advancing requires a **status check**, not merely a JSON body. A concrete path where a play/session JSON handler returns **HTTP 200 + `{ error }`** and a client treats that as success was **not** found in the inspected handlers + clients.
 
@@ -106,12 +106,12 @@ On the inspected JSON mutation/poll clients, advancing requires a **status check
 
 ### Runner / test base (Phase 1 bootstrap)
 
-| Item | Observed |
-|------|----------|
-| vitest / jest / playwright / mocha / `*.test.*` | **Absent** from `package.json` scripts/deps (`package.json:5-61`) and repo globs |
-| Automated behavioral gate | `npm run smoke` → `scripts/smoke.mjs` (`package.json:14`) |
-| CI | `ci` (lint/check/build) + `smoke` (local Supabase + preview + smoke); no suite job (`.github/workflows/ci.yml`) |
-| Docs | `AGENTS.md` / `test-plan.md` §4: no unit/integration runner yet; suite required after Phase 1 |
+| Item                                            | Observed                                                                                                        |
+| ----------------------------------------------- | --------------------------------------------------------------------------------------------------------------- |
+| vitest / jest / playwright / mocha / `*.test.*` | **Absent** from `package.json` scripts/deps (`package.json:5-61`) and repo globs                                |
+| Automated behavioral gate                       | `npm run smoke` → `scripts/smoke.mjs` (`package.json:14`)                                                       |
+| CI                                              | `ci` (lint/check/build) + `smoke` (local Supabase + preview + smoke); no suite job (`.github/workflows/ci.yml`) |
+| Docs                                            | `AGENTS.md` / `test-plan.md` §4: no unit/integration runner yet; suite required after Phase 1                   |
 
 Smoke covers more than auth (create **201**, join **302**, claim **200**/conflict **409**, board GET shape) but does **not** assert persisted cell count / empty phrase / unknown reward DB integrity.
 
@@ -142,16 +142,16 @@ No in-repo decision names which runner Phase 1 must install (plan says “cheape
 
 ## Historical Context (from prior changes)
 
-| Claim | Verdict | Notes |
-|-------|---------|-------|
-| S-01: create success ⇒ N² cells, distinct phrases, positions `0…N²−1` | **Supported as product intent** (`context/archive/2026-09-27-gm-create-session-board/plan.md` persist invariants) | Matches generator behavior on success path |
-| S-01: persist via `create_session_with_cells` RPC | **Contradicted by current code** | Archive `change.md` adapted to two-step insert; `sessions.service.ts:109-136` |
-| S-01: orphan 0-cell session possible on cell-insert failure | **Supported** | Same archive adaptation + current service |
-| Incomplete board → HTTP 422 | **Supported** | Archive ui-session-board + `sessions/[id].astro:52-53` |
-| Create API: 401/400/500; success 201 `{ id, code }` | **Supported** | Archive plan + `index.ts` + client |
-| Client advances only on `status === 201` | **Supported** | `useCreateSession.ts:19` |
-| S-01 deferred unit runner (smoke + manual) | **Superseded** for testing strategy by `test-plan.md` Phase 1 | Product contracts from S-01 still bind |
-| Prefer non-2xx for SSR branded errors | **Supported** lesson | `lessons.md:12-17` |
+| Claim                                                                 | Verdict                                                                                                           | Notes                                                                         |
+| --------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------- |
+| S-01: create success ⇒ N² cells, distinct phrases, positions `0…N²−1` | **Supported as product intent** (`context/archive/2026-09-27-gm-create-session-board/plan.md` persist invariants) | Matches generator behavior on success path                                    |
+| S-01: persist via `create_session_with_cells` RPC                     | **Contradicted by current code**                                                                                  | Archive `change.md` adapted to two-step insert; `sessions.service.ts:109-136` |
+| S-01: orphan 0-cell session possible on cell-insert failure           | **Supported**                                                                                                     | Same archive adaptation + current service                                     |
+| Incomplete board → HTTP 422                                           | **Supported**                                                                                                     | Archive ui-session-board + `sessions/[id].astro:52-53`                        |
+| Create API: 401/400/500; success 201 `{ id, code }`                   | **Supported**                                                                                                     | Archive plan + `index.ts` + client                                            |
+| Client advances only on `status === 201`                              | **Supported**                                                                                                     | `useCreateSession.ts:19`                                                      |
+| S-01 deferred unit runner (smoke + manual)                            | **Superseded** for testing strategy by `test-plan.md` Phase 1                                                     | Product contracts from S-01 still bind                                        |
+| Prefer non-2xx for SSR branded errors                                 | **Supported** lesson                                                                                              | `lessons.md:12-17`                                                            |
 
 ## Related Research
 

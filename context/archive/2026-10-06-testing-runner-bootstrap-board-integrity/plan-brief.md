@@ -17,18 +17,19 @@ Vitest suite + CI wiring; create success proven via GM board GET invariants; thi
 
 ## Key Decisions Made
 
-| Decision | Choice | Why (1 sentence) | Source |
-| --- | --- | --- | --- |
-| Runner | Vitest | DX upgrade while integration still uses preview + local Supabase like smoke | Plan |
-| Orphan 0-cell | Document only; no fix / no red test | Keep Phase 1 test-only; product atomicity is a later change | Plan |
-| Contract surface | Create + thin JSON failure matrix | Covers Risk #2 on core APIs without Phase 2/3 claim-race/authz work | Plan |
-| Board assert | Authenticated GM `GET /api/sessions/[id]/board` | No service-role helper; exercises real read path + status | Plan |
-| CI wiring | Extend existing `smoke` job | Reuse one Supabase + preview bootstrap | Plan |
-| Exclusions | Blank catalog phrases + RLS bypass out | Belong to later phases / not create-API integrity | Plan |
+| Decision         | Choice                                          | Why (1 sentence)                                                            | Source |
+| ---------------- | ----------------------------------------------- | --------------------------------------------------------------------------- | ------ |
+| Runner           | Vitest                                          | DX upgrade while integration still uses preview + local Supabase like smoke | Plan   |
+| Orphan 0-cell    | Document only; no fix / no red test             | Keep Phase 1 test-only; product atomicity is a later change                 | Plan   |
+| Contract surface | Create + thin JSON failure matrix               | Covers Risk #2 on core APIs without Phase 2/3 claim-race/authz work         | Plan   |
+| Board assert     | Authenticated GM `GET /api/sessions/[id]/board` | No service-role helper; exercises real read path + status                   | Plan   |
+| CI wiring        | Extend existing `smoke` job                     | Reuse one Supabase + preview bootstrap                                      | Plan   |
+| Exclusions       | Blank catalog phrases + RLS bypass out          | Belong to later phases / not create-API integrity                           | Plan   |
 
 ## Scope
 
 **In scope:**
+
 - Vitest runner, npm scripts, HTTP/cookie helpers
 - Create **201** → board invariants via GM board GET
 - Create **401** / **400** (zod + unknown reward)
@@ -37,6 +38,7 @@ Vitest suite + CI wiring; create success proven via GM board GET invariants; thi
 - test-plan cookbook §6.1 / §6.2 / §6.4 / §6.5 Phase 1 notes; AGENTS pointer if still “no runner”
 
 **Out of scope:**
+
 - Orphan 0-cell product fix or stubbed red test
 - Blank catalog phrase enforcement; RLS/PostgREST bypass (Risk #6)
 - Claim **409** race, undo side effects, rejoin, join **302** matrix
@@ -48,12 +50,12 @@ Vitest unit tests run in-process without Supabase. Integration/contract tests au
 
 ## Phases at a Glance
 
-| Phase | What it delivers | Key risk |
-| --- | --- | --- |
-| 1. Runner bootstrap | Vitest + helpers + seed unit | Config / `@/*` alias friction |
-| 2. Board integrity | Create→board asserts + 401/400 | Flaky auth/cookie harness |
-| 3. HTTP contracts | Failure status matrix | Over-scoping into Phase 2 |
-| 4. CI + cookbook | smoke job wiring + cookbook | Wall-time / env wiring |
+| Phase               | What it delivers               | Key risk                      |
+| ------------------- | ------------------------------ | ----------------------------- |
+| 1. Runner bootstrap | Vitest + helpers + seed unit   | Config / `@/*` alias friction |
+| 2. Board integrity  | Create→board asserts + 401/400 | Flaky auth/cookie harness     |
+| 3. HTTP contracts   | Failure status matrix          | Over-scoping into Phase 2     |
+| 4. CI + cookbook    | smoke job wiring + cookbook    | Wall-time / env wiring        |
 
 **Prerequisites:** Docker + local Supabase for integration; Node per `.nvmrc` (22.x) for app scripts.
 **Estimated effort:** ~2–3 sessions across 4 phases.

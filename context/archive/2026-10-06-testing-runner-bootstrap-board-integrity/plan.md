@@ -136,6 +136,7 @@ Prove successful create persists a playable board; lock create failure status cl
 **Intent**: After authenticated `POST /api/sessions` returns **201** `{ id, code }`, load GM board and prove persisted shape—not “generate OK”.
 
 **Contract**: For at least one size (prefer **5** default path; optionally one smaller size if cheap):
+
 - HTTP **201** with `id` + `code`
 - `GET /api/sessions/{id}/board` → **200**
 - `cells.length === size * size`
@@ -151,6 +152,7 @@ Prove successful create persists a playable board; lock create failure status cl
 **Intent**: Lock that create failures are non-2xx so clients cannot advance.
 
 **Contract** (minimum):
+
 - unauthenticated → **401**
 - invalid JSON / zod violation (e.g. empty custom phrase text, bad size) → **400**
 - unknown reward UUID (valid UUID not in catalog) → **400**
@@ -195,6 +197,7 @@ Prove that a successful create with custom phrases marked guaranteed persists th
 **Intent**: Challenge "`guaranteed: true` + HTTP 201 ⇒ phrase is on the board." Structural invariants alone are insufficient.
 
 **Contract**:
+
 - Create with ≥1 guaranteed custom (prefer multiple if cheap) → **201**
 - GM board GET → **200**
 - Every guaranteed phrase text from the request appears among cell phrases (trim/normalize per product rules)
@@ -232,12 +235,12 @@ Lock non-success status classes on core JSON board/claim/undo routes without Pha
 
 **Contract** (status + presence of error-ish body string/field only—no full snapshots):
 
-| Endpoint | Failures to lock |
-|----------|------------------|
-| `GET /api/sessions/[id]/board` | **401** unauth; **404** unknown id |
-| `GET /api/play/board` | **400** bad code; **404** missing/inactive as implemented |
-| `POST /api/play/claim` | **400** bad body/position; **401** missing/invalid player cookie; **404** unknown session code (as implemented) |
-| `POST /api/sessions/[id]/undo-claim` | **401**; **400** bad body; **404** unknown session |
+| Endpoint                             | Failures to lock                                                                                                |
+| ------------------------------------ | --------------------------------------------------------------------------------------------------------------- |
+| `GET /api/sessions/[id]/board`       | **401** unauth; **404** unknown id                                                                              |
+| `GET /api/play/board`                | **400** bad code; **404** missing/inactive as implemented                                                       |
+| `POST /api/play/claim`               | **400** bad body/position; **401** missing/invalid player cookie; **404** unknown session code (as implemented) |
+| `POST /api/sessions/[id]/undo-claim` | **401**; **400** bad body; **404** unknown session                                                              |
 
 Optional cheap **403** origin cases only if harness already sends Origin and flipping it is one-liner; not required.
 
@@ -273,6 +276,7 @@ Wire suite into CI smoke job; fill test-plan cookbook for Phase 1 patterns; upda
 **Intent**: Run Vitest integration (and unit if desired) after preview is healthy, reusing the same Supabase + user + `BASE_URL` as smoke.
 
 **Contract**:
+
 - Keep existing smoke step
 - Add step: with `BASE_URL=http://localhost:4321` and smoke user env, run `npm run test:integration` (or `npm test` if config skips integration without env—prefer explicit integration script)
 - Optionally add `npm run test:unit` to `ci` job (no Supabase)—recommended for fast signal
