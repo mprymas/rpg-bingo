@@ -1,10 +1,10 @@
 ---
 change_id: configure-sentry
 title: Configure Sentry
-status: implemented
+status: archived
 created: 2026-10-07
 updated: 2026-10-07
-archived_at: null
+archived_at: 2026-10-07T16:48:01Z
 ---
 
 ## Notes
