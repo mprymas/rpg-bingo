@@ -1,7 +1,7 @@
 ---
 change_id: report-error-helper
 title: Shared reportError helper for API/SSR Worker logs
-status: implementing
+status: implemented
 created: 2026-10-07
 updated: 2026-10-07
 archived_at: null

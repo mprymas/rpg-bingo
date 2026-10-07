@@ -233,15 +233,15 @@ Close Auth soft-identity blindness for logging only; UX stays soft.
 
 #### Manual
 
-- [ ] 2.4 Unexpected soft 500/503 shows structured server.error in logs
-- [ ] 2.5 Mapped domain 4xx does not emit server.error
+- [x] 2.4 Unexpected soft 500/503 shows structured server.error in logs — c4799d0
+- [x] 2.5 Mapped domain 4xx does not emit server.error — c4799d0
 
 ### Phase 3: Middleware + auth `{ error }` logging
 
 #### Automated
 
-- [x] 3.1 Lint + unit tests pass
+- [x] 3.1 Lint + unit tests pass — bd59ce6
 
 #### Manual
 
-- [ ] 3.2 Soft auth UX unchanged; infra-shaped / getUser / signOut errors are log-eligible per filter
+- [x] 3.2 Soft auth UX unchanged; infra-shaped / getUser / signOut errors are log-eligible per filter — bd59ce6
