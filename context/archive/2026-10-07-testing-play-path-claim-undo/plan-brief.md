@@ -17,14 +17,14 @@ Preview-HTTP Vitest cases prove Risks #3/#4/#5/#7; helpers join and bootstrap se
 
 ## Key Decisions Made
 
-| Decision | Choice | Why (1 sentence) | Source |
-| -------- | ------ | ---------------- | ------ |
-| Test layer | Vitest integration; no thin e2e | Research: cookie/SSR recovery makes browser e2e unnecessary for #4/#5 | Research |
-| Reward fixture | Fixed seed UUIDs; tests use slug → id | Stable create-with-rewards without HTML scrape; slug is the human handle | Plan |
-| Helpers | `joinPlayer` + `createActiveSession` in `http.ts` | Shared join/create; keep oracles in the test file | Plan |
-| Race aggressiveness | One `Promise.all` pair | Matches risk; avoids flaky retry loops | Plan |
-| Undo coverage | Reclaim in same case | Proves cell is claimable after undo, not only visually free | Plan |
-| CI catalog | Seed after `supabase start` | Risk #4 must green in CI, not only locally | Plan |
+| Decision            | Choice                                            | Why (1 sentence)                                                         | Source   |
+| ------------------- | ------------------------------------------------- | ------------------------------------------------------------------------ | -------- |
+| Test layer          | Vitest integration; no thin e2e                   | Research: cookie/SSR recovery makes browser e2e unnecessary for #4/#5    | Research |
+| Reward fixture      | Fixed seed UUIDs; tests use slug → id             | Stable create-with-rewards without HTML scrape; slug is the human handle | Plan     |
+| Helpers             | `joinPlayer` + `createActiveSession` in `http.ts` | Shared join/create; keep oracles in the test file                        | Plan     |
+| Race aggressiveness | One `Promise.all` pair                            | Matches risk; avoids flaky retry loops                                   | Plan     |
+| Undo coverage       | Reclaim in same case                              | Proves cell is claimable after undo, not only visually free              | Plan     |
+| CI catalog          | Seed after `supabase start`                       | Risk #4 must green in CI, not only locally                               | Plan     |
 
 ## Scope
 
@@ -38,12 +38,12 @@ GM signs in → create session (optional catalog reward by slug) → one or two 
 
 ## Phases at a Glance
 
-| Phase | What it delivers | Key risk |
-| ----- | ---------------- | -------- |
-| 1. Catalog fixture + CI seed | Fixed ids, slug map, CI seed | Local DB still on old random ids until reset |
-| 2. Play-path helpers | `joinPlayer` + session bootstrap | Helpers too thin/thick vs cookbook |
-| 3. Integration suite | Risks #3/#4/#5/#7 cases | Flaky race or empty catalog in CI |
-| 4. Cookbook + status | §6.5 filled; Phase 2 done | Docs drift from actual helpers |
+| Phase                        | What it delivers                 | Key risk                                     |
+| ---------------------------- | -------------------------------- | -------------------------------------------- |
+| 1. Catalog fixture + CI seed | Fixed ids, slug map, CI seed     | Local DB still on old random ids until reset |
+| 2. Play-path helpers         | `joinPlayer` + session bootstrap | Helpers too thin/thick vs cookbook           |
+| 3. Integration suite         | Risks #3/#4/#5/#7 cases          | Flaky race or empty catalog in CI            |
+| 4. Cookbook + status         | §6.5 filled; Phase 2 done        | Docs drift from actual helpers               |
 
 **Prerequisites:** Phase 1 runner/integration harness (`testing-runner-bootstrap-board-integrity`); local/CI Supabase + preview for integration.
 **Estimated effort:** ~1–2 sessions across 4 phases.

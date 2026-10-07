@@ -108,6 +108,7 @@ Centralize form-join and GM session bootstrap so Phase 3 cases do not copy smoke
 **Intent**: Add thin helpers for player join and authenticated session create reused across Phase 3 cases.
 
 **Contract**:
+
 - `joinPlayer(client, { code, nick })` — form `POST /api/play/join`, expect 302, rely on existing jar/`Origin` behavior to store `rpg_player`
 - `createActiveSession(gmClient, body)` — JSON `POST /api/sessions`, expect success create status, return `{ id, code }`
 - Dual-player/race guidance: prefer two `createHttpClient()` instances over `jar.delete("rpg_player")` on one client
@@ -143,6 +144,7 @@ One Vitest integration file proves Risks #3, #4, #5, and #7 with HTTP status + s
 **Intent**: Cover parallel claim race, reward reveal, cookie rejoin, and undo+reclaim without kitchen-sink or sequential-only race proof.
 
 **Contract**:
+
 - Gate with `describe.skipIf(!hasBaseUrl())` and credentials when GM auth required (same pattern as `create-session-board.test.ts`)
 - Each case creates its own session (avoid cross-talk under parallel Vitest)
 - **#3**: two clients join → one `Promise.all` pair of `POST /api/play/claim` on the same position → exactly one 200 and one 409 with `error: "conflict"` and occupant nick/color; follow-up `GET /api/play/board?code=` shows a single `claimedByColor` on that position
@@ -183,6 +185,7 @@ Document the play-path pattern for future contributors and close the rollout row
 **Intent**: Replace §6.5 claim/undo TBD with the Phase 2 pattern; record that thin e2e is not required for #4/#5 on current architecture; mark Phase 2 done.
 
 **Contract**:
+
 - §6.5: join via `joinPlayer`, dual clients for race, slug→id for rewards, claim/undo/rejoin assert shapes, reference the new integration file
 - §6.3: note research verdict — no e2e required for #4/#5 given cookie/SSR recovery (or leave TBD only if still “optional and unused”)
 - §3 table: Phase 2 Status → `done`; Change folder remains `testing-play-path-claim-undo`

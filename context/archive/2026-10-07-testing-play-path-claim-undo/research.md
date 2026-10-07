@@ -67,13 +67,13 @@ GM undo clears occupancy columns only and keeps `reward_id` ([supabase/migration
 
 ### Existing harness (reuse)
 
-| Asset | Role for Phase 2 |
-|-------|------------------|
-| `tests/helpers/http.ts` | Cookie jar, default `Origin`, `signIn`, `skipIf(!hasBaseUrl())` |
-| `scripts/smoke.mjs:221-304` | Cookbook for form join, claim 200, second player, sequential 409, board poll shape |
-| `tests/integration/http-contract-matrix.test.ts` | Claim/undo **failure** statuses only; forged cookie for negatives |
-| `tests/integration/create-session-board.test.ts` | GM create + board GET side-effect pattern |
-| Cookbook §6.5 claim/undo | Still TBD in [context/foundation/test-plan.md](context/foundation/test-plan.md) |
+| Asset                                            | Role for Phase 2                                                                   |
+| ------------------------------------------------ | ---------------------------------------------------------------------------------- |
+| `tests/helpers/http.ts`                          | Cookie jar, default `Origin`, `signIn`, `skipIf(!hasBaseUrl())`                    |
+| `scripts/smoke.mjs:221-304`                      | Cookbook for form join, claim 200, second player, sequential 409, board poll shape |
+| `tests/integration/http-contract-matrix.test.ts` | Claim/undo **failure** statuses only; forged cookie for negatives                  |
+| `tests/integration/create-session-board.test.ts` | GM create + board GET side-effect pattern                                          |
+| Cookbook §6.5 claim/undo                         | Still TBD in [context/foundation/test-plan.md](context/foundation/test-plan.md)    |
 
 **Missing helpers (not in `http.ts` today):** `joinPlayer` (form POST + 302), dual-client factory guidance, session bootstrap returning `{ id, code }`, shared claim/conflict/board cell asserts, catalog `rewardId` acquisition.
 
@@ -102,14 +102,14 @@ GM undo clears occupancy columns only and keeps `reward_id` ([supabase/migration
 
 ## Historical Context (from prior changes)
 
-| Claim | Verdict | Notes |
-|-------|---------|-------|
-| First-wins via conditional UPDATE | **Supported** | Archive player-claim plan; live RPC `20261003190000` |
-| Mystery until claim; reveal on claim success | **Supported** | Snapshot CASE + claim RETURNING join |
-| Auth via `claim_token`, no public player ids on roster | **Supported** | impl-review Fix A; smoke asserts no `id`/`claimToken` on players |
-| Undo clears occupancy, keeps `reward_id` | **Supported** | Archive gm-undo plan + `20261003200000` |
-| FR-012 “unieważnia nagrodę” = delete reward_id | **Contradicted** by implementation | Treat as player-visible de-reveal + free cell |
-| Phase 1 deferred claim race / undo / rejoin Vitest | **Supported** | `testing-runner-bootstrap-board-integrity` plan exclusions; cookbook §6.5 TBD |
+| Claim                                                  | Verdict                            | Notes                                                                         |
+| ------------------------------------------------------ | ---------------------------------- | ----------------------------------------------------------------------------- |
+| First-wins via conditional UPDATE                      | **Supported**                      | Archive player-claim plan; live RPC `20261003190000`                          |
+| Mystery until claim; reveal on claim success           | **Supported**                      | Snapshot CASE + claim RETURNING join                                          |
+| Auth via `claim_token`, no public player ids on roster | **Supported**                      | impl-review Fix A; smoke asserts no `id`/`claimToken` on players              |
+| Undo clears occupancy, keeps `reward_id`               | **Supported**                      | Archive gm-undo plan + `20261003200000`                                       |
+| FR-012 “unieważnia nagrodę” = delete reward_id         | **Contradicted** by implementation | Treat as player-visible de-reveal + free cell                                 |
+| Phase 1 deferred claim race / undo / rejoin Vitest     | **Supported**                      | `testing-runner-bootstrap-board-integrity` plan exclusions; cookbook §6.5 TBD |
 
 Related archives: `context/archive/2026-10-03-player-claim-field-reward/`, `context/archive/2026-10-03-gm-undo-field-claim/`.
 
