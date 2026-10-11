@@ -95,3 +95,7 @@ export interface ClaimConflictResponse {
 export interface UndoClaimSuccessResponse {
   cell: SessionWithCells["cells"][number];
 }
+
+export interface CloseSessionSuccessResponse {
+  ok: true;
+}

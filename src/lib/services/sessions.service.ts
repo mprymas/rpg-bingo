@@ -4,6 +4,7 @@ import { generateBoard } from "@/lib/services/board-generator";
 import { generateSessionCode } from "@/lib/services/session-code";
 import type {
   ClaimOccupant,
+  CloseSessionSuccessResponse,
   CreateSessionCommand,
   CreateSessionResponse,
   PlayerBoard,
@@ -194,6 +195,7 @@ export async function getSessionWithCells(
     code: data.code,
     size: data.size,
     status: data.status,
+    replaced_by_session_id: data.replaced_by_session_id,
     created_at: data.created_at,
     cells,
     players,
@@ -360,6 +362,44 @@ function undoErrorFromMessage(message: string): UndoBoardCellError | null {
   if (message.includes("invalid_position")) return new UndoBoardCellError("INVALID_POSITION");
   if (message.includes("cell_not_found")) return new UndoBoardCellError("CELL_NOT_FOUND");
   return null;
+}
+
+export type CloseSessionAsReplacedErrorCode = "SESSION_NOT_FOUND" | "SESSION_NOT_ACTIVE" | "REPLACEMENT_NOT_FOUND";
+
+export class CloseSessionAsReplacedError extends Error {
+  readonly code: CloseSessionAsReplacedErrorCode;
+
+  constructor(code: CloseSessionAsReplacedErrorCode) {
+    super(code);
+    this.name = "CloseSessionAsReplacedError";
+    this.code = code;
+  }
+}
+
+/** Pure mapper from Postgres RAISE messages — unit-testable without a live DB. */
+export function closeSessionAsReplacedErrorFromMessage(message: string): CloseSessionAsReplacedError | null {
+  if (message.includes("session_not_found")) return new CloseSessionAsReplacedError("SESSION_NOT_FOUND");
+  if (message.includes("session_not_active")) return new CloseSessionAsReplacedError("SESSION_NOT_ACTIVE");
+  if (message.includes("replacement_not_found")) return new CloseSessionAsReplacedError("REPLACEMENT_NOT_FOUND");
+  return null;
+}
+
+export async function closeSessionAsReplaced(
+  supabase: AppSupabaseClient,
+  input: { sessionId: string; replacedBySessionId: string },
+): Promise<CloseSessionSuccessResponse> {
+  const { error } = await supabase.rpc("close_session_as_replaced", {
+    p_session_id: input.sessionId,
+    p_replaced_by: input.replacedBySessionId,
+  });
+
+  if (error) {
+    const mapped = closeSessionAsReplacedErrorFromMessage(error.message);
+    if (mapped) throw mapped;
+    throw error;
+  }
+
+  return { ok: true };
 }
 
 export async function undoBoardCell(

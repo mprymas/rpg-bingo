@@ -4,7 +4,7 @@
 version: 1
 status: draft
 created: 2026-09-22
-updated: 2026-10-03
+updated: 2026-10-11
 prd_version: 1
 main_goal: market-feedback
 top_blocker: capacity
@@ -51,7 +51,7 @@ Mistrz Gry chce przy stole meta-wyzwania i lekką rywalizację zamiast uznaniowy
 | S-02 | player-join-shared-board                             | gracz dołącza kodem i nickiem (bez konta) i widzi wspólną planszę z nagrodami na polach | S-01          | US-01, FR-002, FR-008, FR-010             | done |
 | S-03 | player-claim-field-reward                            | gracz oznacza wolne pole, widzi nagrodę; inni widzą zajęte pole w ~10s (poll)             | S-02          | US-01, FR-009, FR-011                     | done |
 | S-04 | gm-undo-field-claim                                  | MG cofa błędne oznaczenie; pole wraca i nagroda jest unieważniona                       | S-03          | FR-012                                    | done |
-| S-05 | gm-regenerate-board                                  | MG generuje nową planszę (nowy kod); gracze dołączają od nowa                           | S-02          | FR-007                                    | proposed |
+| S-05 | gm-regenerate-board                                  | MG generuje nową planszę (nowy kod); gracze dołączają od nowa                           | S-02          | FR-007                                    | in-progress |
 
 
 
@@ -173,7 +173,7 @@ Foundations below assume these are present and do NOT re-scaffold them.
 - **Blockers:** —
 - **Unknowns:** —
 - **Risk:** Domknięcie must-have ścieżki „kolejna plansza”; równoległe z claim/undo dzięki wspólnemu Prerequisite S-02 — dźwignia przy `capacity`.
-- **Status:** proposed
+- **Status:** in-progress
 
 
 

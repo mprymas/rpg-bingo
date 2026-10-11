@@ -149,6 +149,7 @@ export type Database = {
           created_at: string
           gm_id: string
           id: string
+          replaced_by_session_id: string | null
           size: number
           status: string
         }
@@ -157,6 +158,7 @@ export type Database = {
           created_at?: string
           gm_id: string
           id?: string
+          replaced_by_session_id?: string | null
           size: number
           status?: string
         }
@@ -165,10 +167,19 @@ export type Database = {
           created_at?: string
           gm_id?: string
           id?: string
+          replaced_by_session_id?: string | null
           size?: number
           status?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "sessions_replaced_by_session_id_fkey"
+            columns: ["replaced_by_session_id"]
+            isOneToOne: false
+            referencedRelation: "sessions"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Views: {
@@ -188,6 +199,10 @@ export type Database = {
           reward_slug: string | null
           status: string
         }[]
+      }
+      close_session_as_replaced: {
+        Args: { p_replaced_by: string; p_session_id: string }
+        Returns: undefined
       }
       get_active_board_by_code: {
         Args: { p_code: string }
