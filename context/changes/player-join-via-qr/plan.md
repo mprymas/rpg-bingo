@@ -262,18 +262,18 @@ Visual gate + automated proof of payload + guard typed-code join.
 
 #### Manual
 
-- [ ] 2.3 Active board: toggle show/hide QR works; second show reuses panel
-- [ ] 2.4 Closed board: no QR control
-- [ ] 2.5 Encoded URL reaches nick form then board on a second device/browser
+- [x] 2.3 Active board: toggle show/hide QR works; second show reuses panel — a6f0b58
+- [x] 2.4 Closed board: no QR control — a6f0b58
+- [x] 2.5 Encoded URL reaches nick form then board on a second device/browser — a6f0b58
 
 ### Phase 3: Kitchen-sink states + e2e regression
 
 #### Automated
 
-- [x] 3.1 QR reveal e2e asserts `data-join-url` / payload equals `/play/{CODE}?join=1`
-- [x] 3.2 Typed-code join e2e still passes (`public-join-path`)
-- [x] 3.3 Unit + lint still green
+- [x] 3.1 QR reveal e2e asserts `data-join-url` / payload equals `/play/{CODE}?join=1` — bf9b957
+- [x] 3.2 Typed-code join e2e still passes (`public-join-path`) — bf9b957
+- [x] 3.3 Unit + lint still green — bf9b957
 
 #### Manual
 
-- [ ] 3.4 Kitchen-sink collapsed / expanded / closed states look correct
+- [x] 3.4 Kitchen-sink collapsed / expanded / closed states look correct — a6f0b58
