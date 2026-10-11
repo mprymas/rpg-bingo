@@ -427,11 +427,11 @@ Additive only: nullable column, nullable FK, two new tables. Existing sessions h
 
 #### Automated
 
-- [x] 3.1 Unit tests pass (incl. prefill): `npm run test:unit`
-- [x] 3.2 Integration create cases pass: `npm run test:integration`
-- [x] 3.3 Type check: `npx astro check`
-- [x] 3.4 Lint incl. UI literals: `npm run lint`
-- [x] 3.5 Build: `npm run build`
+- [x] 3.1 Unit tests pass (incl. prefill): `npm run test:unit` — bed253c
+- [x] 3.2 Integration create cases pass: `npm run test:integration` — bed253c
+- [x] 3.3 Type check: `npx astro check` — bed253c
+- [x] 3.4 Lint incl. UI literals: `npm run lint` — bed253c
+- [x] 3.5 Build: `npm run build` — bed253c
 
 #### Manual
 
