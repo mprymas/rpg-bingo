@@ -92,6 +92,7 @@ export function deriveRewardProgress(input: {
       thresholdCount: input.thresholdCount,
       thresholdReward,
       lines: linesByPlayer.get(key) ?? [],
+      fieldRewards: [],
     });
   }
 

@@ -2,6 +2,7 @@ import { useState } from "react";
 import { flushSync } from "react-dom";
 import { RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 
 interface Props {
   sessionId: string;
@@ -11,6 +12,8 @@ interface Props {
   initialConfirmOpen?: boolean;
   /** Kitchen-sink: no navigation. */
   preview?: boolean;
+  /** Inline next to a header link (no outer margin / centering). */
+  inline?: boolean;
 }
 
 export default function GmRegenerateControls({
@@ -18,6 +21,7 @@ export default function GmRegenerateControls({
   sessionStatus,
   initialConfirmOpen = false,
   preview = false,
+  inline = false,
 }: Props) {
   const [confirmOpen, setConfirmOpen] = useState(initialConfirmOpen);
   const [navigating, setNavigating] = useState(false);
@@ -40,10 +44,11 @@ export default function GmRegenerateControls({
 
   if (!confirmOpen) {
     return (
-      <div className="mb-6 flex justify-center">
+      <div className={cn(!inline && "mb-6 flex justify-center")}>
         <Button
           type="button"
           variant="outline"
+          size={inline ? "sm" : "default"}
           className="cursor-pointer"
           onClick={() => {
             setConfirmOpen(true);
@@ -58,7 +63,10 @@ export default function GmRegenerateControls({
 
   return (
     <div
-      className="border-border bg-background mb-6 space-y-4 rounded-lg border p-4"
+      className={cn(
+        "border-border bg-background space-y-4 rounded-lg border p-4",
+        inline ? "col-span-full w-full" : "mb-6",
+      )}
       role="group"
       aria-label="Potwierdź nową planszę"
     >

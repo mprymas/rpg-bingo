@@ -2,7 +2,7 @@
 import Layout from "@/layouts/Layout.astro";
 import JoinNickForm from "@/components/play/JoinNickForm";
 import PlayerBoard from "@/components/play/PlayerBoard";
-import type { PlayerBoardCell, PlayerRewardProgress, PlayerRosterEntry } from "@/types";
+import type { BoardLineSlot, PlayerBoardCell, PlayerRewardProgress, PlayerRosterEntry } from "@/types";
 
 if (import.meta.env.PROD) {
   return new Response("Not Found", { status: 404 });
@@ -82,9 +82,33 @@ const mixedBoardCells = makePlayerCells(9, (cell, i) => {
 });
 
 const demoPlayers: PlayerRosterEntry[] = [
-  { nick: "Anna", color: 1, created_at: "2026-09-15T14:31:00.000Z" },
-  { nick: "Borin", color: 3, created_at: "2026-09-15T14:32:00.000Z" },
-  { nick: "Cyra", color: 7, created_at: "2026-09-15T14:33:00.000Z" },
+  { nick: "Anna", color: 1, created_at: "2026-09-15T14:31:00.000Z", claimedCount: 0, thresholdReward: null },
+  { nick: "Borin", color: 3, created_at: "2026-09-15T14:32:00.000Z", claimedCount: 0, thresholdReward: null },
+  { nick: "Cyra", color: 7, created_at: "2026-09-15T14:33:00.000Z", claimedCount: 0, thresholdReward: null },
+];
+
+const demoPlayersBelowN: PlayerRosterEntry[] = [
+  { nick: "Anna", color: 1, created_at: "2026-09-15T14:31:00.000Z", claimedCount: 1, thresholdReward: null },
+  { nick: "Borin", color: 3, created_at: "2026-09-15T14:32:00.000Z", claimedCount: 0, thresholdReward: null },
+  { nick: "Cyra", color: 7, created_at: "2026-09-15T14:33:00.000Z", claimedCount: 2, thresholdReward: null },
+];
+
+const demoPlayersThresholdEarned: PlayerRosterEntry[] = [
+  {
+    nick: "Anna",
+    color: 1,
+    created_at: "2026-09-15T14:31:00.000Z",
+    claimedCount: 3,
+    thresholdReward: rewardInspiration,
+  },
+  { nick: "Borin", color: 3, created_at: "2026-09-15T14:32:00.000Z", claimedCount: 1, thresholdReward: null },
+  {
+    nick: "Cyra",
+    color: 7,
+    created_at: "2026-09-15T14:33:00.000Z",
+    claimedCount: 5,
+    thresholdReward: rewardExperience,
+  },
 ];
 
 const progressBelowN: PlayerRewardProgress = {
@@ -92,6 +116,7 @@ const progressBelowN: PlayerRewardProgress = {
   thresholdCount: 3,
   thresholdReward: null,
   lines: [],
+  fieldRewards: [rewardInspiration],
 };
 
 const progressThresholdEarned: PlayerRewardProgress = {
@@ -99,6 +124,7 @@ const progressThresholdEarned: PlayerRewardProgress = {
   thresholdCount: 3,
   thresholdReward: rewardInspiration,
   lines: [],
+  fieldRewards: [rewardExperience],
 };
 
 const progressLinesEarned: PlayerRewardProgress = {
@@ -109,7 +135,26 @@ const progressLinesEarned: PlayerRewardProgress = {
     { axis: "row", index: 1, reward: rewardInspiration },
     { axis: "column", index: 0, reward: rewardExperience },
   ],
+  fieldRewards: [],
 };
+
+const lineSlotsMystery: BoardLineSlot[] = [
+  { axis: "row", index: 0, reward: null, claimedByColor: null },
+  { axis: "row", index: 1, reward: null, claimedByColor: null },
+  { axis: "row", index: 2, reward: null, claimedByColor: null },
+  { axis: "column", index: 0, reward: null, claimedByColor: null },
+  { axis: "column", index: 1, reward: null, claimedByColor: null },
+  { axis: "column", index: 2, reward: null, claimedByColor: null },
+];
+
+const lineSlotsEarned: BoardLineSlot[] = [
+  { axis: "row", index: 0, reward: null, claimedByColor: null },
+  { axis: "row", index: 1, reward: rewardInspiration, claimedByColor: 3 },
+  { axis: "row", index: 2, reward: null, claimedByColor: null },
+  { axis: "column", index: 0, reward: rewardExperience, claimedByColor: 7 },
+  { axis: "column", index: 1, reward: null, claimedByColor: null },
+  { axis: "column", index: 2, reward: null, claimedByColor: null },
+];
 
 const nickErrorCopy = "Nick musi mieć od 1 do 24 znaków.";
 const notFoundCopy = "Nie znaleziono sesji";
@@ -153,39 +198,55 @@ const sections = [
   },
   {
     id: "progress-below-n",
-    title: "progress — below threshold",
-    description: "Postęp poniżej N — licznik X/N i pusty stan „Twoje nagrody”.",
+    title: "roster — below threshold",
+    description: "Lista graczy z progress barem X/N i ukrytym kafelkiem nagrody progowej.",
     kind: "board" as const,
     cells: mixedBoardCells,
     conflictMessage: null as string | null,
     progress: progressBelowN as PlayerRewardProgress | null,
+    players: demoPlayersBelowN,
+    thresholdCount: 3 as number | null,
   },
   {
     id: "progress-threshold",
-    title: "progress — threshold earned",
-    description: "Zdobyta nagroda progowa na liście „Twoje nagrody”.",
+    title: "roster — threshold earned",
+    description: "Kafelek nagrody progowej odsłonięty i w kolorze gracza po osiągnięciu N.",
     kind: "board" as const,
     cells: mixedBoardCells,
     conflictMessage: null as string | null,
     progress: progressThresholdEarned as PlayerRewardProgress | null,
+    players: demoPlayersThresholdEarned,
+    thresholdCount: 3 as number | null,
   },
   {
     id: "progress-lines",
-    title: "progress — lines earned",
-    description: "Zdobyte nagrody za wiersz/kolumnę (etykiety 1-based).",
+    title: "line slots — earned",
+    description: "Ramka wierszy/kolumn: mystery + zdobyte z kolorem gracza.",
     kind: "board" as const,
     cells: mixedBoardCells,
     conflictMessage: null as string | null,
     progress: progressLinesEarned as PlayerRewardProgress | null,
+    lineSlots: lineSlotsEarned,
   },
   {
-    id: "progress-no-rules",
-    title: "progress — no rules",
-    description: "Sesja bez reguł progowych/liniowych — sekcja postępu ukryta.",
+    id: "line-slots-mystery",
+    title: "line slots — mystery",
+    description: "Ramka nagród za wiersze (prawo) i kolumny (dół) — ukryte do ukończenia linii.",
     kind: "board" as const,
     cells: mixedBoardCells,
     conflictMessage: null as string | null,
     progress: null as PlayerRewardProgress | null,
+    lineSlots: lineSlotsMystery,
+  },
+  {
+    id: "progress-no-rules",
+    title: "roster — no threshold",
+    description: "Sesja bez nagród za liczbę pól — lista graczy bez progress bara.",
+    kind: "board" as const,
+    cells: mixedBoardCells,
+    conflictMessage: null as string | null,
+    progress: null as PlayerRewardProgress | null,
+    thresholdCount: null as number | null,
   },
   {
     id: "mystery",
@@ -317,10 +378,12 @@ const sections = [
                 code="PLAY01"
                 size={3}
                 initialCells={section.cells}
-                initialPlayers={demoPlayers}
+                initialPlayers={"players" in section && section.players ? section.players : demoPlayers}
                 initialStatus={section.closedChrome ? "closed" : "active"}
                 initialSuccessorCode={"successorCode" in section ? section.successorCode : null}
                 initialProgress={"progress" in section ? section.progress : null}
+                initialLineSlots={"lineSlots" in section ? section.lineSlots : []}
+                initialThresholdCount={"thresholdCount" in section ? section.thresholdCount : null}
                 preview
                 previewClosedChrome={"closedChrome" in section ? section.closedChrome : undefined}
                 initialConflictMessage={section.conflictMessage}

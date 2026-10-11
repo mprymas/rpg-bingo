@@ -2,9 +2,9 @@ import type { APIRoute } from "astro";
 import { PLAYER_COOKIE_NAME, readPlayerIdentity } from "@/lib/player-cookie";
 import { reportError } from "@/lib/report-error";
 import { playJoinCodeSchema } from "@/lib/schemas/play-join";
-import { getActiveBoardByCode, getPlayerRewardProgress } from "@/lib/services/sessions.service";
+import { getActiveBoardByCode, getPlayerRewardSnapshot } from "@/lib/services/sessions.service";
 import { createClient } from "@/lib/supabase";
-import type { PlayerBoard } from "@/types";
+import type { BoardLineSlot, PlayerBoard } from "@/types";
 
 export const prerender = false;
 
@@ -36,9 +36,12 @@ export const GET: APIRoute = async (context) => {
 
     const identity = readPlayerIdentity(context.cookies.get(PLAYER_COOKIE_NAME)?.value, code);
     let progress: PlayerBoard["progress"] = null;
+    let lineSlots: BoardLineSlot[] = [];
     if (identity) {
       try {
-        progress = await getPlayerRewardProgress(supabase, code, identity.claimToken);
+        const snapshot = await getPlayerRewardSnapshot(supabase, code, identity.claimToken);
+        progress = snapshot.progress;
+        lineSlots = snapshot.lineSlots;
       } catch (progressError) {
         reportError(progressError, {
           route: "GET /api/play/board (progress)",
@@ -46,10 +49,11 @@ export const GET: APIRoute = async (context) => {
           sessionCode: code,
         });
         progress = null;
+        lineSlots = [];
       }
     }
 
-    const body: PlayerBoard = { ...board, progress };
+    const body: PlayerBoard = { ...board, progress, lineSlots };
     return json(body, 200);
   } catch (error) {
     reportError(error, {

@@ -5,7 +5,7 @@ import PlayerBoard from "@/components/play/PlayerBoard";
 import { PLAYER_COOKIE_NAME, nickForAutoRejoin, readPlayerIdentity } from "@/lib/player-cookie";
 import { reportError } from "@/lib/report-error";
 import { SESSION_CODE_PATTERN } from "@/lib/services/session-code";
-import { getActiveBoardByCode } from "@/lib/services/sessions.service";
+import { getActiveBoardByCode, getPlayerRewardSnapshot } from "@/lib/services/sessions.service";
 import { createClient } from "@/lib/supabase";
 import type { PlayerBoard as PlayerBoardData } from "@/types";
 
@@ -65,6 +65,18 @@ const nickError = joinError === "nick";
 const fullError = joinError === "full";
 const showForm = Boolean(board) && !isClosed && (joinRequested || !swatchClass);
 const prefill = rejoinNick ?? "";
+
+if (board && identity && !showForm) {
+  const supabase = createClient(Astro.request.headers, Astro.cookies);
+  if (supabase) {
+    try {
+      const snapshot = await getPlayerRewardSnapshot(supabase, code, identity.claimToken);
+      board = { ...board, progress: snapshot.progress, lineSlots: snapshot.lineSlots };
+    } catch (error) {
+      reportError(error, { route: "/play/[code] (progress)", httpStatus: 200, sessionCode: code });
+    }
+  }
+}
 
 const expectedCells = board ? board.size * board.size : 0;
 const boardComplete = board ? board.cells.length === expectedCells : false;
@@ -140,6 +152,9 @@ if (board && !showForm && !boardComplete) {
                   initialPlayers={board.players}
                   initialStatus={board.status}
                   initialSuccessorCode={board.successorCode}
+                  initialProgress={board.progress}
+                  initialLineSlots={board.lineSlots}
+                  initialThresholdCount={board.thresholdCount}
                   rejoinNick={rejoinNick}
                   client:load
                 />

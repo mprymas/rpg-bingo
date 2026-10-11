@@ -108,12 +108,17 @@ const showCloseRetry = Boolean(session && closeFailedReason && UUID_RE.test(clos
       <div class="bg-background min-h-screen p-4 sm:p-8">
         <div class="mx-auto w-full max-w-2xl space-y-8 rounded-2xl border border-border bg-card p-6 text-foreground sm:p-8">
           <div class="flex flex-col gap-4">
-            <a
-              href="/dashboard"
-              class="self-start text-sm text-primary outline-none hover:underline focus-visible:ring-2 focus-visible:ring-ring"
-            >
-              Wróć do panelu
-            </a>
+            <div class="grid grid-cols-[1fr_auto] items-center gap-x-3 gap-y-2">
+              <a
+                href="/dashboard"
+                class="justify-self-start text-sm text-primary outline-none hover:underline focus-visible:ring-2 focus-visible:ring-ring"
+              >
+                Wróć do panelu
+              </a>
+              {boardComplete ? (
+                <GmRegenerateControls sessionId={session.id} sessionStatus={session.status} inline client:load />
+              ) : null}
+            </div>
             <SessionJoinQr sessionCode={session.code} sessionStatus={session.status} client:load />
             <div class="flex flex-wrap items-center justify-center gap-3 text-sm text-muted-foreground">
               <span>
@@ -141,17 +146,16 @@ const showCloseRetry = Boolean(session && closeFailedReason && UUID_RE.test(clos
           ) : null}
 
           {boardComplete ? (
-            <>
-              <GmRegenerateControls sessionId={session.id} sessionStatus={session.status} client:load />
-              <GmBoard
-                sessionId={session.id}
-                size={session.size}
-                initialCells={session.cells}
-                initialPlayers={session.players}
-                sessionStatus={session.status}
-                client:load
-              />
-            </>
+            <GmBoard
+              sessionId={session.id}
+              size={session.size}
+              initialCells={session.cells}
+              initialPlayers={session.players}
+              initialLineRewards={session.lineRewards}
+              thresholdCount={session.threshold_count}
+              sessionStatus={session.status}
+              client:load
+            />
           ) : (
             <p class="rounded-lg border border-dashed border-border px-4 py-6 text-center text-destructive">
               Nie udało się wczytać planszy (oczekiwano {expectedCells} pól, jest {session.cells.length}). Utwórz sesję

@@ -76,11 +76,19 @@ export function RewardRulesFields({
   const thresholdCountId = `${idPrefix}-threshold-count`;
 
   return (
-    <>
-      <fieldset className="space-y-3">
-        <legend className="text-muted-foreground text-sm font-medium">Nagroda za wiersz/kolumnę</legend>
+    <div className="border-border space-y-8 border-t pt-8">
+      <div>
+        <h2 className="text-foreground text-base font-semibold tracking-tight">Dodatkowe reguły nagród</h2>
+        <p className="text-muted-foreground mt-1 text-sm">
+          Opcjonalne — osobno od nagród losowanych na konkretne pola powyżej.
+        </p>
+      </div>
+
+      <fieldset className="border-border bg-muted/30 space-y-3 rounded-xl border p-4">
+        <legend className="text-foreground px-1 text-sm font-semibold">Nagrody za wiersz lub kolumnę</legend>
         <p className="text-muted-foreground text-sm">
-          Nic nie zaznaczono — brak nagrody za wiersz/kolumnę. Kilka zaznaczonych — losujemy spośród nich.
+          Nic nie zaznaczono — brak nagrody za układ. Kilka zaznaczonych — jedna nagroda na każdy wiersz i każdą
+          kolumnę, wylosowana z tej listy.
         </p>
         <CatalogChecklist
           rewards={rewards}
@@ -90,14 +98,16 @@ export function RewardRulesFields({
         />
       </fieldset>
 
-      <fieldset className="space-y-3">
-        <legend className="text-muted-foreground text-sm font-medium">Nagroda za {thresholdCount} pól</legend>
+      <fieldset className="border-border bg-muted/30 space-y-3 rounded-xl border p-4">
+        <legend className="text-foreground px-1 text-sm font-semibold">
+          Nagroda za liczbę pól (próg {thresholdCount})
+        </legend>
         <p className="text-muted-foreground text-sm">
-          Nic nie zaznaczono — brak nagrody progowej. Kilka zaznaczonych — losujemy spośród nich przy dołączeniu gracza.
+          Gracz dostaje jedną wylosowaną nagrodę, gdy zajmie co najmniej N pól. Nic nie zaznaczono — brak progu.
         </p>
         <div className="flex flex-wrap items-center gap-2">
           <Label htmlFor={thresholdCountId} className="text-foreground cursor-pointer font-normal">
-            Liczba pól (N)
+            Próg — liczba pól (N)
           </Label>
           <Input
             id={thresholdCountId}
@@ -130,6 +140,6 @@ export function RewardRulesFields({
           onToggle={onThresholdRewardToggle}
         />
       </fieldset>
-    </>
+    </div>
   );
 }

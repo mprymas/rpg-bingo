@@ -241,6 +241,14 @@ interface PlayerRewardProgressDto {
   thresholdCount: number | null;
   thresholdReward: { slug: string; label: string } | null;
   lines: { axis: string; index: number; reward: { slug: string; label: string } }[];
+  fieldRewards: { slug: string; label: string }[];
+}
+
+interface BoardLineSlotDto {
+  axis: string;
+  index: number;
+  reward: { slug: string; label: string } | null;
+  claimedByColor: number | null;
 }
 
 interface PlayerBoardDto {
@@ -252,12 +260,21 @@ interface PlayerBoardDto {
     reward: { slug: string; label: string } | null;
     claimedByColor: number | null;
   }[];
+  players: {
+    nick: string;
+    color: number;
+    claimedCount: number;
+    thresholdReward: { slug: string; label: string } | null;
+  }[];
+  thresholdCount: number | null;
   progress: PlayerRewardProgressDto | null;
+  lineSlots: BoardLineSlotDto[];
 }
 
 interface ClaimSuccessBody {
   cell: { position: number; reward: { slug: string; label: string } | null; claimedByColor: number | null };
   progress: PlayerRewardProgressDto | null;
+  lineSlots: BoardLineSlotDto[];
 }
 
 interface GmBoardDto {
@@ -267,7 +284,9 @@ interface GmBoardDto {
     earned: {
       claimedCount: number;
       thresholdReward: { slug: string; label: string } | null;
+      thresholdRewardAssigned: { slug: string; label: string } | null;
       lines: { axis: string; index: number; reward: { slug: string; label: string } }[];
+      fieldRewards: { slug: string; label: string }[];
     };
   }[];
   rewardRules: {
@@ -275,6 +294,7 @@ interface GmBoardDto {
     thresholdRewardIds: string[];
     lineRewardIds: string[];
   };
+  lineRewards: BoardLineSlotDto[];
 }
 
 async function fetchPlayerBoard(client: HttpClient, code: string): Promise<PlayerBoardDto> {
@@ -404,7 +424,8 @@ describe.skipIf(!hasBaseUrl() || !resolveTestCredentials() || !hasSupabaseEnv())
 
       const claim2 = await borin.request("/api/play/claim", { method: "POST", json: { code, position: 2 } });
       expect(claim2.status).toBe(200);
-      const borinProgress = (claim2.body as ClaimSuccessBody).progress;
+      const claim2Body = claim2.body as ClaimSuccessBody;
+      const borinProgress = claim2Body.progress;
       expect(borinProgress?.claimedCount).toBe(1);
       expect(borinProgress?.thresholdReward).toBeNull();
       expect(borinProgress?.lines).toHaveLength(1);
@@ -413,10 +434,39 @@ describe.skipIf(!hasBaseUrl() || !resolveTestCredentials() || !hasSupabaseEnv())
         index: 0,
         reward: { slug: row0Reward.slug, label: row0Reward.label },
       });
+      const borinColor = claim2Body.cell.claimedByColor;
+      expect(typeof borinColor).toBe("number");
+      expect(claim2Body.lineSlots).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            axis: "row",
+            index: 0,
+            reward: { slug: row0Reward.slug, label: row0Reward.label },
+            claimedByColor: borinColor,
+          }),
+        ]),
+      );
+      const incompleteSlot = claim2Body.lineSlots.find((s) => s.axis === "row" && s.index === 1);
+      expect(incompleteSlot).toMatchObject({ reward: null, claimedByColor: null });
 
       const annaBoard = await fetchPlayerBoard(anna, code);
       expect(annaBoard.progress?.thresholdReward?.slug).toBe("inspiration");
       expect(annaBoard.progress?.lines).toEqual([]);
+      expect(annaBoard.thresholdCount).toBe(2);
+      const annaRoster = annaBoard.players.find((p) => p.nick === "Anna");
+      const borinRoster = annaBoard.players.find((p) => p.nick === "Borin");
+      expect(annaRoster).toMatchObject({ claimedCount: 2, thresholdReward: { slug: "inspiration" } });
+      expect(borinRoster).toMatchObject({ claimedCount: 1, thresholdReward: null });
+      expect(annaBoard.lineSlots).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            axis: "row",
+            index: 0,
+            reward: { slug: row0Reward.slug, label: row0Reward.label },
+            claimedByColor: borinColor,
+          }),
+        ]),
+      );
 
       const borinBoard = await fetchPlayerBoard(borin, code);
       expect(borinBoard.progress?.thresholdReward).toBeNull();
@@ -429,6 +479,19 @@ describe.skipIf(!hasBaseUrl() || !resolveTestCredentials() || !hasSupabaseEnv())
       expect(earnedByNick(gmAfterClaims, "Borin").lines).toMatchObject([
         { axis: "row", index: 0, reward: { slug: row0Reward.slug } },
       ]);
+      expect(gmAfterClaims.lineRewards).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            axis: "row",
+            index: 0,
+            reward: { slug: row0Reward.slug, label: row0Reward.label },
+            claimedByColor: borinColor,
+          }),
+        ]),
+      );
+      const gmIncomplete = gmAfterClaims.lineRewards.find((s) => s.axis === "row" && s.index === 1);
+      expect(gmIncomplete?.reward).not.toBeNull();
+      expect(gmIncomplete?.claimedByColor).toBeNull();
 
       const undo = await gm.request(`/api/sessions/${id}/undo-claim`, {
         method: "POST",
@@ -497,7 +560,7 @@ describe.skipIf(!hasBaseUrl() || !resolveTestCredentials() || !hasSupabaseEnv())
       expect(board.progress?.lines).toEqual([]);
     });
 
-    it("rule-less session keeps progress null and empty roster earned; per-field reveal unchanged", async () => {
+    it("rule-less session: no progress until a field reward is claimed; then lists Pole rewards", async () => {
       const { id, code } = await createActiveSession(gm, {
         size: 3,
         customPhrases: [],
@@ -519,12 +582,15 @@ describe.skipIf(!hasBaseUrl() || !resolveTestCredentials() || !hasSupabaseEnv())
       });
       expect(claim.status).toBe(200);
       const claimed = claim.body as ClaimSuccessBody;
-      expect(claimed.progress).toBeNull();
       expect(claimed.cell.reward).not.toBeNull();
       expect(claimed.cell.reward?.slug).toBe("inspiration");
+      expect(claimed.progress?.thresholdCount).toBeNull();
+      expect(claimed.progress?.thresholdReward).toBeNull();
+      expect(claimed.progress?.lines).toEqual([]);
+      expect(claimed.progress?.fieldRewards.map((r) => r.slug)).toEqual(["inspiration"]);
 
       const after = await fetchPlayerBoard(player, code);
-      expect(after.progress).toBeNull();
+      expect(after.progress?.fieldRewards.map((r) => r.slug)).toEqual(["inspiration"]);
       const persisted = after.cells.find((c) => c.position === mystery.position);
       expect(persisted?.reward?.slug).toBe("inspiration");
 
@@ -534,9 +600,12 @@ describe.skipIf(!hasBaseUrl() || !resolveTestCredentials() || !hasSupabaseEnv())
         thresholdRewardIds: [],
         lineRewardIds: [],
       });
+      expect(gmBoard.lineRewards).toEqual([]);
       for (const entry of gmBoard.players) {
         expect(entry.earned.thresholdReward).toBeNull();
+        expect(entry.earned.thresholdRewardAssigned).toBeNull();
         expect(entry.earned.lines).toEqual([]);
+        expect(entry.earned.fieldRewards.map((r) => r.slug)).toEqual(["inspiration"]);
       }
     });
   },

@@ -51,21 +51,39 @@ const demoPlayers: SessionPlayerRosterEntry[] = [
     nick: "Aria",
     color: 1,
     created_at: "2026-09-15T14:31:00.000Z",
-    earned: { claimedCount: 0, thresholdReward: null, lines: [] },
+    earned: {
+      claimedCount: 0,
+      thresholdReward: null,
+      thresholdRewardAssigned: null,
+      lines: [],
+      fieldRewards: [],
+    },
   },
   {
     id: "demo-player-borin",
     nick: "Borin",
     color: 2,
     created_at: "2026-09-15T14:32:00.000Z",
-    earned: { claimedCount: 0, thresholdReward: null, lines: [] },
+    earned: {
+      claimedCount: 0,
+      thresholdReward: null,
+      thresholdRewardAssigned: null,
+      lines: [],
+      fieldRewards: [],
+    },
   },
   {
     id: "demo-player-cyra",
     nick: "Cyra",
     color: 3,
     created_at: "2026-09-15T14:33:00.000Z",
-    earned: { claimedCount: 0, thresholdReward: null, lines: [] },
+    earned: {
+      claimedCount: 0,
+      thresholdReward: null,
+      thresholdRewardAssigned: null,
+      lines: [],
+      fieldRewards: [],
+    },
   },
 ];
 
@@ -78,7 +96,9 @@ const demoPlayersWithEarned: SessionPlayerRosterEntry[] = [
     earned: {
       claimedCount: 3,
       thresholdReward: rewardInspiration,
+      thresholdRewardAssigned: rewardInspiration,
       lines: [{ axis: "row", index: 0, reward: rewardExperience }],
+      fieldRewards: [rewardInspiration],
     },
   },
   {
@@ -89,7 +109,9 @@ const demoPlayersWithEarned: SessionPlayerRosterEntry[] = [
     earned: {
       claimedCount: 2,
       thresholdReward: null,
+      thresholdRewardAssigned: rewardExperience,
       lines: [{ axis: "column", index: 1, reward: rewardInspiration }],
+      fieldRewards: [rewardExperience],
     },
   },
   {
@@ -97,7 +119,13 @@ const demoPlayersWithEarned: SessionPlayerRosterEntry[] = [
     nick: "Cyra",
     color: 3,
     created_at: "2026-09-15T14:33:00.000Z",
-    earned: { claimedCount: 1, thresholdReward: null, lines: [] },
+    earned: {
+      claimedCount: 1,
+      thresholdReward: null,
+      thresholdRewardAssigned: rewardInspiration,
+      lines: [],
+      fieldRewards: [],
+    },
   },
 ];
 
@@ -105,7 +133,9 @@ function makeClaimedCells(sessionId: string): SessionWithCells["cells"] {
   const cells = makeCells(sessionId, 9);
   const claims: { position: number; playerId: string; color: number; at: string }[] = [
     { position: 0, playerId: "demo-player-aria", color: 1, at: "2026-09-15T14:34:00.000Z" },
-    { position: 4, playerId: "demo-player-borin", color: 2, at: "2026-09-15T14:35:00.000Z" },
+    { position: 1, playerId: "demo-player-aria", color: 1, at: "2026-09-15T14:34:30.000Z" },
+    { position: 2, playerId: "demo-player-aria", color: 1, at: "2026-09-15T14:35:00.000Z" },
+    { position: 4, playerId: "demo-player-borin", color: 2, at: "2026-09-15T14:35:30.000Z" },
     { position: 7, playerId: "demo-player-cyra", color: 3, at: "2026-09-15T14:36:00.000Z" },
   ];
   for (const claim of claims) {
@@ -160,6 +190,7 @@ const fixtureComplete: SessionWithCells = {
   cells: makeCells("demo-complete", 9),
   players: [],
   rewardRules: emptyRewardRules,
+  lineRewards: [],
 };
 
 const fixtureIncomplete: SessionWithCells = {
@@ -174,6 +205,7 @@ const fixtureIncomplete: SessionWithCells = {
   cells: makeCells("demo-incomplete", 4),
   players: [],
   rewardRules: emptyRewardRules,
+  lineRewards: [],
 };
 
 const fixtureClosed: SessionWithCells = {
@@ -188,6 +220,7 @@ const fixtureClosed: SessionWithCells = {
   cells: makeCells("demo-closed", 9),
   players: [],
   rewardRules: emptyRewardRules,
+  lineRewards: [],
 };
 
 const fixtureClosedReplaced: SessionWithCells = {
@@ -202,6 +235,7 @@ const fixtureClosedReplaced: SessionWithCells = {
   cells: makeClaimedCells("demo-closed-replaced"),
   players: demoPlayers,
   rewardRules: emptyRewardRules,
+  lineRewards: [],
 };
 
 const fixtureClaimed: SessionWithCells = {
@@ -216,6 +250,7 @@ const fixtureClaimed: SessionWithCells = {
   cells: makeClaimedCells("demo-claimed"),
   players: demoPlayers,
   rewardRules: emptyRewardRules,
+  lineRewards: [],
 };
 
 const fixtureClaimedClosed: SessionWithCells = {
@@ -230,6 +265,7 @@ const fixtureClaimedClosed: SessionWithCells = {
   cells: makeClaimedCells("demo-claimed-closed"),
   players: demoPlayers,
   rewardRules: emptyRewardRules,
+  lineRewards: [],
 };
 
 const fixtureRosterEmpty: SessionWithCells = {
@@ -244,6 +280,7 @@ const fixtureRosterEmpty: SessionWithCells = {
   cells: makeCells("demo-roster-empty", 9),
   players: [],
   rewardRules: emptyRewardRules,
+  lineRewards: [],
 };
 
 const fixtureRosterEarned: SessionWithCells = {
@@ -262,6 +299,14 @@ const fixtureRosterEarned: SessionWithCells = {
     thresholdRewardIds: ["demo-inspiration"],
     lineRewardIds: ["demo-experience", "demo-inspiration"],
   },
+  lineRewards: [
+    { axis: "row", index: 0, reward: rewardExperience, claimedByColor: 1 },
+    { axis: "row", index: 1, reward: rewardInspiration, claimedByColor: null },
+    { axis: "row", index: 2, reward: rewardExperience, claimedByColor: null },
+    { axis: "column", index: 0, reward: rewardInspiration, claimedByColor: null },
+    { axis: "column", index: 1, reward: rewardExperience, claimedByColor: null },
+    { axis: "column", index: 2, reward: rewardInspiration, claimedByColor: null },
+  ],
 };
 
 const fixtureRosterNoRules: SessionWithCells = {
@@ -276,6 +321,7 @@ const fixtureRosterNoRules: SessionWithCells = {
   cells: makeClaimedCells("demo-roster-no-rules"),
   players: demoPlayers,
   rewardRules: emptyRewardRules,
+  lineRewards: [],
 };
 
 const loadErrorCopy = "Nie udało się wczytać sesji";
@@ -538,16 +584,28 @@ const sections: {
               session && (
                 <div class="mx-auto w-full max-w-2xl space-y-8 rounded-2xl border border-border bg-card p-6 text-foreground sm:p-8">
                   <div class="flex flex-col gap-4">
-                    <a
-                      href="/dashboard"
-                      class:list={[
-                        "self-start text-sm text-primary outline-none hover:underline focus-visible:ring-2 focus-visible:ring-ring",
-                        focusDemo && "ring-2 ring-ring",
-                      ]}
-                      tabindex={focusDemo ? 0 : undefined}
-                    >
-                      Wróć do panelu
-                    </a>
+                    <div class="grid grid-cols-[1fr_auto] items-center gap-x-3 gap-y-2">
+                      <a
+                        href="/dashboard"
+                        class:list={[
+                          "justify-self-start text-sm text-primary outline-none hover:underline focus-visible:ring-2 focus-visible:ring-ring",
+                          focusDemo && "ring-2 ring-ring",
+                        ]}
+                        tabindex={focusDemo ? 0 : undefined}
+                      >
+                        Wróć do panelu
+                      </a>
+                      {section.kind === "gm-board" ? (
+                        <GmRegenerateControls
+                          sessionId={session.id}
+                          sessionStatus={section.gmBoard?.sessionStatus}
+                          initialConfirmOpen={section.gmBoard?.regenerateConfirmOpen}
+                          inline
+                          preview
+                          client:load
+                        />
+                      ) : null}
+                    </div>
                     {section.kind === "qr" ? (
                       <SessionJoinQr
                         sessionCode={session.code}
@@ -593,18 +651,13 @@ const sections: {
                           successorCode={section.gmBoard.successorCode}
                         />
                       ) : null}
-                      <GmRegenerateControls
-                        sessionId={session.id}
-                        sessionStatus={section.gmBoard?.sessionStatus}
-                        initialConfirmOpen={section.gmBoard?.regenerateConfirmOpen}
-                        preview
-                        client:load
-                      />
                       <GmBoard
                         sessionId={session.id}
                         size={session.size}
                         initialCells={session.cells}
                         initialPlayers={session.players}
+                        initialLineRewards={session.lineRewards}
+                        thresholdCount={session.threshold_count}
                         sessionStatus={section.gmBoard?.sessionStatus}
                         initialConfirmPosition={section.gmBoard?.initialConfirmPosition}
                         initialPending={section.gmBoard?.initialPending}

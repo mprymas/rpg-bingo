@@ -1,9 +1,11 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database, Json } from "@/db/database.types";
 import { drawLineRewards, generateBoard } from "@/lib/services/board-generator";
+import { buildLineSlots } from "@/lib/services/line-slots";
 import { deriveRewardProgress } from "@/lib/services/reward-progress";
 import { generateSessionCode } from "@/lib/services/session-code";
 import type {
+  BoardLineSlot,
   ClaimOccupant,
   CloseSessionSuccessResponse,
   DeleteSessionSuccessResponse,
@@ -234,6 +236,13 @@ interface PlayerRewardInputs {
   threshold_reward: RewardRef | null;
   cells: { position: number; claimed_at: string; is_mine: boolean }[];
   lines: { axis: LineAxis; index: number; slug: string; label: string }[];
+  field_rewards: RewardRef[];
+  line_slots: BoardLineSlot[];
+}
+
+export interface PlayerRewardSnapshot {
+  progress: PlayerRewardProgress | null;
+  lineSlots: BoardLineSlot[];
 }
 
 function parsePlayerRewardInputs(data: Json): PlayerRewardInputs | null {
@@ -256,7 +265,14 @@ function parsePlayerRewardInputs(data: Json): PlayerRewardInputs | null {
   }
 
   if (typeof record.has_line_rules !== "boolean") return null;
-  if (!Array.isArray(record.cells) || !Array.isArray(record.lines)) return null;
+  if (
+    !Array.isArray(record.cells) ||
+    !Array.isArray(record.lines) ||
+    !Array.isArray(record.field_rewards) ||
+    !Array.isArray(record.line_slots)
+  ) {
+    return null;
+  }
 
   const cells: PlayerRewardInputs["cells"] = [];
   for (const cell of record.cells) {
@@ -284,6 +300,33 @@ function parsePlayerRewardInputs(data: Json): PlayerRewardInputs | null {
     lines.push({ axis: l.axis, index: l.index, slug: l.slug, label: l.label });
   }
 
+  const fieldRewards: RewardRef[] = [];
+  for (const reward of record.field_rewards) {
+    if (!isRewardRef(reward)) return null;
+    fieldRewards.push({ slug: reward.slug, label: reward.label });
+  }
+
+  const lineSlots: BoardLineSlot[] = [];
+  for (const slot of record.line_slots) {
+    if (!slot || typeof slot !== "object") return null;
+    const s = slot as Record<string, unknown>;
+    if (typeof s.axis !== "string" || !isLineAxis(s.axis) || typeof s.index !== "number") return null;
+    const color =
+      s.claimed_by_color === null || s.claimed_by_color === undefined
+        ? null
+        : typeof s.claimed_by_color === "number"
+          ? s.claimed_by_color
+          : null;
+    if (s.claimed_by_color != null && color === null) return null;
+
+    let reward: RewardRef | null = null;
+    if (s.slug != null || s.label != null) {
+      if (typeof s.slug !== "string" || typeof s.label !== "string") return null;
+      reward = { slug: s.slug, label: s.label };
+    }
+    lineSlots.push({ axis: s.axis, index: s.index, reward, claimedByColor: color });
+  }
+
   return {
     size: record.size,
     threshold_count: thresholdCount,
@@ -291,30 +334,33 @@ function parsePlayerRewardInputs(data: Json): PlayerRewardInputs | null {
     threshold_reward: thresholdReward,
     cells,
     lines,
+    field_rewards: fieldRewards,
+    line_slots: lineSlots,
   };
 }
 
-/** Derived progress for one player seat; null when token/code invalid or session has no rules. */
-export async function getPlayerRewardProgress(
+/** Derived progress + line edge slots for one player seat. */
+export async function getPlayerRewardSnapshot(
   supabase: AppSupabaseClient,
   code: string,
   claimToken: string,
-): Promise<PlayerRewardProgress | null> {
+): Promise<PlayerRewardSnapshot> {
   const { data, error } = await supabase.rpc("get_player_reward_inputs", {
     p_code: code,
     p_claim_token: claimToken,
   });
 
   if (error) throw error;
-  if (data == null) return null;
+  if (data == null) return { progress: null, lineSlots: [] };
 
   const inputs = parsePlayerRewardInputs(data);
   if (!inputs) {
     throw new Error("get_player_reward_inputs returned unexpected shape");
   }
 
-  const hasRules = inputs.threshold_count != null || inputs.has_line_rules;
-  if (!hasRules) return null;
+  const lineSlots = inputs.line_slots;
+  const hasRules = inputs.threshold_count != null || inputs.has_line_rules || inputs.field_rewards.length > 0;
+  if (!hasRules) return { progress: null, lineSlots };
 
   const progressByKey = deriveRewardProgress({
     size: inputs.size,
@@ -332,14 +378,25 @@ export async function getPlayerRewardProgress(
     thresholdRewardByPlayer: new Map([["me", inputs.threshold_reward]]),
   });
 
-  return (
-    progressByKey.get("me") ?? {
-      claimedCount: 0,
-      thresholdCount: inputs.threshold_count,
-      thresholdReward: null,
-      lines: [],
-    }
-  );
+  const base = progressByKey.get("me") ?? {
+    claimedCount: 0,
+    thresholdCount: inputs.threshold_count,
+    thresholdReward: null,
+    lines: [],
+    fieldRewards: [],
+  };
+
+  return { progress: { ...base, fieldRewards: inputs.field_rewards }, lineSlots };
+}
+
+/** @deprecated Prefer getPlayerRewardSnapshot — kept for call-site migration. */
+export async function getPlayerRewardProgress(
+  supabase: AppSupabaseClient,
+  code: string,
+  claimToken: string,
+): Promise<PlayerRewardProgress | null> {
+  const snapshot = await getPlayerRewardSnapshot(supabase, code, claimToken);
+  return snapshot.progress;
 }
 
 export async function getSessionWithCells(
@@ -412,6 +469,14 @@ export async function getSessionWithCells(
     thresholdRewardByPlayer,
   });
 
+  const fieldRewardsByPlayer = new Map<string, RewardRef[]>();
+  for (const cell of data.cells) {
+    if (!cell.claimed_by_player_id || !cell.reward || !isRewardRef(cell.reward)) continue;
+    const list = fieldRewardsByPlayer.get(cell.claimed_by_player_id) ?? [];
+    list.push({ slug: cell.reward.slug, label: cell.reward.label });
+    fieldRewardsByPlayer.set(cell.claimed_by_player_id, list);
+  }
+
   const players: SessionPlayerRosterEntry[] = [...data.players]
     .sort((a, b) => (a.created_at < b.created_at ? -1 : a.created_at > b.created_at ? 1 : 0))
     .map((player) => {
@@ -420,7 +485,9 @@ export async function getSessionWithCells(
         thresholdCount: data.threshold_count,
         thresholdReward: null,
         lines: [],
+        fieldRewards: [],
       };
+      const assigned = thresholdRewardByPlayer.get(player.id) ?? null;
       return {
         id: player.id,
         nick: player.nick,
@@ -429,7 +496,9 @@ export async function getSessionWithCells(
         earned: {
           claimedCount: earned.claimedCount,
           thresholdReward: earned.thresholdReward,
+          thresholdRewardAssigned: assigned,
           lines: earned.lines,
+          fieldRewards: fieldRewardsByPlayer.get(player.id) ?? [],
         },
       };
     });
@@ -458,6 +527,16 @@ export async function getSessionWithCells(
       thresholdRewardIds,
       lineRewardIds,
     },
+    lineRewards: buildLineSlots({
+      size: data.size,
+      cells: cells.map((cell) => ({
+        position: cell.position,
+        claimedByColor: cell.claimedByColor,
+        claimedAt: cell.claimed_at,
+      })),
+      lines: boardLines,
+      revealWhenIncomplete: true,
+    }),
   };
 }
 
@@ -484,11 +563,21 @@ export async function getActiveBoardByCode(supabase: AppSupabaseClient, code: st
   const status = mapSessionStatus(head.status);
   if (!status) return null;
 
-  const players: PlayerRosterEntry[] = playerRows.map((player) => ({
-    nick: player.nick,
-    color: player.color,
-    created_at: player.created_at,
-  }));
+  const players: PlayerRosterEntry[] = playerRows.map((player) => {
+    const slug = player.threshold_reward_slug;
+    const label = player.threshold_reward_label;
+    const thresholdReward = typeof slug === "string" && typeof label === "string" ? { slug, label } : null;
+    return {
+      nick: player.nick,
+      color: player.color,
+      created_at: player.created_at,
+      claimedCount: player.claimed_count,
+      thresholdReward,
+    };
+  });
+
+  const thresholdCount =
+    playerRows.length > 0 && typeof playerRows[0].threshold_count === "number" ? playerRows[0].threshold_count : null;
 
   return {
     code: head.code,
@@ -497,7 +586,9 @@ export async function getActiveBoardByCode(supabase: AppSupabaseClient, code: st
     successorCode: head.successor_code,
     cells: boardRows.map((row) => mapPlayerBoardCell(row)),
     players,
+    thresholdCount,
     progress: null,
+    lineSlots: [],
   };
 }
 

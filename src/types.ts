@@ -30,11 +30,23 @@ export interface EarnedLineReward {
   reward: RewardRef;
 }
 
+/** Edge slot for a pre-drawn row/column reward on the board frame. */
+export interface BoardLineSlot {
+  axis: LineAxis;
+  index: number;
+  /** Null for players while the line is incomplete (mystery). GM always has a label. */
+  reward: RewardRef | null;
+  /** Completer colour when the line is complete; null otherwise. */
+  claimedByColor: number | null;
+}
+
 export interface PlayerRewardProgress {
   claimedCount: number;
   thresholdCount: number | null;
   thresholdReward: RewardRef | null;
   lines: EarnedLineReward[];
+  /** Per-field rewards from cells this player currently holds. */
+  fieldRewards: RewardRef[];
 }
 
 export interface SessionRewardRules {
@@ -84,13 +96,22 @@ export interface GeneratedLine {
 export type SessionPlayerRosterEntry = Pick<SessionPlayer, "id" | "nick" | "color" | "created_at"> & {
   earned: {
     claimedCount: number;
+    /** Threshold reward once the player holds ≥ N fields; null before then. */
     thresholdReward: RewardRef | null;
+    /** Pre-drawn at join; shown to GM even before the threshold is met. */
+    thresholdRewardAssigned: RewardRef | null;
     lines: EarnedLineReward[];
+    /** Per-field rewards on cells this player currently holds. */
+    fieldRewards: RewardRef[];
   };
 };
 
 /** Player-facing roster — no row ids (claim auth uses a secret claim_token in the cookie). */
-export type PlayerRosterEntry = Pick<SessionPlayer, "nick" | "color" | "created_at">;
+export type PlayerRosterEntry = Pick<SessionPlayer, "nick" | "color" | "created_at"> & {
+  claimedCount: number;
+  /** Threshold reward once this player holds ≥ N fields; null until then (mystery tile). */
+  thresholdReward: RewardRef | null;
+};
 
 export type SessionWithCells = Session & {
   cells: (BoardCell & {
@@ -100,6 +121,8 @@ export type SessionWithCells = Session & {
   })[];
   players: SessionPlayerRosterEntry[];
   rewardRules: SessionRewardRules;
+  /** Pre-drawn row/column edge slots (empty when line rules are off). */
+  lineRewards: BoardLineSlot[];
 };
 
 /**
@@ -122,8 +145,12 @@ export interface PlayerBoard {
   successorCode: string | null;
   cells: PlayerBoardCell[];
   players: PlayerRosterEntry[];
-  /** Null when no player identity or the session has no threshold/line rules. */
+  /** Session threshold N when field-count rewards are configured; null otherwise. */
+  thresholdCount: number | null;
+  /** Null when no player identity or the session has no threshold/line/field rewards. */
   progress: PlayerRewardProgress | null;
+  /** Row/column edge slots; empty without identity or when line rules are off. */
+  lineSlots: BoardLineSlot[];
 }
 
 export interface ClaimOccupant {
@@ -134,6 +161,7 @@ export interface ClaimOccupant {
 export interface ClaimSuccessResponse {
   cell: PlayerBoardCell;
   progress: PlayerRewardProgress | null;
+  lineSlots: BoardLineSlot[];
 }
 
 export interface ClaimConflictResponse {

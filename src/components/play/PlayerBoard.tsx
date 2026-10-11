@@ -1,6 +1,9 @@
 import { useEffect, useEffectEvent, useRef, useState } from "react";
 import { cn } from "@/lib/utils";
+import BoardWithLineSlots from "@/components/play/BoardWithLineSlots";
+import PlayerRosterList from "@/components/play/PlayerRosterList";
 import type {
+  BoardLineSlot,
   ClaimConflictResponse,
   ClaimSuccessResponse,
   EarnedLineReward,
@@ -14,12 +17,6 @@ import type {
 const POLL_MS = 5000;
 const FLIP_MS = 450;
 const TOAST_MS = 3000;
-
-const GRID_COLS: Record<number, string> = {
-  3: "grid-cols-3",
-  4: "grid-cols-4",
-  5: "grid-cols-5",
-};
 
 const PLAYER_BG: Record<number, string> = {
   1: "bg-player-1",
@@ -54,17 +51,6 @@ const PLAYER_FG: Record<number, string> = {
   8: "text-player-8-foreground",
 };
 
-const PLAYER_NICK: Record<number, string> = {
-  1: "text-player-1",
-  2: "text-player-2",
-  3: "text-player-3",
-  4: "text-player-4",
-  5: "text-player-5",
-  6: "text-player-6",
-  7: "text-player-7",
-  8: "text-player-8",
-};
-
 interface Props {
   code: string;
   size: number;
@@ -73,6 +59,9 @@ interface Props {
   initialStatus?: SessionStatus;
   initialSuccessorCode?: string | null;
   initialProgress?: PlayerRewardProgress | null;
+  /** Row/column edge slots (mystery until complete for players). */
+  initialLineSlots?: BoardLineSlot[];
+  initialThresholdCount?: number | null;
   /** Nick for auto-rejoin (old-code identity else lastNick); null → manual successor entry. */
   rejoinNick?: string | null;
   /** Kitchen-sink fixtures: no claim POSTs and no polling. */
@@ -104,13 +93,44 @@ function isEarnedLine(value: unknown): value is EarnedLineReward {
 function isPlayerRewardProgress(value: unknown): value is PlayerRewardProgress {
   if (!value || typeof value !== "object") return false;
   const record = value as Record<string, unknown>;
-  return (
-    typeof record.claimedCount === "number" &&
-    (record.thresholdCount === null || typeof record.thresholdCount === "number") &&
-    isRewardRef(record.thresholdReward) &&
-    Array.isArray(record.lines) &&
-    record.lines.every(isEarnedLine)
-  );
+  if (
+    typeof record.claimedCount !== "number" ||
+    (record.thresholdCount !== null && typeof record.thresholdCount !== "number") ||
+    !isRewardRef(record.thresholdReward) ||
+    !Array.isArray(record.lines) ||
+    !record.lines.every(isEarnedLine) ||
+    !Array.isArray(record.fieldRewards)
+  ) {
+    return false;
+  }
+  for (const reward of record.fieldRewards) {
+    if (!isRewardRef(reward) || reward === null) return false;
+  }
+  return true;
+}
+
+function isBoardLineSlot(value: unknown): value is BoardLineSlot {
+  if (!value || typeof value !== "object") return false;
+  const record = value as Record<string, unknown>;
+  if ((record.axis !== "row" && record.axis !== "column") || typeof record.index !== "number") return false;
+  if (record.reward != null && !isRewardRef(record.reward)) return false;
+  if (record.claimedByColor != null && typeof record.claimedByColor !== "number") return false;
+  return true;
+}
+
+function isPlayerRosterEntry(value: unknown): value is PlayerRosterEntry {
+  if (!value || typeof value !== "object") return false;
+  const record = value as Record<string, unknown>;
+  if (
+    typeof record.nick !== "string" ||
+    typeof record.color !== "number" ||
+    typeof record.created_at !== "string" ||
+    typeof record.claimedCount !== "number"
+  ) {
+    return false;
+  }
+  if (record.thresholdReward != null && !isRewardRef(record.thresholdReward)) return false;
+  return true;
 }
 
 function isPlayerBoard(value: unknown): value is PlayerBoardData {
@@ -120,10 +140,14 @@ function isPlayerBoard(value: unknown): value is PlayerBoardData {
     typeof record.size !== "number" ||
     !Array.isArray(record.cells) ||
     !Array.isArray(record.players) ||
+    !Array.isArray(record.lineSlots) ||
+    (record.thresholdCount !== null && typeof record.thresholdCount !== "number") ||
     (record.status !== "active" && record.status !== "closed")
   ) {
     return false;
   }
+  if (!record.players.every(isPlayerRosterEntry)) return false;
+  if (!record.lineSlots.every(isBoardLineSlot)) return false;
   if (record.progress != null && !isPlayerRewardProgress(record.progress)) return false;
   return true;
 }
@@ -133,12 +157,8 @@ function isClaimSuccess(value: unknown): value is ClaimSuccessResponse {
   const record = value as Record<string, unknown>;
   if (record.cell == null || typeof record.cell !== "object" || record.error === "conflict") return false;
   if (record.progress != null && !isPlayerRewardProgress(record.progress)) return false;
+  if (!Array.isArray(record.lineSlots) || !record.lineSlots.every(isBoardLineSlot)) return false;
   return true;
-}
-
-function lineRewardLabel(line: EarnedLineReward): string {
-  const axisLabel = line.axis === "row" ? "Wiersz" : "Kolumna";
-  return `${axisLabel} ${String(line.index + 1)}: ${line.reward.label}`;
 }
 
 function isClaimConflict(value: unknown): value is ClaimConflictResponse {
@@ -155,6 +175,8 @@ export default function PlayerBoard({
   initialStatus = "active",
   initialSuccessorCode = null,
   initialProgress = null,
+  initialLineSlots = [],
+  initialThresholdCount = null,
   rejoinNick = null,
   preview = false,
   initialConflictMessage = null,
@@ -163,6 +185,10 @@ export default function PlayerBoard({
   const [cells, setCells] = useState(initialCells);
   const [players, setPlayers] = useState(initialPlayers);
   const [progress, setProgress] = useState<PlayerRewardProgress | null>(initialProgress);
+  const [lineSlots, setLineSlots] = useState<BoardLineSlot[]>(initialLineSlots);
+  const [thresholdCount, setThresholdCount] = useState<number | null>(
+    initialThresholdCount ?? initialProgress?.thresholdCount ?? null,
+  );
   const [status, setStatus] = useState<SessionStatus>(initialStatus);
   const [successorCode, setSuccessorCode] = useState<string | null>(initialSuccessorCode);
   const [redirecting, setRedirecting] = useState(
@@ -237,6 +263,8 @@ export default function PlayerBoard({
     setCells(data.cells);
     setPlayers(data.players);
     setProgress(data.progress);
+    setLineSlots(data.lineSlots);
+    setThresholdCount(data.thresholdCount);
     setStatus(data.status);
     setSuccessorCode(data.successorCode);
     if (data.status !== "closed" || !data.successorCode || !rejoinNick) return;
@@ -326,6 +354,25 @@ export default function PlayerBoard({
       if (response.ok && isClaimSuccess(body)) {
         mergeCell(body.cell);
         setProgress(body.progress);
+        setLineSlots(body.lineSlots);
+        const color = body.cell.claimedByColor;
+        const nextProgress = body.progress;
+        if (color != null && nextProgress) {
+          setPlayers((prev) =>
+            prev.map((player) =>
+              player.color === color
+                ? {
+                    ...player,
+                    claimedCount: nextProgress.claimedCount,
+                    thresholdReward: nextProgress.thresholdReward,
+                  }
+                : player,
+            ),
+          );
+          if (nextProgress.thresholdCount != null) {
+            setThresholdCount(nextProgress.thresholdCount);
+          }
+        }
         triggerFlip(position);
         return;
       }
@@ -343,10 +390,8 @@ export default function PlayerBoard({
     }
   }
 
-  const rewardCount = cells.filter((cell) => cell.hasReward).length;
   const sorted = [...cells].sort((a, b) => a.position - b.position);
-  const earnedLines = progress?.lines ?? [];
-  const hasEarnedRewards = Boolean(progress?.thresholdReward) || earnedLines.length > 0;
+  const rosterThreshold = thresholdCount ?? progress?.thresholdCount ?? null;
 
   return (
     <div className="relative space-y-4">
@@ -385,7 +430,7 @@ export default function PlayerBoard({
         </div>
       ) : null}
 
-      <div className={cn("mx-auto grid max-w-md gap-1", GRID_COLS[size] ?? "grid-cols-5")}>
+      <BoardWithLineSlots size={size} lineSlots={lineSlots}>
         {sorted.map((cell) => {
           const claimed = cell.claimedByColor != null;
           const free = !claimed;
@@ -444,52 +489,19 @@ export default function PlayerBoard({
             </div>
           );
         })}
-      </div>
+      </BoardWithLineSlots>
 
-      {rewardCount > 0 ? (
-        <p className="text-muted-foreground text-center text-sm">{rewardCount} pól z nagrodą</p>
-      ) : null}
-
-      {progress ? (
-        <div className="space-y-2">
-          {progress.thresholdCount != null ? (
-            <p className="text-foreground text-center text-sm font-medium">
-              Zdobyte pola: {progress.claimedCount}/{progress.thresholdCount}
-            </p>
-          ) : null}
-          <div>
-            <h2 className="text-muted-foreground mb-2 text-sm font-medium">Twoje nagrody</h2>
-            {hasEarnedRewards ? (
-              <ul className="text-foreground space-y-1 text-sm">
-                {progress.thresholdReward ? <li>{progress.thresholdReward.label}</li> : null}
-                {earnedLines.map((line) => (
-                  <li key={`${line.axis}-${String(line.index)}`}>{lineRewardLabel(line)}</li>
-                ))}
-              </ul>
-            ) : (
-              <p className="text-muted-foreground text-sm">Nie zdobyłeś jeszcze żadnej nagrody</p>
-            )}
-          </div>
-        </div>
-      ) : null}
-
-      <div>
-        <h2 className="text-muted-foreground mb-3 text-sm font-medium">Gracze</h2>
-        {players.length === 0 ? (
-          <p className="text-muted-foreground text-sm">Nikt jeszcze nie dołączył</p>
-        ) : (
-          <ul className="flex flex-wrap gap-x-4 gap-y-2">
-            {players.map((player) => (
-              <li
-                key={`${player.nick}-${player.color}-${player.created_at}`}
-                className={cn("text-sm font-medium", PLAYER_NICK[player.color] ?? "text-foreground")}
-              >
-                {player.nick}
-              </li>
-            ))}
-          </ul>
-        )}
-      </div>
+      <PlayerRosterList
+        players={players.map((player) => ({
+          key: `${player.nick}-${String(player.color)}-${player.created_at}`,
+          nick: player.nick,
+          color: player.color,
+          claimedCount: player.claimedCount,
+          thresholdReward: player.thresholdReward,
+        }))}
+        thresholdCount={rosterThreshold}
+        boardSize={size}
+      />
     </div>
   );
 }

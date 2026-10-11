@@ -334,9 +334,13 @@ export type Database = {
       get_session_players_by_code: {
         Args: { p_code: string }
         Returns: {
+          claimed_count: number
           color: number
           created_at: string
           nick: string
+          threshold_count: number | null
+          threshold_reward_label: string | null
+          threshold_reward_slug: string | null
         }[]
       }
       join_session_player: {

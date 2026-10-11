@@ -288,11 +288,14 @@ export default function NewSessionForm({ rewards, prefill = null, demoState }: P
         </p>
       </fieldset>
 
-      <fieldset className="space-y-3">
-        <legend className="text-muted-foreground text-sm font-medium">Nagrody</legend>
+      <fieldset className="border-border bg-card space-y-3 rounded-xl border p-4">
+        <legend className="text-foreground px-1 text-sm font-semibold">Nagrody na polach</legend>
+        <p className="text-muted-foreground text-sm">
+          Ile pól na planszy ma dostać daną nagrodę (losowane przy generowaniu). To nie jest próg ani wiersz/kolumna.
+        </p>
         {rewards.length === 0 ? (
           <p className="text-muted-foreground text-sm">
-            Brak nagród w katalogu. Możesz wygenerować planszę bez nagród.
+            Brak nagród w katalogu. Możesz wygenerować planszę bez nagród na polach.
           </p>
         ) : (
           <div className="space-y-3">
@@ -318,14 +321,14 @@ export default function NewSessionForm({ rewards, prefill = null, demoState }: P
                     }));
                   }}
                   className="w-20 text-center sm:shrink-0"
-                  aria-label={`Liczba nagród: ${reward.label}`}
+                  aria-label={`Liczba nagród na polach: ${reward.label}`}
                 />
               </div>
             ))}
           </div>
         )}
         <p className={cn("text-sm", rewardTotal > maxCells ? "text-destructive" : "text-muted-foreground")}>
-          Nagrody: {rewardTotal} / {maxCells}
+          Pól z nagrodą: {rewardTotal} / {maxCells}
         </p>
       </fieldset>
 

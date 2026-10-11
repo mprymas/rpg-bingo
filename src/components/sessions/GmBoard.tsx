@@ -2,16 +2,12 @@ import { useEffect, useEffectEvent, useRef, useState } from "react";
 import { Check, X } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import BoardWithLineSlots from "@/components/play/BoardWithLineSlots";
+import PlayerRosterList from "@/components/play/PlayerRosterList";
 import { cn } from "@/lib/utils";
-import type { EarnedLineReward, SessionPlayerRosterEntry, SessionWithCells, UndoClaimSuccessResponse } from "@/types";
+import type { BoardLineSlot, SessionPlayerRosterEntry, SessionWithCells, UndoClaimSuccessResponse } from "@/types";
 
 const POLL_MS = 5000;
-
-const GRID_COLS: Record<number, string> = {
-  3: "grid-cols-3",
-  4: "grid-cols-4",
-  5: "grid-cols-5",
-};
 
 const PLAYER_BG: Record<number, string> = {
   1: "bg-player-1",
@@ -35,17 +31,6 @@ const PLAYER_FG: Record<number, string> = {
   8: "text-player-8-foreground",
 };
 
-const PLAYER_NICK: Record<number, string> = {
-  1: "text-player-1",
-  2: "text-player-2",
-  3: "text-player-3",
-  4: "text-player-4",
-  5: "text-player-5",
-  6: "text-player-6",
-  7: "text-player-7",
-  8: "text-player-8",
-};
-
 export type GmBoardCell = SessionWithCells["cells"][number];
 
 interface Props {
@@ -53,6 +38,10 @@ interface Props {
   size: number;
   initialCells: GmBoardCell[];
   initialPlayers: SessionPlayerRosterEntry[];
+  /** Pre-drawn row/column edge slots (labels always visible for GM). */
+  initialLineRewards?: BoardLineSlot[];
+  /** Session threshold N; used for roster labels. */
+  thresholdCount?: number | null;
   /** When not `"active"`, claimed cells stay non-interactive. */
   sessionStatus?: string;
   /** Kitchen-sink fixtures: no polling; undo POST is a local no-op. */
@@ -65,28 +54,33 @@ interface Props {
   initialError?: string | null;
 }
 
+function isRewardRefValue(value: unknown): value is { slug: string; label: string } {
+  if (!value || typeof value !== "object") return false;
+  const reward = value as Record<string, unknown>;
+  return typeof reward.slug === "string" && typeof reward.label === "string";
+}
+
 function isEarnedRoster(value: unknown): value is SessionPlayerRosterEntry["earned"] {
   if (!value || typeof value !== "object") return false;
   const record = value as Record<string, unknown>;
-  if (typeof record.claimedCount !== "number" || !Array.isArray(record.lines)) return false;
-  if (record.thresholdReward != null) {
-    if (typeof record.thresholdReward !== "object") return false;
-    const reward = record.thresholdReward as Record<string, unknown>;
-    if (typeof reward.slug !== "string" || typeof reward.label !== "string") return false;
+  if (typeof record.claimedCount !== "number" || !Array.isArray(record.lines) || !Array.isArray(record.fieldRewards)) {
+    return false;
   }
+  if (record.thresholdReward != null && !isRewardRefValue(record.thresholdReward)) return false;
+  if (record.thresholdRewardAssigned != null && !isRewardRefValue(record.thresholdRewardAssigned)) return false;
   for (const line of record.lines) {
     if (!line || typeof line !== "object") return false;
     const entry = line as Record<string, unknown>;
     if (
       (entry.axis !== "row" && entry.axis !== "column") ||
       typeof entry.index !== "number" ||
-      !entry.reward ||
-      typeof entry.reward !== "object"
+      !isRewardRefValue(entry.reward)
     ) {
       return false;
     }
-    const reward = entry.reward as Record<string, unknown>;
-    if (typeof reward.slug !== "string" || typeof reward.label !== "string") return false;
+  }
+  for (const reward of record.fieldRewards) {
+    if (!isRewardRefValue(reward)) return false;
   }
   return true;
 }
@@ -94,7 +88,12 @@ function isEarnedRoster(value: unknown): value is SessionPlayerRosterEntry["earn
 function isSessionWithCells(value: unknown): value is SessionWithCells {
   if (!value || typeof value !== "object") return false;
   const record = value as Record<string, unknown>;
-  if (!Array.isArray(record.cells) || !Array.isArray(record.players) || typeof record.size !== "number") {
+  if (
+    !Array.isArray(record.cells) ||
+    !Array.isArray(record.players) ||
+    typeof record.size !== "number" ||
+    !Array.isArray(record.lineRewards)
+  ) {
     return false;
   }
   for (const player of record.players) {
@@ -103,15 +102,6 @@ function isSessionWithCells(value: unknown): value is SessionWithCells {
     if (entry.earned != null && !isEarnedRoster(entry.earned)) return false;
   }
   return true;
-}
-
-function lineRewardBadgeLabel(line: EarnedLineReward): string {
-  const axisLabel = line.axis === "row" ? "Wiersz" : "Kolumna";
-  return `${axisLabel} ${String(line.index + 1)}: ${line.reward.label}`;
-}
-
-function playerHasEarnedRewards(player: SessionPlayerRosterEntry): boolean {
-  return Boolean(player.earned.thresholdReward) || player.earned.lines.length > 0;
 }
 
 function isUndoClaimSuccess(value: unknown): value is UndoClaimSuccessResponse {
@@ -136,6 +126,8 @@ export default function GmBoard({
   size,
   initialCells,
   initialPlayers,
+  initialLineRewards = [],
+  thresholdCount = null,
   sessionStatus,
   preview = false,
   initialConfirmPosition = null,
@@ -144,6 +136,8 @@ export default function GmBoard({
 }: Props) {
   const [cells, setCells] = useState(initialCells);
   const [players, setPlayers] = useState(initialPlayers);
+  const [lineRewards, setLineRewards] = useState(initialLineRewards);
+  const [thresholdN, setThresholdN] = useState(thresholdCount);
   const [confirmPosition, setConfirmPosition] = useState<number | null>(initialConfirmPosition);
   const [pending, setPending] = useState(initialPending);
   const [error, setError] = useState<string | null>(initialError);
@@ -173,6 +167,8 @@ export default function GmBoard({
           });
         });
         setPlayers(data.players);
+        setLineRewards(data.lineRewards);
+        setThresholdN(data.threshold_count);
       }
     } catch {
       // Poll failures are non-blocking; next tick retries.
@@ -259,7 +255,7 @@ export default function GmBoard({
         </p>
       ) : null}
 
-      <div className={cn("mx-auto grid max-w-md gap-1", GRID_COLS[size] ?? "grid-cols-5")}>
+      <BoardWithLineSlots size={size} lineSlots={lineRewards}>
         {sorted.map((cell) => {
           const claimed = cell.claimedByColor != null;
           const color = cell.claimedByColor;
@@ -353,38 +349,21 @@ export default function GmBoard({
             </div>
           );
         })}
-      </div>
+      </BoardWithLineSlots>
 
-      <div>
-        <h2 className="text-muted-foreground mb-3 text-sm font-medium">Gracze</h2>
-        {players.length === 0 ? (
-          <p className="text-muted-foreground text-sm">Nikt jeszcze nie dołączył</p>
-        ) : (
-          <ul className="flex flex-col gap-3">
-            {players.map((player) => (
-              <li key={player.id} className="space-y-1.5">
-                <span className={cn("text-sm font-medium", PLAYER_NICK[player.color] ?? "text-foreground")}>
-                  {player.nick}
-                </span>
-                {playerHasEarnedRewards(player) ? (
-                  <ul className="flex flex-wrap gap-1.5">
-                    {player.earned.thresholdReward ? (
-                      <li>
-                        <Badge variant="secondary">{player.earned.thresholdReward.label}</Badge>
-                      </li>
-                    ) : null}
-                    {player.earned.lines.map((line) => (
-                      <li key={`${line.axis}-${String(line.index)}`}>
-                        <Badge variant="outline">{lineRewardBadgeLabel(line)}</Badge>
-                      </li>
-                    ))}
-                  </ul>
-                ) : null}
-              </li>
-            ))}
-          </ul>
-        )}
-      </div>
+      <PlayerRosterList
+        players={players.map((player) => ({
+          key: player.id,
+          nick: player.nick,
+          color: player.color,
+          claimedCount: player.earned.claimedCount,
+          thresholdReward: player.earned.thresholdReward,
+          thresholdRewardAssigned: player.earned.thresholdRewardAssigned,
+        }))}
+        thresholdCount={thresholdN}
+        boardSize={size}
+        revealAssigned
+      />
     </div>
   );
 }
