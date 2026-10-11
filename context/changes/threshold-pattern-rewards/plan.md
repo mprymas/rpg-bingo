@@ -402,10 +402,10 @@ Additive only: nullable column, nullable FK, two new tables. Existing sessions h
 
 #### Automated
 
-- [x] 1.1 Migration applies on local Supabase: `npx supabase migration up --local`
-- [x] 1.2 Regenerated types compile: `npx astro check`
-- [x] 1.3 Lint passes: `npm run lint`
-- [x] 1.4 Existing integration suite still green (join, claim, undo, delete cascade): `npm run test:integration`
+- [x] 1.1 Migration applies on local Supabase: `npx supabase migration up --local` — 956b324
+- [x] 1.2 Regenerated types compile: `npx astro check` — 956b324
+- [x] 1.3 Lint passes: `npm run lint` — 956b324
+- [x] 1.4 Existing integration suite still green (join, claim, undo, delete cascade): `npm run test:integration` — 956b324
 
 #### Manual
 
