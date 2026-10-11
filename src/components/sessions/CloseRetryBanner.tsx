@@ -10,6 +10,10 @@ interface Props {
   preview?: boolean;
   /** Kitchen-sink: seed visible banner. */
   initialVisible?: boolean;
+  /** Specific reason the close-after-create failed. */
+  initialError?: string | null;
+  /** Source was already closed — retry can never succeed, so hide it. */
+  initialAlreadyClosed?: boolean;
 }
 
 export default function CloseRetryBanner({
@@ -17,10 +21,13 @@ export default function CloseRetryBanner({
   replacedBySessionId,
   preview = false,
   initialVisible = true,
+  initialError = null,
+  initialAlreadyClosed = false,
 }: Props) {
   const [visible, setVisible] = useState(initialVisible);
   const [pending, setPending] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(initialError);
+  const [alreadyClosed, setAlreadyClosed] = useState(initialAlreadyClosed);
 
   if (!visible) return null;
 
@@ -49,6 +56,7 @@ export default function CloseRetryBanner({
         } catch {
           // keep default
         }
+        if (response.status === 409) setAlreadyClosed(true);
         setError(message);
         setPending(false);
         return;
@@ -72,18 +80,20 @@ export default function CloseRetryBanner({
         Nowa plansza jest gotowa, ale nie udało się zamknąć poprzedniej sesji. Spróbuj ponownie zamknąć starą sesję.
       </p>
       {error ? <p className="text-destructive text-sm">{error}</p> : null}
-      <div className="flex justify-end">
-        <Button type="button" variant="outline" disabled={pending} onClick={() => void retryClose()}>
-          {pending ? (
-            <span className="flex items-center gap-2">
-              <span className="border-foreground/30 border-t-foreground size-4 animate-spin rounded-full border-2" />
-              Zamykanie…
-            </span>
-          ) : (
-            "Zamknij poprzednią sesję"
-          )}
-        </Button>
-      </div>
+      {alreadyClosed ? null : (
+        <div className="flex justify-end">
+          <Button type="button" variant="outline" disabled={pending} onClick={() => void retryClose()}>
+            {pending ? (
+              <span className="flex items-center gap-2">
+                <span className="border-foreground/30 border-t-foreground size-4 animate-spin rounded-full border-2" />
+                Zamykanie…
+              </span>
+            ) : (
+              "Zamknij poprzednią sesję"
+            )}
+          </Button>
+        </div>
+      )}
     </div>
   );
 }

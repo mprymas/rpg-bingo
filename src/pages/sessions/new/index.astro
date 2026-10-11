@@ -3,6 +3,7 @@ import Layout from "@/layouts/Layout.astro";
 import NewSessionForm from "@/components/sessions/NewSessionForm";
 import type { NewSessionFormPrefill } from "@/components/sessions/NewSessionForm";
 import { aggregateRewardCountsFromCells, isBoardSize } from "@/lib/services/session-prefill";
+import { reportError } from "@/lib/report-error";
 import { getSessionWithCells } from "@/lib/services/sessions.service";
 import { createClient } from "@/lib/supabase";
 
@@ -30,17 +31,19 @@ const user = Astro.locals.user;
 if (!catalogError && fromParam && UUID_RE.test(fromParam) && user) {
   try {
     const source = await getSessionWithCells(supabase, fromParam, user.id);
-    if (source && isBoardSize(source.size)) {
+    if (source?.status === "active" && isBoardSize(source.size)) {
       prefill = {
         size: source.size,
         rewards: aggregateRewardCountsFromCells(source.cells),
         replaceSessionId: source.id,
       };
     }
-  } catch {
-    // Unauthorized / missing / load failure → plain new session (ignore prefill).
+  } catch (prefillError) {
+    reportError(prefillError, { route: "/sessions/new?from", sessionId: fromParam });
   }
 }
+
+const prefillUnavailable = Boolean(fromParam) && !prefill;
 ---
 
 {catalogError ? (
@@ -67,6 +70,11 @@ if (!catalogError && fromParam && UUID_RE.test(fromParam) && user) {
             Wróć do panelu
           </a>
         </div>
+        {prefillUnavailable && (
+          <p class="mb-6 rounded-lg border border-border bg-background p-3 text-sm text-muted-foreground" role="status">
+            Nie udało się wczytać poprzedniej sesji — zostanie utworzona nowa, niezależna sesja.
+          </p>
+        )}
         <NewSessionForm rewards={rewards ?? []} prefill={prefill} client:load />
       </div>
     </div>

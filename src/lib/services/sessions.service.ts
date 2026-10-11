@@ -154,6 +154,17 @@ export async function listSessionsForGm(supabase: AppSupabaseClient, gmId: strin
   return data;
 }
 
+export async function getSessionCodeForGm(
+  supabase: AppSupabaseClient,
+  id: string,
+  gmId: string,
+): Promise<string | null> {
+  const { data, error } = await supabase.from("sessions").select("code").eq("id", id).eq("gm_id", gmId).maybeSingle();
+
+  if (error) throw error;
+  return data?.code ?? null;
+}
+
 export async function getSessionWithCells(
   supabase: AppSupabaseClient,
   id: string,

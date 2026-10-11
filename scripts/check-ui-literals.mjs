@@ -22,6 +22,7 @@ const SCOPED_FILES = [
   "src/components/sessions/GmBoard.tsx",
   "src/components/sessions/GmRegenerateControls.tsx",
   "src/components/sessions/CloseRetryBanner.tsx",
+  "src/components/sessions/GmSuccessorNotice.astro",
   "src/pages/play/[code].astro",
   "src/pages/play/kitchen-sink.astro",
   "src/pages/play/index.astro",

@@ -3,10 +3,12 @@ import Layout from "@/layouts/Layout.astro";
 import CloseRetryBanner from "@/components/sessions/CloseRetryBanner";
 import GmBoard from "@/components/sessions/GmBoard";
 import GmRegenerateControls from "@/components/sessions/GmRegenerateControls";
+import GmSuccessorNotice from "@/components/sessions/GmSuccessorNotice.astro";
 import { Badge } from "@/components/ui/badge";
+import { CLOSE_ERROR_MESSAGES, parseCloseErrorReason } from "@/lib/close-error-messages";
 import { reportError } from "@/lib/report-error";
 import { createClient } from "@/lib/supabase";
-import { getSessionWithCells } from "@/lib/services/sessions.service";
+import { getSessionCodeForGm, getSessionWithCells } from "@/lib/services/sessions.service";
 import type { SessionWithCells } from "@/types";
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -15,6 +17,7 @@ const id = Astro.params.id ?? "";
 let session: SessionWithCells | null = null;
 let notFound = false;
 let loadError: string | null = null;
+let successorCode: string | null = null;
 
 if (!UUID_RE.test(id)) {
   notFound = true;
@@ -41,6 +44,14 @@ if (!UUID_RE.test(id)) {
     loadError = "Nie udało się wczytać sesji";
     Astro.response.status = 503;
   }
+
+  if (session?.replaced_by_session_id) {
+    try {
+      successorCode = await getSessionCodeForGm(supabase, session.replaced_by_session_id, user.id);
+    } catch (error) {
+      reportError(error, { route: "/sessions/[id] successor", sessionId: id });
+    }
+  }
 }
 
 const statusLabel = session ? (session.status === "active" ? "Aktywna" : "Zamknięta") : "";
@@ -57,9 +68,9 @@ if (session && !boardComplete) {
   Astro.response.status = 422;
 }
 
-const closeFailed = Astro.url.searchParams.get("closeFailed") === "1";
+const closeFailedReason = parseCloseErrorReason(Astro.url.searchParams.get("closeFailed"));
 const closeSourceId = Astro.url.searchParams.get("sourceId") ?? "";
-const showCloseRetry = Boolean(session && closeFailed && UUID_RE.test(closeSourceId));
+const showCloseRetry = Boolean(session && closeFailedReason && UUID_RE.test(closeSourceId));
 ---
 
 {notFound ? (
@@ -118,7 +129,19 @@ const showCloseRetry = Boolean(session && closeFailed && UUID_RE.test(closeSourc
           </div>
 
           {showCloseRetry ? (
-            <CloseRetryBanner sourceSessionId={closeSourceId} replacedBySessionId={session.id} client:load />
+            <CloseRetryBanner
+              sourceSessionId={closeSourceId}
+              replacedBySessionId={session.id}
+              initialError={
+                closeFailedReason && closeFailedReason !== "UNKNOWN" ? CLOSE_ERROR_MESSAGES[closeFailedReason] : null
+              }
+              initialAlreadyClosed={closeFailedReason === "SESSION_NOT_ACTIVE"}
+              client:load
+            />
+          ) : null}
+
+          {session.replaced_by_session_id && successorCode ? (
+            <GmSuccessorNotice successorId={session.replaced_by_session_id} successorCode={successorCode} />
           ) : null}
 
           {boardComplete ? (

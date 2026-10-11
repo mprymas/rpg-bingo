@@ -2,6 +2,7 @@
 import Layout from "@/layouts/Layout.astro";
 import BoardGrid from "@/components/sessions/BoardGrid.astro";
 import CloseRetryBanner from "@/components/sessions/CloseRetryBanner";
+import GmSuccessorNotice from "@/components/sessions/GmSuccessorNotice.astro";
 import GmBoard from "@/components/sessions/GmBoard";
 import GmRegenerateControls from "@/components/sessions/GmRegenerateControls";
 import { Badge } from "@/components/ui/badge";
@@ -201,7 +202,7 @@ interface GmBoardFixture {
   initialError?: string | null;
   regenerateConfirmOpen?: boolean;
   showCloseRetry?: boolean;
-  /** Kitchen-only handoff copy when the closed session has a successor. */
+  /** Successor code for the closed session (production loads it via getSessionCodeForGm). */
   successorCode?: string;
 }
 
@@ -449,11 +450,11 @@ const sections: {
                           client:load
                         />
                       ) : null}
-                      {section.gmBoard?.successorCode ? (
-                        <p class="border-border bg-muted/40 rounded-lg border px-4 py-3 text-center text-sm text-muted-foreground">
-                          Sesja zamknięta — następczy kod graczy:{" "}
-                          <span class="text-foreground font-mono tracking-widest">{section.gmBoard.successorCode}</span>
-                        </p>
+                      {section.gmBoard?.successorCode && session.replaced_by_session_id ? (
+                        <GmSuccessorNotice
+                          successorId={session.replaced_by_session_id}
+                          successorCode={section.gmBoard.successorCode}
+                        />
                       ) : null}
                       <GmRegenerateControls
                         sessionId={session.id}

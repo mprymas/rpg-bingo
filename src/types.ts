@@ -30,11 +30,14 @@ export interface CreateSessionCommand {
   replaceSessionId?: string;
 }
 
+export type CloseErrorReason = "SESSION_NOT_FOUND" | "SESSION_NOT_ACTIVE" | "REPLACEMENT_NOT_FOUND" | "UNKNOWN";
+
 export interface CreateSessionResponse {
   id: string;
   code: string;
   /** Present when the new session was created but closing the source failed. */
   closeError?: string;
+  closeErrorReason?: CloseErrorReason;
 }
 
 export interface ApiErrorResponse {

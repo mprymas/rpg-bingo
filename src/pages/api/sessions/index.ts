@@ -1,5 +1,7 @@
 import type { APIRoute } from "astro";
+import { CLOSE_ERROR_MESSAGES } from "@/lib/close-error-messages";
 import { reportError } from "@/lib/report-error";
+import { isAllowedRequestOrigin } from "@/lib/request-origin";
 import { createSessionSchema } from "@/lib/schemas/session";
 import { BoardGenerationError } from "@/lib/services/board-generator";
 import {
@@ -24,17 +26,6 @@ function boardGenerationMessage(error: BoardGenerationError, size: number): stri
   }
 }
 
-function closeErrorMessage(error: CloseSessionAsReplacedError): string {
-  switch (error.code) {
-    case "SESSION_NOT_FOUND":
-      return "Nie udało się zamknąć poprzedniej sesji — nie znaleziono sesji źródłowej";
-    case "SESSION_NOT_ACTIVE":
-      return "Nie udało się zamknąć poprzedniej sesji — jest już zamknięta";
-    case "REPLACEMENT_NOT_FOUND":
-      return "Nie udało się zamknąć poprzedniej sesji — brak sesji zastępczej";
-  }
-}
-
 function json(body: unknown, status: number): Response {
   return new Response(JSON.stringify(body), {
     status,
@@ -43,6 +34,10 @@ function json(body: unknown, status: number): Response {
 }
 
 export const POST: APIRoute = async (context) => {
+  if (!isAllowedRequestOrigin(context.request)) {
+    return json({ error: "Forbidden" }, 403);
+  }
+
   if (!context.locals.user) {
     return json({ error: "Wymagane logowanie" }, 401);
   }
@@ -77,7 +72,7 @@ export const POST: APIRoute = async (context) => {
         });
       } catch (closeError) {
         if (closeError instanceof CloseSessionAsReplacedError) {
-          response.closeError = closeErrorMessage(closeError);
+          response.closeErrorReason = closeError.code;
         } else {
           reportError(closeError, {
             route: "POST /api/sessions (close after create)",
@@ -85,8 +80,9 @@ export const POST: APIRoute = async (context) => {
             sessionId: parsed.data.replaceSessionId,
             replacedBySessionId: result.id,
           });
-          response.closeError = "Nie udało się zamknąć poprzedniej sesji";
+          response.closeErrorReason = "UNKNOWN";
         }
+        response.closeError = CLOSE_ERROR_MESSAGES[response.closeErrorReason];
       }
     }
 

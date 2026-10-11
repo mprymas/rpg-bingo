@@ -2,7 +2,7 @@
 -- SECURITY DEFINER so RLS never needs UPDATE on sessions for GMs. No DELETE policy.
 
 ALTER TABLE public.sessions
-  ADD COLUMN replaced_by_session_id uuid NULL REFERENCES public.sessions (id);
+  ADD COLUMN replaced_by_session_id uuid NULL REFERENCES public.sessions (id) ON DELETE SET NULL;
 
 CREATE FUNCTION public.close_session_as_replaced(
   p_session_id uuid,
@@ -42,7 +42,8 @@ BEGIN
   SELECT s.gm_id
   INTO v_replacement_gm_id
   FROM public.sessions s
-  WHERE s.id = p_replaced_by;
+  WHERE s.id = p_replaced_by
+    AND s.status = 'active';
 
   IF v_replacement_gm_id IS NULL OR v_replacement_gm_id IS DISTINCT FROM auth.uid() THEN
     RAISE EXCEPTION 'replacement_not_found' USING ERRCODE = 'P0002';

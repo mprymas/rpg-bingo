@@ -20,7 +20,7 @@ export function useCreateSession() {
         const data = (await response.json()) as CreateSessionResponse;
         const params = new URLSearchParams();
         if (data.closeError && body.replaceSessionId) {
-          params.set("closeFailed", "1");
+          params.set("closeFailed", data.closeErrorReason ?? "UNKNOWN");
           params.set("sourceId", body.replaceSessionId);
         }
         const query = params.toString();

@@ -42,7 +42,7 @@ describe.skipIf(!hasBaseUrl() || !resolveTestCredentials())(
       expect(signIn.status).toBe(200);
     });
 
-    it("after regenerate: old board closed + successorCode; claim fails; join successor works; unknown 404", async () => {
+    it("after regenerate: old board closed + successorCode; claim and join on old fail; join successor works; unknown 404", async () => {
       const source = await createActiveSession(gm, emptySessionBody);
 
       const player = createHttpClient(requireBaseUrl());
@@ -74,6 +74,13 @@ describe.skipIf(!hasBaseUrl() || !resolveTestCredentials())(
         json: { code: source.code, position: 0 },
       });
       expect(claimOnClosed.status).toBe(404);
+
+      const joinClosed = await player.request("/api/play/join", {
+        method: "POST",
+        form: { code: source.code, nick: "Bartek" },
+        headers: { Accept: "application/json" },
+      });
+      expect(joinClosed.status).toBe(404);
 
       const joinSuccessor = await player.request("/api/play/join", {
         method: "POST",

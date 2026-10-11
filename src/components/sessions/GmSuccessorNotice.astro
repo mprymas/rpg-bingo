@@ -1,0 +1,18 @@
+---
+interface Props {
+  successorId: string;
+  successorCode: string;
+}
+
+const { successorId, successorCode } = Astro.props;
+---
+
+<p class="rounded-lg border border-border bg-muted/40 px-4 py-3 text-center text-sm text-muted-foreground">
+  Sesja zamknięta — następczy kod graczy:{" "}
+  <a
+    href={`/sessions/${successorId}`}
+    class="font-mono tracking-widest text-foreground outline-none hover:underline focus-visible:ring-2 focus-visible:ring-ring"
+  >
+    {successorCode}
+  </a>
+</p>

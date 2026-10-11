@@ -134,12 +134,8 @@ export default function PlayerBoard({
   const closed = status === "closed" || previewClosedChrome != null;
   const readOnly = preview || closed;
   const showRedirecting = redirecting || previewClosedChrome === "redirecting";
-  const displaySuccessor =
-    previewClosedChrome === "closed-successor" || previewClosedChrome === "redirecting"
-      ? (successorCode ?? "N3WCD2")
-      : successorCode;
   const showManualSuccessor =
-    Boolean(displaySuccessor) &&
+    Boolean(successorCode) &&
     !showRedirecting &&
     (previewClosedChrome === "closed-successor" || (closed && (!rejoinNick || rejoinFailed)));
 
@@ -180,7 +176,8 @@ export default function PlayerBoard({
         window.location.assign(redirect);
         return;
       }
-      rejoinStartedRef.current = false;
+      // 4xx is permanent (full / closed / bad nick) — keep the guard so polls don't re-POST.
+      if (response.status >= 500) rejoinStartedRef.current = false;
       setRedirecting(false);
       setRejoinFailed(true);
     } catch {
@@ -316,10 +313,10 @@ export default function PlayerBoard({
             <p className="text-muted-foreground text-sm">
               Nowy kod:{" "}
               <a
-                href={`/play/${displaySuccessor}?join=1`}
+                href={`/play/${successorCode ?? ""}?join=1`}
                 className="text-primary focus-visible:ring-ring font-mono tracking-widest outline-none hover:underline focus-visible:ring-2"
               >
-                {displaySuccessor}
+                {successorCode}
               </a>
             </p>
           ) : null}
