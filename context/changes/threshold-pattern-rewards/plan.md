@@ -21,7 +21,7 @@ Add two optional reward rules next to the existing per-field rewards: a **thresh
 - When line rewards are on, every row and every column of the board has one reward pre-drawn (with replacement) from the selected list. When the threshold rule is on, each player gets one reward pre-drawn from the threshold list when they first take a seat.
 - A line is **complete** when all its fields are claimed (by anyone); its reward goes to the player who claimed the line's field with the latest `claimed_at`. Each completed line is a separate reward. The threshold reward is earned once per player when their claimed count Ã¢ÂÂ¥ N; every such player earns it.
 - Undo of any field automatically revokes a broken line and a threshold the player no longer meets; reclaiming restores the same pre-drawn reward (to the new completer, for lines).
-- Player board shows "X/N pÃÂ³l" (threshold rule on) and "Twoje nagrody" with earned threshold/line rewards, updated straight from the claim response and on each poll. GM roster lists earned threshold/line rewards per player.
+- Player and GM boards show **line rewards on the board edges** (`BoardWithLineSlots` / `lineSlots`): mystery until the line is complete, then the completer's colour + reward label. Threshold progress is shown on the shared roster (`PlayerRosterList`) as X/N for every seat; when a seat earns the threshold, its reward label is visible to all players (mystery tile until then). Updated from the claim response and on each poll.
 - Sessions without rules (all existing ones, and new ones with nothing selected) behave exactly as today; per-field rewards unchanged.
 
 Verify: `npm run test:unit`, `npm run test:integration` (new suite), `npm run lint`, `npx astro check`, `npm run build`; manual walkthrough on the kitchen sinks and a 3ÃÂ3 table run.
@@ -40,15 +40,22 @@ Verify: `npm run test:unit`, `npm run test:integration` (new suite), `npm run li
 - Per-player-owned lines (all fields by one player) or team-wide line rewards Ã¢ÂÂ completer rule only.
 - Repeated threshold rewards (every multiple of N) Ã¢ÂÂ threshold pays once per player.
 - Drawing rewards at the moment of earning or a grant ledger Ã¢ÂÂ rewards are pre-drawn, state is derived.
-- New claim animations, banners, toasts or confetti Ã¢ÂÂ satisfaction comes from visible progress and the earned list (existing flip stays).
-- Showing other players' earned rewards on the player board; showing line-reward markers on the board edges.
+- New claim animations, banners, toasts or confetti Ã¢ÂÂ satisfaction comes from visible edge/roster progress (existing flip stays).
 - Forcing rules onto existing sessions or migrating them; changing per-field reward behaviour, undo RPC, or join-by-code flow.
 - E2E (Playwright) coverage for this change Ã¢ÂÂ unit + integration only.
 - Custom (non-catalog) rewards or catalog changes.
 
 ## Implementation Approach
 
-Store **rules and pre-drawn rewards**, derive **earned state**. One pure TypeScript function `deriveRewardProgress` computes counts, completed lines, completers and threshold earnings from claim data; both the GM snapshot (RLS-scoped reads) and the player snapshot (new SECURITY DEFINER RPC keyed by `claim_token`) feed it. The player RPC only reveals a line reward once the line is fully claimed and the player's threshold reward once they hold Ã¢ÂÂ¥ N fields, preserving the existing mystery rule. Order: schema Ã¢ÂÂ pure logic Ã¢ÂÂ create/regenerate Ã¢ÂÂ boards.
+Store **rules and pre-drawn rewards**, derive **earned state**. One pure TypeScript function `deriveRewardProgress` computes counts, completed lines, completers and threshold earnings from claim data; both the GM snapshot (RLS-scoped reads) and the player snapshot (new SECURITY DEFINER RPC keyed by `claim_token`) feed it. The player RPC only reveals a line reward once the line is fully claimed and the player's threshold reward once they hold Ã¢ÂÂ¥ N fields, preserving the existing mystery rule. Line-edge UI is fed by `line_slots` on the same RPC (mystery `slug`/`label` until complete). Order: schema → pure logic → create/regenerate → boards.
+
+### Addendum (2026-10-11, impl-review F1 + F2)
+
+Accepted after Phase 4:
+
+1. **Board-edge line rewards** replace the originally planned under-board "Twoje nagrody" list (`BoardWithLineSlots`, `lineSlots`). Supporting migrations beyond the Phase 1 file: `20261011171000_player_reward_inputs_has_line_rules.sql`, `20261011172000_player_reward_inputs_field_rewards.sql`, `20261011173000_player_reward_inputs_line_slots.sql`, `20261011180000_session_players_threshold_roster.sql`. Shipped in `457c9b1`.
+2. **Peer threshold visibility on the player board** is accepted: `get_session_players_by_code` returns per-seat claimed counts and earned threshold labels; `PlayerRosterList` on the player board shows every seat's X/N and earned label (mystery until earned). Unearned assigned rewards stay hidden from players; GM still uses `revealAssigned`.
+3. **`field_rewards` on the player RPC** may still be returned for enrichment when threshold/line rules are on, but per-field Pole alone does **not** make `progress` non-null (impl-review F6 Fix B). Rule-less sessions reveal Pole only on the claimed cell.
 
 ## Critical Implementation Details
 
@@ -105,7 +112,7 @@ Persist rules and pre-drawn rewards, draw threshold rewards on join, and expose 
 - `PlayerRewardProgress { claimedCount: number; thresholdCount: number | null; thresholdReward: RewardRef | null; lines: EarnedLineReward[] }`
 - `SessionRewardRules { thresholdCount: number | null; thresholdRewardIds: string[]; lineRewardIds: string[] }`
 - `CreateSessionCommand` + `lineRewardIds: string[]`, `thresholdRewardIds: string[]`, `thresholdCount: number | null`
-- `PlayerBoard` + `progress: PlayerRewardProgress | null` (null = no identity or session without rules)
+- `PlayerBoard` + `progress: PlayerRewardProgress | null` (null = no identity or session without threshold/line rules; per-field Pole alone does not open progress)
 - `ClaimSuccessResponse` + `progress: PlayerRewardProgress | null`
 - `SessionWithCells` + `rewardRules: SessionRewardRules`; roster entries + `earned: { claimedCount: number; thresholdReward: RewardRef | null; lines: EarnedLineReward[] }`
 
@@ -276,49 +283,49 @@ Serve derived progress to players and earned rewards to the GM roster.
 
 **File**: `src/lib/services/sessions.service.ts`
 
-**Intent**: `getPlayerRewardProgress(supabase, code, claimToken)` calls `get_player_reward_inputs`, maps `is_mine` Ã¢ÂÂ `"me"`/`"other"`, runs `deriveRewardProgress`, returns the `"me"` entry, or `null` when the RPC returns NULL or the session has no rules (`threshold_count` null and no lines).
+**Intent**: `getPlayerRewardSnapshot` / `getPlayerRewardProgress` call `get_player_reward_inputs`, map `is_mine` → `"me"`/`"other"`, run `deriveRewardProgress`, return the `"me"` entry, or `null` when the RPC returns NULL or the session has no threshold/line rules (`threshold_count` null and `has_line_rules` false). Per-field Pole alone does not open progress.
 
-**Contract**: Returns `PlayerRewardProgress | null`; RPC errors propagate.
+**Contract**: Returns `PlayerRewardProgress | null` (+ `lineSlots`); RPC errors propagate.
 
 #### 2. Player APIs
 
 **Files**: `src/pages/api/play/board.ts`, `src/pages/api/play/claim.ts`
 
-**Intent**: Board GET reads the player cookie (`readPlayerIdentity`) and attaches `progress` (null without a valid identity Ã¢ÂÂ board itself still served). Claim success attaches `progress` computed after the claim so the player sees it immediately.
+**Intent**: Board GET reads the player cookie (`readPlayerIdentity`) and attaches `progress` and `lineSlots` (null/empty without a valid identity — board itself still served). Claim success attaches both after the claim so the player sees them immediately.
 
-**Contract**: `PlayerBoard.progress`, `ClaimSuccessResponse.progress`; status codes and conflict body unchanged. A progress failure is reported via `reportError` and yields `progress: null` rather than failing the claim.
+**Contract**: `PlayerBoard.progress` + `lineSlots`, `ClaimSuccessResponse.progress` + `lineSlots`; status codes and conflict body unchanged. A progress failure is reported via `reportError` and omits `progress` / `lineSlots` on the claim response (claim still 200) so the client keeps prior UI state.
 
 #### 3. GM snapshot
 
 **File**: `src/lib/services/sessions.service.ts` (`getSessionWithCells`)
 
-**Intent**: Also read `threshold_count`, `session_reward_pool`, `board_lines` (+ reward), players' `threshold_reward_id` (+ reward); run `deriveRewardProgress` with player ids; fill `rewardRules` and each roster entry's `earned`.
+**Intent**: Also read `threshold_count`, `session_reward_pool`, `board_lines` (+ reward), players' `threshold_reward_id` (+ reward); run `deriveRewardProgress` with player ids; fill `rewardRules`, `lineRewards` / edge slots (GM reveals incomplete), and each roster entry's threshold progress.
 
-**Contract**: `SessionWithCells.rewardRules`, roster `earned`; GM sees all lines/thresholds (GM already sees all rewards).
+**Contract**: `SessionWithCells.rewardRules` + line-edge inputs; roster threshold progress; GM sees all lines/thresholds (GM already sees all rewards).
 
 #### 4. Player UI
 
-**File**: `src/components/play/PlayerBoard.tsx`
+**Files**: `src/components/play/PlayerBoard.tsx`, `src/components/play/BoardWithLineSlots.tsx`, `src/components/play/PlayerRosterList.tsx`, `src/lib/services/line-slots.ts`
 
-**Intent**: Under the board, when `progress` is non-null: "Zdobyte pola: X/N" (only if threshold rule on) and "Twoje nagrody" listing the threshold reward and each line ("Wiersz 2: Inspiracja", "Kolumna 1: Przedmiot", 1-based labels); empty state text when nothing earned yet. Update `progress` from the claim response and from each poll. No new animation/banner.
+**Intent**: Wrap the board in `BoardWithLineSlots` fed by `lineSlots` (mystery until complete; then completer colour + label). Below the board, `PlayerRosterList` shows **every seat's** threshold X/N and earned reward label when earned (mystery tile until then — peers included). Update `progress` / `lineSlots` from the claim response and each poll. No under-board "Twoje nagrody" list; no new animation/banner.
 
-**Contract**: Token/role classes only; hidden when `progress` is null (old sessions unchanged).
+**Contract**: Token/role classes only; edge slots and threshold chrome hidden when the session has no line/threshold rules.
 
 #### 5. GM UI
 
-**File**: `src/components/sessions/GmBoard.tsx`
+**Files**: `src/components/sessions/GmBoard.tsx`, `src/components/play/BoardWithLineSlots.tsx`, `src/components/play/PlayerRosterList.tsx`
 
-**Intent**: Roster entry shows earned threshold/line rewards per player (e.g. small `Badge`s). After a successful undo, trigger an immediate snapshot refresh so revocations show without waiting for the poll.
+**Intent**: Same edge-slot board with incomplete line rewards revealed; roster via `PlayerRosterList` with GM `revealAssigned` for threshold tiles. After a successful undo, trigger an immediate snapshot refresh so revocations show without waiting for the poll.
 
-**Contract**: Uses `SessionWithCells` roster `earned`; nothing extra rendered for sessions without rules.
+**Contract**: Nothing extra rendered for sessions without rules.
 
 #### 6. Kitchen sinks
 
 **Files**: `src/pages/play/kitchen-sink.astro`, `src/pages/sessions/board/kitchen-sink.astro`
 
-**Intent**: Player: progress below N, threshold earned, lines earned, no rules. GM: roster with earned rewards, roster without rules.
+**Intent**: Player: edge slots (mystery / earned), roster threshold below N / earned, no rules. GM: edges revealed incomplete, roster with assigned/earned threshold, roster without rules.
 
-**Contract**: Static demo data; existing sections untouched.
+**Contract**: Static demo data; existing non-rules sections untouched.
 
 #### 7. Integration tests
 
@@ -341,10 +348,10 @@ Serve derived progress to players and earned rewards to the GM roster.
 
 #### Manual Verification:
 
-- 3ÃÂ3 session with both rules, two browsers: completing a row shows the line reward for the completer immediately; reaching N shows the threshold reward; GM roster shows both
-- GM undo of a field in the completed line removes the line reward on GM roster at once and on the player board within one poll
-- An existing (pre-change) session plays exactly as before; no progress section shown
-- Kitchen sinks for player board and GM board render new states token-clean on a phone-width viewport
+- 3×3 session with both rules, two browsers: completing a row reveals the edge slot for the completer immediately; reaching N updates the roster threshold tile; GM board shows both
+- GM undo of a field in the completed line revokes the edge slot / roster state at once on GM and within one poll on the player board
+- An existing (pre-change) session plays exactly as before; no edge slots or threshold roster chrome
+- Kitchen sinks for player board and GM board render new edge/roster states token-clean on a phone-width viewport
 
 **Implementation Note**: After completing this phase and all automated verification passes, pause here for manual confirmation from the human that the manual testing was successful before proceeding to the next phase.
 

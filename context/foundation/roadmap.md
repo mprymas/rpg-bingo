@@ -42,8 +42,8 @@ Po rozegranej sesji przy stole wyszły trzy braki: MG nie sprząta starych sesji
 
 | ID   | Change ID                  | Outcome (user can …)                                                                 | Prerequisites | PRD refs     | Status |
 | ---- | -------------------------- | ------------------------------------------------------------------------------------ | ------------- | ------------ | ------ |
-| S-01 | player-join-via-qr         | gracz dołącza skanując QR; join wpisanym kodem nadal działa                          | —             | US-01        | in-progress |
-| S-02 | threshold-pattern-rewards  | gracz zdobywa nagrody za liczbę pól / układ; przy claimie czuje satysfakcję; per-pole bez regresji | —             | US-01        | ready  |
+| S-01 | player-join-via-qr         | gracz dołącza skanując QR; join wpisanym kodem nadal działa                          | —             | US-01        | done |
+| S-02 | threshold-pattern-rewards  | gracz zdobywa nagrody za liczbę pól / układ; przy claimie czuje satysfakcję; per-pole bez regresji | —             | US-01        | in-progress |
 | S-03 | gm-delete-session          | MG usuwa sesję (dowolny status) po potwierdzeniu; bez potwierdzenia nic nie znika      | —             | US-02        | done |
 
 ## Streams
@@ -84,7 +84,7 @@ Brak nowych Foundations — baseline pokrywa warstwy potrzebne do S-01…S-03; k
 - **Blockers:** —
 - **Unknowns:** —
 - **Risk:** Pierwszy widoczny win przy stole; regresja joinu kodem to hard guardrail — sekwencjonowane równolegle z nagradami, nie przed nimi na siłę.
-- **Status:** in-progress
+- **Status:** done
 
 ### S-02: Nagrody za liczbę pól / układ + satysfakcja przy claim
 
@@ -97,7 +97,7 @@ Brak nowych Foundations — baseline pokrywa warstwy potrzebne do S-01…S-03; k
 - **Unknowns:**
   - Jak prosty jest domyślny układ (sam wiersz/kolumna vs też przekątna)? — Owner: user. Block: no. (PRD podaje „np. cały wiersz/kolumna”; domyślnie wiersz+kolumna wystarczy przy `speed`.)
 - **Risk:** Tu jest inwestycja w regułę nagród i ryzyko „księgowości”; proste progi + opcjonalność chronią lekkość bingo i stare sesje.
-- **Status:** ready
+- **Status:** in-progress
 
 ### S-03: MG usuwa sesję po potwierdzeniu
 
@@ -146,3 +146,4 @@ This table is the clean handoff to Jira/Linear or any MCP-backed backlog. Includ
 - **S-04: MG cofa błędne oznaczenie pola; pole wraca do puli wolnych, powiązana nagroda jest unieważniona.** — Archived 2026-10-03 → `context/archive/2026-10-03-gm-undo-field-claim/`. Lesson: —.
 - **S-05: MG generuje nową planszę z nowym kodem; gracze muszą dołączyć do niej od nowa.** — Archived 2026-10-11 → `context/archive/2026-10-11-gm-regenerate-board/`. Lesson: —.
 - **S-03: MG widzi listę sesji, wybiera usunięcie i po potwierdzeniu sesja znika niezależnie od statusu; bez potwierdzenia nic się nie kasuje (aktywna sesja nie znika przypadkiem).** — Archived 2026-10-11 → `context/archive/2026-10-11-gm-delete-session/`. Lesson: —.
+- **S-01: gracz dołącza do planszy skanując kod QR z ekranu MG (bez wpisywania adresu i kodu); dołączanie wpisanym kodem nadal działa jak dziś.** — Archived 2026-10-11 → `context/archive/2026-10-11-player-join-via-qr/`. Lesson: —.

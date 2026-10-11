@@ -560,7 +560,7 @@ describe.skipIf(!hasBaseUrl() || !resolveTestCredentials() || !hasSupabaseEnv())
       expect(board.progress?.lines).toEqual([]);
     });
 
-    it("rule-less session: no progress until a field reward is claimed; then lists Pole rewards", async () => {
+    it("rule-less session: progress stays null; Pole reveals on the claimed cell only", async () => {
       const { id, code } = await createActiveSession(gm, {
         size: 3,
         customPhrases: [],
@@ -584,13 +584,10 @@ describe.skipIf(!hasBaseUrl() || !resolveTestCredentials() || !hasSupabaseEnv())
       const claimed = claim.body as ClaimSuccessBody;
       expect(claimed.cell.reward).not.toBeNull();
       expect(claimed.cell.reward?.slug).toBe("inspiration");
-      expect(claimed.progress?.thresholdCount).toBeNull();
-      expect(claimed.progress?.thresholdReward).toBeNull();
-      expect(claimed.progress?.lines).toEqual([]);
-      expect(claimed.progress?.fieldRewards.map((r) => r.slug)).toEqual(["inspiration"]);
+      expect(claimed.progress).toBeNull();
 
       const after = await fetchPlayerBoard(player, code);
-      expect(after.progress?.fieldRewards.map((r) => r.slug)).toEqual(["inspiration"]);
+      expect(after.progress).toBeNull();
       const persisted = after.cells.find((c) => c.position === mystery.position);
       expect(persisted?.reward?.slug).toBe("inspiration");
 

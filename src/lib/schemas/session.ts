@@ -27,12 +27,14 @@ export const createSessionSchema = z
       }),
     lineRewardIds: z
       .array(z.uuid({ error: "Nieprawidłowy identyfikator nagrody" }))
+      .max(32, { error: "Zbyt wiele nagród za wiersz/kolumnę — maksymalnie 32" })
       .default([])
       .refine((ids) => new Set(ids).size === ids.length, {
         message: "Identyfikatory nagród za wiersz/kolumnę muszą być unikalne",
       }),
     thresholdRewardIds: z
       .array(z.uuid({ error: "Nieprawidłowy identyfikator nagrody" }))
+      .max(32, { error: "Zbyt wiele nagród progowych — maksymalnie 32" })
       .default([])
       .refine((ids) => new Set(ids).size === ids.length, {
         message: "Identyfikatory nagród progowych muszą być unikalne",

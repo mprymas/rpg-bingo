@@ -45,7 +45,11 @@ export interface PlayerRewardProgress {
   thresholdCount: number | null;
   thresholdReward: RewardRef | null;
   lines: EarnedLineReward[];
-  /** Per-field rewards from cells this player currently holds. */
+  /**
+   * Per-field rewards from cells this player currently holds.
+   * Only populated when the session has threshold and/or line rules;
+   * rule-less sessions keep `progress: null` and reveal Pole on the claimed cell.
+   */
   fieldRewards: RewardRef[];
 }
 
@@ -160,8 +164,10 @@ export interface ClaimOccupant {
 
 export interface ClaimSuccessResponse {
   cell: PlayerBoardCell;
-  progress: PlayerRewardProgress | null;
-  lineSlots: BoardLineSlot[];
+  /** Omitted when the post-claim progress snapshot fails (client keeps prior state). */
+  progress?: PlayerRewardProgress | null;
+  /** Omitted when the post-claim progress snapshot fails (client keeps prior state). */
+  lineSlots?: BoardLineSlot[];
 }
 
 export interface ClaimConflictResponse {

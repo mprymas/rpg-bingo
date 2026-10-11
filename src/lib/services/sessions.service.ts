@@ -359,7 +359,8 @@ export async function getPlayerRewardSnapshot(
   }
 
   const lineSlots = inputs.line_slots;
-  const hasRules = inputs.threshold_count != null || inputs.has_line_rules || inputs.field_rewards.length > 0;
+  // Per-field Pole rewards do not open a progress object — they stay on the claimed cell.
+  const hasRules = inputs.threshold_count != null || inputs.has_line_rules;
   if (!hasRules) return { progress: null, lineSlots };
 
   const progressByKey = deriveRewardProgress({

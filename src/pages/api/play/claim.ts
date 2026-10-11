@@ -5,7 +5,7 @@ import { isAllowedRequestOrigin } from "@/lib/request-origin";
 import { playClaimBodySchema } from "@/lib/schemas/play-claim";
 import { ClaimBoardCellError, claimBoardCell, getPlayerRewardSnapshot } from "@/lib/services/sessions.service";
 import { createClient } from "@/lib/supabase";
-import type { BoardLineSlot, ClaimConflictResponse, ClaimSuccessResponse, PlayerRewardProgress } from "@/types";
+import type { ClaimConflictResponse, ClaimSuccessResponse } from "@/types";
 
 export const prerender = false;
 
@@ -62,12 +62,14 @@ export const POST: APIRoute = async (context) => {
       return json(conflict, 409);
     }
 
-    let progress: PlayerRewardProgress | null = null;
-    let lineSlots: BoardLineSlot[] = [];
     try {
       const snapshot = await getPlayerRewardSnapshot(supabase, code, identity.claimToken);
-      progress = snapshot.progress;
-      lineSlots = snapshot.lineSlots;
+      const success: ClaimSuccessResponse = {
+        cell: result.cell,
+        progress: snapshot.progress,
+        lineSlots: snapshot.lineSlots,
+      };
+      return json(success, 200);
     } catch (progressError) {
       reportError(progressError, {
         route: "POST /api/play/claim (progress)",
@@ -75,12 +77,10 @@ export const POST: APIRoute = async (context) => {
         sessionCode: code,
         position,
       });
-      progress = null;
-      lineSlots = [];
+      // Omit progress/lineSlots so the client keeps prior UI state.
+      const success: ClaimSuccessResponse = { cell: result.cell };
+      return json(success, 200);
     }
-
-    const success: ClaimSuccessResponse = { cell: result.cell, progress, lineSlots };
-    return json(success, 200);
   } catch (error) {
     if (error instanceof ClaimBoardCellError) {
       switch (error.code) {

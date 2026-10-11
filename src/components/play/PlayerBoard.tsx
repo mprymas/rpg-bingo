@@ -156,8 +156,10 @@ function isClaimSuccess(value: unknown): value is ClaimSuccessResponse {
   if (!value || typeof value !== "object") return false;
   const record = value as Record<string, unknown>;
   if (record.cell == null || typeof record.cell !== "object" || record.error === "conflict") return false;
-  if (record.progress != null && !isPlayerRewardProgress(record.progress)) return false;
-  if (!Array.isArray(record.lineSlots) || !record.lineSlots.every(isBoardLineSlot)) return false;
+  if ("progress" in record && record.progress != null && !isPlayerRewardProgress(record.progress)) return false;
+  if ("lineSlots" in record) {
+    if (!Array.isArray(record.lineSlots) || !record.lineSlots.every(isBoardLineSlot)) return false;
+  }
   return true;
 }
 
@@ -353,10 +355,14 @@ export default function PlayerBoard({
 
       if (response.ok && isClaimSuccess(body)) {
         mergeCell(body.cell);
-        setProgress(body.progress);
-        setLineSlots(body.lineSlots);
+        if ("progress" in body) {
+          setProgress(body.progress ?? null);
+        }
+        if ("lineSlots" in body && body.lineSlots !== undefined) {
+          setLineSlots(body.lineSlots);
+        }
         const color = body.cell.claimedByColor;
-        const nextProgress = body.progress;
+        const nextProgress = "progress" in body ? (body.progress ?? null) : null;
         if (color != null && nextProgress) {
           setPlayers((prev) =>
             prev.map((player) =>
