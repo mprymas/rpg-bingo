@@ -6,7 +6,7 @@
 >
 > Refresh: re-run `/10x-test-plan --refresh` when stale (see §8).
 >
-> Last updated: 2026-10-07
+> Last updated: 2026-10-11
 
 ## 1. Strategy
 
@@ -90,7 +90,7 @@ plus the MCP/tools actually exposed in the current session.
 | ------------------- | ----------------------------------------------------------- | ------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | unit + integration  | Vitest (`vitest.config.ts` projects `unit` / `integration`) | ^5.0.3  | Scripts: `npm run test:unit`, `npm run test:integration`, `npm test`. Naming: `*.test.ts`. Unit: `src/**/*.test.ts` (and `tests/unit/` if needed). Integration: `tests/integration/**/*.test.ts`; needs preview URL (`PREVIEW_BASE_URL` preferred — Vite may overwrite `BASE_URL`) |
 | API / HTTP contract | Vitest integration + `tests/helpers/http.ts`                | same    | Assert status + side effects / error shape; no full-body snapshots. Helpers mirror smoke cookie-jar + Origin                                                                                                                                                                       |
-| e2e                 | Playwright (`playwright.config.ts`, `tests/e2e/`)           | 1.63.0  | Seed covers #4 claim→reward UI; `public-join-path.spec.ts` covers #10 (home code→nick→board). Phase 2: thin e2e not required for #5 rejoin (cookie/SSR). Auth via `storageState` (`tests/e2e/auth.setup.ts`); credentials `E2E_USERNAME` / `E2E_PASSWORD`. Script: `npm run test:e2e` |
+| e2e                 | Playwright (`playwright.config.ts`, `tests/e2e/`)           | 1.63.0  | Seed covers #4 claim→reward UI; `public-join-path.spec.ts` covers #10 (home code→nick→board); `regenerate-player-rejoin.spec.ts` covers MG regenerate → player auto-rejoin on successor (S-05 / FR-007, shipped with `gm-regenerate-board`). Phase 2: thin e2e not required for #5 cookie rejoin (cookie/SSR). Auth via `storageState` (`tests/e2e/auth.setup.ts`); credentials `E2E_USERNAME` / `E2E_PASSWORD`. Script: `npm run test:e2e` |
 | Existing smoke      | `scripts/smoke.mjs` via `npm run smoke`                     | n/a     | Auth-flow smoke; CI `smoke` job runs smoke → `test:integration` → `test:e2e` against preview + local Supabase                                                                                                                                                                      |
 | accessibility       | none planned                                                | —       | PRD non-goal: full WCAG AA out of MVP                                                                                                                                                                                                                                              |
 | AI-native           | none planned                                                | —       | Cost × signal: deterministic integration preferred; browser MCP is manual only                                                                                                                                                                                                     |
@@ -115,7 +115,7 @@ phase lands; before that, the gate is `planned`.
 | unit + integration suite                    | local + CI (`test:unit` in `ci`; `test:integration` in `smoke`) | required (today)          | board integrity + guaranteed-phrase membership + HTTP success-contract regressions |
 | play-path integration (+ thin e2e if added) | local + CI                                                      | required after §3 Phase 2 | claim race, undo, rejoin stuck-state                                               |
 | authz / abuse API checks                    | local + CI (`test:integration` abuse suite)                     | required (today)          | unauthorized claim/join; unauthenticated MG create/list/preview; cross-owner GM  |
-| thin Playwright e2e (#4 seed + #10 join)    | local + CI (`test:e2e` in `smoke`; reuse preview via `E2E_REUSE_SERVER=1`) | required (today) | public join UI path; claim→reward UI                                                                               |
+| thin Playwright e2e (#4 seed + #10 join + regenerate rejoin) | local + CI (`test:e2e` in `smoke`; reuse preview via `E2E_REUSE_SERVER=1`) | required (today) | public join UI path; claim→reward UI; MG regenerate → player lands on new code                        |
 | expanded smoke / CI test job wiring         | CI on PR (`smoke` → Vitest integration → Playwright e2e)        | required (today)          | floor stays green on every PR                                                      |
 
 ## 6. Cookbook Patterns
@@ -142,7 +142,7 @@ Reference: `src/lib/services/board-generator.test.ts` (fixed `random`, asserts c
 5. Env: `PREVIEW_BASE_URL` (preferred) or absolute `BASE_URL`; signed-in cases need `SMOKE_EMAIL`/`SMOKE_PASSWORD` or `TEST_EMAIL`/`TEST_PASSWORD`.
 6. Run against a healthy preview: `PREVIEW_BASE_URL=http://localhost:4321 npm run test:integration` (CI sets the same after `npm run smoke`).
 
-References: `tests/integration/create-session-board.test.ts`, `tests/integration/http-contract-matrix.test.ts`.
+References: `tests/integration/create-session-board.test.ts`, `tests/integration/http-contract-matrix.test.ts`, `tests/integration/create-replace-session.test.ts`, `tests/integration/close-session.test.ts`, `tests/integration/play-closed-board-rejoin.test.ts`.
 
 **Phase 1 exclusions / known gap:** blank catalog and RLS-bypass scenarios are out of Phase 1 scope. Orphan 0-cell session after failed cell insert (create returns 500; row may remain) is a **known deferred gap** — document only; no red test and no transactional rewrite in Phase 1 (see change notes for `testing-runner-bootstrap-board-integrity`).
 
@@ -153,6 +153,7 @@ References: `tests/integration/create-session-board.test.ts`, `tests/integration
 **In place:**
 - `tests/e2e/seed.spec.ts` — Risk #4 (claim free cell → reward visible) via deep-link join (`/play/{code}?join=1`). Does **not** cover the public code-entry path.
 - `tests/e2e/public-join-path.spec.ts` — Risk #10 (Phase 5): home `JoinSessionForm` (session code) → nick → shared board with visible cells/phrases. Do not skip code entry with a deep link; do not treat join-API integration as sufficient for this risk. Never kitchen-sink / pixel snapshots.
+- `tests/e2e/regenerate-player-rejoin.spec.ts` — S-05 / FR-007 (shipped with `gm-regenerate-board`): GM confirm → create-with-replace → player on old code auto-moves to successor (poll/SSR). Separate player browser context; assert new URL + nick roster, not closed chrome. Prefer URL/visibility waits over fixed poll sleeps. Does **not** replace HTTP coverage in §6.5 regenerate.
 
 **How to add:**
 1. Put the file under `tests/e2e/<name>.spec.ts`. Name the test after the risk.
@@ -190,6 +191,16 @@ References: `tests/integration/create-session-board.test.ts`, `tests/integration
 8. Gate with `describe.skipIf(!hasBaseUrl() || !resolveTestCredentials())`. Local/CI: seeded catalog via `supabase/seed.sql` (CI applies after start with `npx supabase db reset --local`). Never hosted `db reset`.
 9. Reference: `tests/integration/play-path-claim-undo.test.ts` (Risks #3/#4/#5/#7).
 
+**Regenerate / close / closed-board rejoin (S-05 — in place via `gm-regenerate-board`):**
+
+Not a §3 rollout phase — tests landed with the feature change. Documented here so the cookbook stays the source of truth for “what to extend.”
+
+1. **Create-then-close:** `POST /api/sessions` with `replaceSessionId` → `201` + new `{ id, code }`; source board `status === "closed"` and `replaced_by_session_id` = new id. Unknown / foreign `replaceSessionId` → create still `201` with `closeError`; retry `POST /api/sessions/{sourceId}/close` with `{ replacedBySessionId }` → `200` `{ ok: true }`. Reference: `tests/integration/create-replace-session.test.ts`.
+2. **Close auth matrix:** unauthenticated close → `401`; foreign GM / unknown id / already closed / missing replacement → expected 4xx + `{ error }`. Reference: `tests/integration/close-session.test.ts`.
+3. **Closed board + join successor:** after regenerate, `GET /api/play/board?code={old}` → `200` with `status: "closed"` + `successorCode`; claim on old → denied; join on successor with nick (no old claimToken) → success; unknown code still `404`. Reference: `tests/integration/play-closed-board-rejoin.test.ts`.
+4. **Unit helpers (no preview):** `src/lib/services/close-session-as-replaced.test.ts` (RPC error mapping), `src/lib/services/session-prefill.test.ts` (reward-count aggregation for `?from=`), `src/lib/player-cookie-auto-rejoin.test.ts` (`nickForAutoRejoin`: identity nick for old code else `lastNick`; session codes must match `SESSION_CODE_PATTERN`).
+5. Gate HTTP suites with `describe.skipIf(!hasBaseUrl() || !resolveTestCredentials())` (and `resolveSecondTestCredentials()` for cross-owner). Hosted migrations: human-approved `npx supabase db push --linked` — never hosted `db reset`.
+
 ### 6.6 Per-rollout-phase notes
 
 **Abuse / join identity (Phase 3 — in place):**
@@ -221,9 +232,10 @@ contributors should respect these unless the underlying assumption changes.
 
 ## 8. Freshness Ledger
 
-- Strategy (§1–§5) last reviewed: 2026-10-07 (Phase 5 done: #10 public-join e2e + CI `test:e2e` in smoke job; §4/§5/§6.3 updated)
-- Stack versions last verified: 2026-10-07 (Vitest ^5.0.3; Playwright 1.63.0 seed #4 + public-join #10; CI e2e gate)
+- Strategy (§1–§5) last reviewed: 2026-10-11 (lightweight cookbook sync after `gm-regenerate-board` tests; §2 risk map unchanged — regenerate not added as a numbered risk; use `--refresh` if FR-007 should enter top-N)
+- Stack versions last verified: 2026-10-11 (Vitest ^5.0.3; Playwright 1.63.0 seed #4 + public-join #10 + regenerate rejoin; CI e2e gate)
 - AI-native tool references last verified: 2026-10-06 (none planned)
+- Cookbook (§6) last synced to suite: 2026-10-11 (§6.2 refs + §6.3 regenerate e2e + §6.5 regenerate/close/closed-board block)
 
 Refresh (`/10x-test-plan --refresh`) when:
 
