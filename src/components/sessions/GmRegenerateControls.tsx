@@ -40,10 +40,11 @@ export default function GmRegenerateControls({
 
   if (!confirmOpen) {
     return (
-      <div className="flex justify-center">
+      <div className="mb-6 flex justify-center">
         <Button
           type="button"
           variant="outline"
+          className="cursor-pointer"
           onClick={() => {
             setConfirmOpen(true);
           }}
@@ -57,7 +58,7 @@ export default function GmRegenerateControls({
 
   return (
     <div
-      className="border-border bg-background space-y-4 rounded-lg border p-4"
+      className="border-border bg-background mb-6 space-y-4 rounded-lg border p-4"
       role="group"
       aria-label="Potwierdź nową planszę"
     >
