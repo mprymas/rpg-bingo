@@ -245,15 +245,15 @@ Additive RPC only; backward compatible. No backfill. Deploy migration before or 
 
 #### Automated
 
-- [ ] 1.1 Migration applies on local Supabase
+- [x] 1.1 Migration applies on local Supabase
 - [x] 1.2 Unit tests for delete error mapper pass (`npm run test:unit`) — 55bab84
 - [x] 1.3 Typecheck passes for touched TS — 55bab84
 - [x] 1.4 Lint passes on new API/service files (`npm run lint`) — 55bab84
 
 #### Manual
 
-- [ ] 1.5 Authenticated DELETE on owned active and closed sessions returns 200 and removes DB rows
-- [ ] 1.6 Foreign/unknown → 404; unauthenticated → 401; bad origin → 403
+- [x] 1.5 Authenticated DELETE on owned active and closed sessions returns 200 and removes DB rows
+- [x] 1.6 Foreign/unknown → 404; unauthenticated → 401; bad origin → 403
 
 ### Phase 2: Dashboard delete UX
 
@@ -264,17 +264,17 @@ Additive RPC only; backward compatible. No backfill. Deploy migration before or 
 
 #### Manual
 
-- [ ] 2.3 Dashboard cancel leaves row; confirm removes closed and active rows; play code 404s after active delete
-- [ ] 2.4 Kitchen-sink confirm states render; demo does not call API
-- [ ] 2.5 AlertDialog keyboard/focus behavior acceptable
+- [x] 2.3 Dashboard cancel leaves row; confirm removes closed and active rows; play code 404s after active delete
+- [x] 2.4 Kitchen-sink confirm states render; demo does not call API
+- [x] 2.5 AlertDialog keyboard/focus behavior acceptable
 
 ### Phase 3: Integration verification
 
 #### Automated
 
-- [ ] 3.1 Integration delete suite passes (`npm run test:integration`)
-- [x] 3.2 Unit suite still green (`npm run test:unit`)
+- [x] 3.1 Integration delete suite passes (`npm run test:integration`)
+- [x] 3.2 Unit suite still green (`npm run test:unit`) — 2cca27f
 
 #### Manual
 
-- [ ] 3.3 Spot-check one active delete in UI vs play 404
+- [x] 3.3 Spot-check one active delete in UI vs play 404
