@@ -7,7 +7,7 @@ import GmBoard from "@/components/sessions/GmBoard";
 import GmRegenerateControls from "@/components/sessions/GmRegenerateControls";
 import SessionJoinQr from "@/components/sessions/SessionJoinQr";
 import { Badge } from "@/components/ui/badge";
-import type { SessionPlayerRosterEntry, SessionWithCells } from "@/types";
+import type { SessionPlayerRosterEntry, SessionRewardRules, SessionWithCells } from "@/types";
 
 if (import.meta.env.PROD) {
   return new Response("Not Found", { status: 404 });
@@ -51,18 +51,21 @@ const demoPlayers: SessionPlayerRosterEntry[] = [
     nick: "Aria",
     color: 1,
     created_at: "2026-09-15T14:31:00.000Z",
+    earned: { claimedCount: 0, thresholdReward: null, lines: [] },
   },
   {
     id: "demo-player-borin",
     nick: "Borin",
     color: 2,
     created_at: "2026-09-15T14:32:00.000Z",
+    earned: { claimedCount: 0, thresholdReward: null, lines: [] },
   },
   {
     id: "demo-player-cyra",
     nick: "Cyra",
     color: 3,
     created_at: "2026-09-15T14:33:00.000Z",
+    earned: { claimedCount: 0, thresholdReward: null, lines: [] },
   },
 ];
 
@@ -107,6 +110,12 @@ function buildLegend(session: SessionWithCells) {
   return [...rewardCounts.values()];
 }
 
+const emptyRewardRules: SessionRewardRules = {
+  thresholdCount: null,
+  thresholdRewardIds: [],
+  lineRewardIds: [],
+};
+
 const fixtureComplete: SessionWithCells = {
   id: "demo-complete",
   code: "ABC123",
@@ -115,8 +124,10 @@ const fixtureComplete: SessionWithCells = {
   replaced_by_session_id: null,
   gm_id: "demo-gm",
   created_at: "2026-09-15T14:30:00.000Z",
+  threshold_count: null,
   cells: makeCells("demo-complete", 9),
   players: [],
+  rewardRules: emptyRewardRules,
 };
 
 const fixtureIncomplete: SessionWithCells = {
@@ -127,8 +138,10 @@ const fixtureIncomplete: SessionWithCells = {
   replaced_by_session_id: null,
   gm_id: "demo-gm",
   created_at: "2026-09-15T14:30:00.000Z",
+  threshold_count: null,
   cells: makeCells("demo-incomplete", 4),
   players: [],
+  rewardRules: emptyRewardRules,
 };
 
 const fixtureClosed: SessionWithCells = {
@@ -139,8 +152,10 @@ const fixtureClosed: SessionWithCells = {
   replaced_by_session_id: null,
   gm_id: "demo-gm",
   created_at: "2026-08-01T10:00:00.000Z",
+  threshold_count: null,
   cells: makeCells("demo-closed", 9),
   players: [],
+  rewardRules: emptyRewardRules,
 };
 
 const fixtureClosedReplaced: SessionWithCells = {
@@ -151,8 +166,10 @@ const fixtureClosedReplaced: SessionWithCells = {
   replaced_by_session_id: "demo-complete",
   gm_id: "demo-gm",
   created_at: "2026-08-01T10:00:00.000Z",
+  threshold_count: null,
   cells: makeClaimedCells("demo-closed-replaced"),
   players: demoPlayers,
+  rewardRules: emptyRewardRules,
 };
 
 const fixtureClaimed: SessionWithCells = {
@@ -163,8 +180,10 @@ const fixtureClaimed: SessionWithCells = {
   replaced_by_session_id: null,
   gm_id: "demo-gm",
   created_at: "2026-09-15T14:30:00.000Z",
+  threshold_count: null,
   cells: makeClaimedCells("demo-claimed"),
   players: demoPlayers,
+  rewardRules: emptyRewardRules,
 };
 
 const fixtureClaimedClosed: SessionWithCells = {
@@ -175,8 +194,10 @@ const fixtureClaimedClosed: SessionWithCells = {
   replaced_by_session_id: null,
   gm_id: "demo-gm",
   created_at: "2026-08-01T10:00:00.000Z",
+  threshold_count: null,
   cells: makeClaimedCells("demo-claimed-closed"),
   players: demoPlayers,
+  rewardRules: emptyRewardRules,
 };
 
 const fixtureRosterEmpty: SessionWithCells = {
@@ -187,8 +208,10 @@ const fixtureRosterEmpty: SessionWithCells = {
   replaced_by_session_id: null,
   gm_id: "demo-gm",
   created_at: "2026-09-15T14:30:00.000Z",
+  threshold_count: null,
   cells: makeCells("demo-roster-empty", 9),
   players: [],
+  rewardRules: emptyRewardRules,
 };
 
 const loadErrorCopy = "Nie udało się wczytać sesji";

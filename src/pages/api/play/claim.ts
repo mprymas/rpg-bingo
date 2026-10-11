@@ -62,7 +62,7 @@ export const POST: APIRoute = async (context) => {
       return json(conflict, 409);
     }
 
-    const success: ClaimSuccessResponse = { cell: result.cell };
+    const success: ClaimSuccessResponse = { cell: result.cell, progress: null };
     return json(success, 200);
   } catch (error) {
     if (error instanceof ClaimBoardCellError) {

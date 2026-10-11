@@ -122,6 +122,9 @@ export default function NewSessionForm({ rewards, prefill = null, demoState }: P
         rewardId: reward.id,
         count: rewardCounts[reward.id] ?? 0,
       })),
+      lineRewardIds: [],
+      thresholdRewardIds: [],
+      thresholdCount: null,
       ...(prefill?.replaceSessionId ? { replaceSessionId: prefill.replaceSessionId } : {}),
     });
   }

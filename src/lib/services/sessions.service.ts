@@ -190,9 +190,15 @@ export async function getSessionWithCells(
   if (error) throw error;
   if (!data) return null;
 
-  const players: SessionPlayerRosterEntry[] = [...data.players].sort((a, b) =>
-    a.created_at < b.created_at ? -1 : a.created_at > b.created_at ? 1 : 0,
-  );
+  const players: SessionPlayerRosterEntry[] = [...data.players]
+    .sort((a, b) => (a.created_at < b.created_at ? -1 : a.created_at > b.created_at ? 1 : 0))
+    .map((player) => ({
+      id: player.id,
+      nick: player.nick,
+      color: player.color,
+      created_at: player.created_at,
+      earned: { claimedCount: 0, thresholdReward: null, lines: [] },
+    }));
   const colorByPlayerId = new Map(players.map((player) => [player.id, player.color]));
 
   const cells = [...data.cells]
@@ -210,8 +216,11 @@ export async function getSessionWithCells(
     status: data.status,
     replaced_by_session_id: data.replaced_by_session_id,
     created_at: data.created_at,
+    threshold_count: data.threshold_count,
     cells,
     players,
+    // Stubs until Phase 4 loads real threshold/line rules.
+    rewardRules: { thresholdCount: null, thresholdRewardIds: [], lineRewardIds: [] },
   };
 }
 
@@ -251,6 +260,7 @@ export async function getActiveBoardByCode(supabase: AppSupabaseClient, code: st
     successorCode: head.successor_code,
     cells: boardRows.map((row) => mapPlayerBoardCell(row)),
     players,
+    progress: null,
   };
 }
 

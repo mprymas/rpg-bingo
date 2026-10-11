@@ -8,6 +8,8 @@ export type SessionPlayer = Database["public"]["Tables"]["session_players"]["Row
 
 export type SessionStatus = "active" | "closed";
 export type BoardSize = 3 | 4 | 5;
+export type LineAxis = "row" | "column";
+export type RewardRef = Pick<Reward, "slug" | "label">;
 
 export const BOARD_SIZES = [3, 4, 5] as const;
 export const SESSION_CODE_LENGTH = 6;
@@ -22,10 +24,32 @@ export interface RewardCountInput {
   count: number;
 }
 
+export interface EarnedLineReward {
+  axis: LineAxis;
+  index: number;
+  reward: RewardRef;
+}
+
+export interface PlayerRewardProgress {
+  claimedCount: number;
+  thresholdCount: number | null;
+  thresholdReward: RewardRef | null;
+  lines: EarnedLineReward[];
+}
+
+export interface SessionRewardRules {
+  thresholdCount: number | null;
+  thresholdRewardIds: string[];
+  lineRewardIds: string[];
+}
+
 export interface CreateSessionCommand {
   size: BoardSize;
   customPhrases: CustomPhraseInput[];
   rewards: RewardCountInput[];
+  lineRewardIds: string[];
+  thresholdRewardIds: string[];
+  thresholdCount: number | null;
   /** When set, create closes this owned active session after the new board succeeds. */
   replaceSessionId?: string;
 }
@@ -51,7 +75,13 @@ export interface GeneratedCell {
 }
 
 /** GM roster entry: nick shown in the player's assigned color. */
-export type SessionPlayerRosterEntry = Pick<SessionPlayer, "id" | "nick" | "color" | "created_at">;
+export type SessionPlayerRosterEntry = Pick<SessionPlayer, "id" | "nick" | "color" | "created_at"> & {
+  earned: {
+    claimedCount: number;
+    thresholdReward: RewardRef | null;
+    lines: EarnedLineReward[];
+  };
+};
 
 /** Player-facing roster — no row ids (claim auth uses a secret claim_token in the cookie). */
 export type PlayerRosterEntry = Pick<SessionPlayer, "nick" | "color" | "created_at">;
@@ -63,6 +93,7 @@ export type SessionWithCells = Session & {
     claimedByColor: number | null;
   })[];
   players: SessionPlayerRosterEntry[];
+  rewardRules: SessionRewardRules;
 };
 
 /**
@@ -85,6 +116,8 @@ export interface PlayerBoard {
   successorCode: string | null;
   cells: PlayerBoardCell[];
   players: PlayerRosterEntry[];
+  /** Null when no player identity or the session has no threshold/line rules. */
+  progress: PlayerRewardProgress | null;
 }
 
 export interface ClaimOccupant {
@@ -94,6 +127,7 @@ export interface ClaimOccupant {
 
 export interface ClaimSuccessResponse {
   cell: PlayerBoardCell;
+  progress: PlayerRewardProgress | null;
 }
 
 export interface ClaimConflictResponse {

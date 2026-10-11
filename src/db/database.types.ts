@@ -12,6 +12,31 @@ export type Database = {
   __InternalSupabase: {
     PostgrestVersion: "14.5"
   }
+  graphql_public: {
+    Tables: {
+      [_ in never]: never
+    }
+    Views: {
+      [_ in never]: never
+    }
+    Functions: {
+      graphql: {
+        Args: {
+          extensions?: Json
+          operationName?: string
+          query?: string
+          variables?: Json
+        }
+        Returns: Json
+      }
+    }
+    Enums: {
+      [_ in never]: never
+    }
+    CompositeTypes: {
+      [_ in never]: never
+    }
+  }
   public: {
     Tables: {
       board_cells: {
@@ -59,6 +84,42 @@ export type Database = {
           },
           {
             foreignKeyName: "board_cells_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      board_lines: {
+        Row: {
+          axis: string
+          index: number
+          reward_id: string
+          session_id: string
+        }
+        Insert: {
+          axis: string
+          index: number
+          reward_id: string
+          session_id: string
+        }
+        Update: {
+          axis?: string
+          index?: number
+          reward_id?: string
+          session_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "board_lines_reward_id_fkey"
+            columns: ["reward_id"]
+            isOneToOne: false
+            referencedRelation: "rewards"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "board_lines_session_id_fkey"
             columns: ["session_id"]
             isOneToOne: false
             referencedRelation: "sessions"
@@ -116,6 +177,7 @@ export type Database = {
           id: string
           nick: string
           session_id: string
+          threshold_reward_id: string | null
         }
         Insert: {
           claim_token?: string
@@ -124,6 +186,7 @@ export type Database = {
           id?: string
           nick: string
           session_id: string
+          threshold_reward_id?: string | null
         }
         Update: {
           claim_token?: string
@@ -132,10 +195,51 @@ export type Database = {
           id?: string
           nick?: string
           session_id?: string
+          threshold_reward_id?: string | null
         }
         Relationships: [
           {
             foreignKeyName: "session_players_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "sessions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "session_players_threshold_reward_id_fkey"
+            columns: ["threshold_reward_id"]
+            isOneToOne: false
+            referencedRelation: "rewards"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      session_reward_pool: {
+        Row: {
+          kind: string
+          reward_id: string
+          session_id: string
+        }
+        Insert: {
+          kind: string
+          reward_id: string
+          session_id: string
+        }
+        Update: {
+          kind?: string
+          reward_id?: string
+          session_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "session_reward_pool_reward_id_fkey"
+            columns: ["reward_id"]
+            isOneToOne: false
+            referencedRelation: "rewards"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "session_reward_pool_session_id_fkey"
             columns: ["session_id"]
             isOneToOne: false
             referencedRelation: "sessions"
@@ -152,6 +256,7 @@ export type Database = {
           replaced_by_session_id: string | null
           size: number
           status: string
+          threshold_count: number | null
         }
         Insert: {
           code: string
@@ -161,6 +266,7 @@ export type Database = {
           replaced_by_session_id?: string | null
           size: number
           status?: string
+          threshold_count?: number | null
         }
         Update: {
           code?: string
@@ -170,6 +276,7 @@ export type Database = {
           replaced_by_session_id?: string | null
           size?: number
           status?: string
+          threshold_count?: number | null
         }
         Relationships: [
           {
@@ -204,10 +311,7 @@ export type Database = {
         Args: { p_replaced_by: string; p_session_id: string }
         Returns: undefined
       }
-      delete_session: {
-        Args: { p_session_id: string }
-        Returns: undefined
-      }
+      delete_session: { Args: { p_session_id: string }; Returns: undefined }
       get_active_board_by_code: {
         Args: { p_code: string }
         Returns: {
@@ -222,6 +326,10 @@ export type Database = {
           status: string
           successor_code: string | null
         }[]
+      }
+      get_player_reward_inputs: {
+        Args: { p_claim_token: string; p_code: string }
+        Returns: Json
       }
       get_session_players_by_code: {
         Args: { p_code: string }
@@ -379,6 +487,9 @@ export type CompositeTypes<
     : never
 
 export const Constants = {
+  graphql_public: {
+    Enums: {},
+  },
   public: {
     Enums: {},
   },

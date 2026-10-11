@@ -25,6 +25,9 @@ export const createSessionSchema = z
       .refine((rewards) => new Set(rewards.map((r) => r.rewardId)).size === rewards.length, {
         message: "Identyfikatory nagród muszą być unikalne",
       }),
+    lineRewardIds: z.array(z.uuid()).default([]),
+    thresholdRewardIds: z.array(z.uuid()).default([]),
+    thresholdCount: z.number().int().nullable().optional().default(null),
     replaceSessionId: z.uuid({ error: "Nieprawidłowy identyfikator sesji" }).optional(),
   })
   .superRefine((data, ctx) => {
