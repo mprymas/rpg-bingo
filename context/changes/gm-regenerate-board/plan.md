@@ -294,8 +294,8 @@ Active-default dashboard list with “Pokaż zamknięte”, plus full automated 
 
 #### Automated
 
-- [x] 3.1 Integration: old code returns closed + successorCode; claim on old fails; join successor succeeds; unknown still 404
-- [x] 3.2 Lint clean
+- [x] 3.1 Integration: old code returns closed + successorCode; claim on old fails; join successor succeeds; unknown still 404 — 883957e
+- [x] 3.2 Lint clean — 883957e
 
 #### Manual
 
@@ -305,9 +305,9 @@ Active-default dashboard list with “Pokaż zamknięte”, plus full automated 
 
 #### Automated
 
-- [ ] 4.1 Integration suite includes regenerate/close/closed-board cases
-- [ ] 4.2 Playwright covers regenerate → player auto-rejoin
-- [ ] 4.3 npm run lint / unit suite green
+- [x] 4.1 Integration suite includes regenerate/close/closed-board cases
+- [x] 4.2 Playwright covers regenerate → player auto-rejoin
+- [x] 4.3 npm run lint / unit suite green
 
 #### Manual
 

@@ -15,6 +15,7 @@ const SCOPED_FILES = [
   "src/pages/dashboard/kitchen-sink.astro",
   "src/components/dashboard/DashboardActions.tsx",
   "src/components/dashboard/DashboardPanel.astro",
+  "src/components/dashboard/DashboardSessionList.tsx",
   "src/pages/sessions/[id].astro",
   "src/pages/sessions/board/kitchen-sink.astro",
   "src/components/sessions/BoardGrid.astro",

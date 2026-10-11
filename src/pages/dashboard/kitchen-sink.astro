@@ -33,9 +33,15 @@ const listErrorCopy = "Nie udało się wczytać sesji";
 const sections = [
   {
     id: "default",
-    title: "default",
-    description: "Lista sesji — fixture active + closed.",
+    title: "default (aktywne)",
+    description: "Domyślnie tylko aktywne — „Pokaż zamknięte” odsłania historię.",
     kind: "default" as const,
+  },
+  {
+    id: "show-closed",
+    title: "Pokaż zamknięte",
+    description: "Toggle włączony — widoczne aktywne i zamknięte (etykieta Zamknięta).",
+    kind: "show-closed" as const,
   },
   {
     id: "focus",
@@ -98,13 +104,20 @@ const sections = [
               {section.description}
             </p>
           ) : section.kind === "error" ? (
-            <DashboardPanel listError={listErrorCopy} demo />
+            <DashboardPanel listError={listErrorCopy} demo joinInputId={`dashboard-join-${section.id}`} />
           ) : section.kind === "empty" ? (
-            <DashboardPanel sessions={[]} demo />
+            <DashboardPanel sessions={[]} demo joinInputId={`dashboard-join-${section.id}`} />
           ) : section.kind === "focus" ? (
-            <DashboardPanel sessions={fixtureSessions} demo focusDemo />
+            <DashboardPanel sessions={fixtureSessions} demo focusDemo joinInputId={`dashboard-join-${section.id}`} />
+          ) : section.kind === "show-closed" ? (
+            <DashboardPanel
+              sessions={fixtureSessions}
+              demo
+              initialShowClosed
+              joinInputId={`dashboard-join-${section.id}`}
+            />
           ) : (
-            <DashboardPanel sessions={fixtureSessions} demo />
+            <DashboardPanel sessions={fixtureSessions} demo joinInputId={`dashboard-join-${section.id}`} />
           )}
         </section>
       ))}

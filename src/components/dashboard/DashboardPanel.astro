@@ -1,6 +1,7 @@
 ---
 import JoinSessionForm from "@/components/JoinSessionForm";
 import DashboardActions from "@/components/dashboard/DashboardActions";
+import DashboardSessionList from "@/components/dashboard/DashboardSessionList";
 import type { Session } from "@/types";
 
 interface Props {
@@ -10,20 +11,20 @@ interface Props {
   demo?: boolean;
   /** Kitchen-sink: force-visible focus rings on CTA, first row, sign-out */
   focusDemo?: boolean;
+  /** Kitchen-sink: start with closed sessions visible */
+  initialShowClosed?: boolean;
+  /** Disambiguate join input ids when multiple panels mount (kitchen-sink). */
+  joinInputId?: string;
 }
 
-const { sessions = [], listError = null, demo = false, focusDemo = false } = Astro.props;
-
-function statusLabel(status: string) {
-  return status === "active" ? "Aktywna" : "Zamknięta";
-}
-
-function formatDate(iso: string) {
-  return new Date(iso).toLocaleString("pl-PL", {
-    dateStyle: "medium",
-    timeStyle: "short",
-  });
-}
+const {
+  sessions = [],
+  listError = null,
+  demo = false,
+  focusDemo = false,
+  initialShowClosed = false,
+  joinInputId = "dashboard-session-code",
+} = Astro.props;
 ---
 
 {listError ? (
@@ -45,39 +46,16 @@ function formatDate(iso: string) {
       <h2 id="join-session-heading" class="text-lg font-semibold text-foreground">
         Dołącz do sesji
       </h2>
-      <JoinSessionForm client:load demo={demo} layout="inline" inputId="dashboard-session-code" />
+      <JoinSessionForm client:load demo={demo} layout="inline" inputId={joinInputId} />
     </section>
 
-    {sessions.length === 0 ? (
-      <p class="rounded-lg border border-dashed border-border px-4 py-8 text-center text-muted-foreground">
-        Nie masz jeszcze żadnej sesji
-      </p>
-    ) : (
-      <ul class="divide-y divide-border overflow-hidden rounded-xl border border-border">
-        {sessions.map((session, index) => (
-          <li>
-            <a
-              href={`/sessions/${session.id}`}
-              class:list={[
-                "flex flex-col gap-1 px-4 py-3 outline-none transition-colors hover:bg-accent focus-visible:bg-accent focus-visible:ring-2 focus-visible:ring-ring sm:flex-row sm:items-center sm:justify-between",
-                focusDemo && index === 0 && "bg-accent ring-2 ring-ring",
-              ]}
-              tabindex={focusDemo && index === 0 ? 0 : undefined}
-              onclick={demo ? "event.preventDefault()" : undefined}
-            >
-              <span class="font-mono text-lg tracking-widest text-foreground">{session.code}</span>
-              <span class="flex flex-wrap gap-3 text-sm text-muted-foreground">
-                <span>
-                  {session.size}×{session.size}
-                </span>
-                <span>{statusLabel(session.status)}</span>
-                <span>{formatDate(session.created_at)}</span>
-              </span>
-            </a>
-          </li>
-        ))}
-      </ul>
-    )}
+    <DashboardSessionList
+      sessions={sessions}
+      demo={demo}
+      focusDemo={focusDemo}
+      initialShowClosed={initialShowClosed}
+      client:load
+    />
 
     <DashboardActions kind="sign-out" demo={demo} demoFocus={focusDemo} client:load />
   </div>
