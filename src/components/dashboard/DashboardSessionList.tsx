@@ -148,24 +148,25 @@ export default function DashboardSessionList({
         </ul>
       )}
 
-      <AlertDialog
-        open={target !== null}
-        onOpenChange={(open) => {
-          if (pending) return;
-          if (!open) {
-            setTarget(null);
-            setError(null);
-          }
-        }}
-      >
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Usunąć sesję {target?.code}?</AlertDialogTitle>
-            <AlertDialogDescription>{target ? deleteWarningCopy(target.status) : null}</AlertDialogDescription>
-          </AlertDialogHeader>
+      {demo && target ? (
+        <div className="border-border bg-background grid gap-4 rounded-lg border p-6 shadow-lg">
+          <div className="flex flex-col gap-2 text-center sm:text-left">
+            <h3 className="text-lg font-semibold">Usunąć sesję {target.code}?</h3>
+            <p className="text-muted-foreground text-sm">{deleteWarningCopy(target.status)}</p>
+          </div>
           {shownError ? <p className="text-destructive text-sm">{shownError}</p> : null}
-          <AlertDialogFooter>
-            <AlertDialogCancel disabled={pending}>Anuluj</AlertDialogCancel>
+          <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+            <Button
+              type="button"
+              variant="outline"
+              disabled={pending}
+              onClick={() => {
+                setTarget(null);
+                setError(null);
+              }}
+            >
+              Anuluj
+            </Button>
             <Button
               type="button"
               variant="destructive"
@@ -176,16 +177,55 @@ export default function DashboardSessionList({
             >
               {pending ? (
                 <span className="flex items-center gap-2">
-                  <span className="border-primary-foreground/30 border-t-primary-foreground size-4 animate-spin rounded-full border-2" />
+                  <span className="border-foreground/30 border-t-foreground size-4 animate-spin rounded-full border-2" />
                   Usuwanie…
                 </span>
               ) : (
                 "Usuń"
               )}
             </Button>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+          </div>
+        </div>
+      ) : (
+        <AlertDialog
+          open={target !== null}
+          onOpenChange={(open) => {
+            if (pending) return;
+            if (!open) {
+              setTarget(null);
+              setError(null);
+            }
+          }}
+        >
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Usunąć sesję {target?.code}?</AlertDialogTitle>
+              <AlertDialogDescription>{target ? deleteWarningCopy(target.status) : null}</AlertDialogDescription>
+            </AlertDialogHeader>
+            {shownError ? <p className="text-destructive text-sm">{shownError}</p> : null}
+            <AlertDialogFooter>
+              <AlertDialogCancel disabled={pending}>Anuluj</AlertDialogCancel>
+              <Button
+                type="button"
+                variant="destructive"
+                disabled={pending}
+                onClick={() => {
+                  void handleConfirmDelete();
+                }}
+              >
+                {pending ? (
+                  <span className="flex items-center gap-2">
+                    <span className="border-foreground/30 border-t-foreground size-4 animate-spin rounded-full border-2" />
+                    Usuwanie…
+                  </span>
+                ) : (
+                  "Usuń"
+                )}
+              </Button>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+      )}
     </div>
   );
 }
