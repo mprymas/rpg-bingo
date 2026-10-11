@@ -114,12 +114,7 @@ const showCloseRetry = Boolean(session && closeFailedReason && UUID_RE.test(clos
             >
               Wróć do panelu
             </a>
-            <p
-              class="text-center font-mono text-4xl tracking-widest text-foreground sm:text-5xl"
-              aria-label="Kod sesji"
-            >
-              {session.code}
-            </p>
+            <SessionJoinQr sessionCode={session.code} sessionStatus={session.status} client:load />
             <div class="flex flex-wrap items-center justify-center gap-3 text-sm text-muted-foreground">
               <span>
                 {session.size}×{session.size}
@@ -127,7 +122,6 @@ const showCloseRetry = Boolean(session && closeFailedReason && UUID_RE.test(clos
               <Badge variant="secondary">{statusLabel}</Badge>
               <span>{createdLabel}</span>
             </div>
-            <SessionJoinQr sessionCode={session.code} sessionStatus={session.status} client:load />
           </div>
 
           {showCloseRetry ? (

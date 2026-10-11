@@ -227,14 +227,14 @@ const sections: {
   {
     id: "qr-collapsed",
     title: "qr collapsed",
-    description: "Aktywny nagłówek — kod QR zwinięty (przycisk „Pokaż kod QR”).",
+    description: "Aktywny nagłówek — ikona QR po prawej stronie kodu, panel zwinięty.",
     kind: "qr",
     session: fixtureComplete,
   },
   {
     id: "qr-expanded",
     title: "qr expanded",
-    description: "Aktywny nagłówek — panel QR otwarty (defaultOpen, tylko sink).",
+    description: "Aktywny nagłówek — ikona QR po prawej, panel otwarty pod kodem (defaultOpen, tylko sink).",
     kind: "qr",
     session: fixtureComplete,
     qrDefaultOpen: true,
@@ -242,7 +242,7 @@ const sections: {
   {
     id: "qr-closed",
     title: "qr closed",
-    description: "Zamknięty nagłówek — brak kontrolki QR (komponent zwraca null).",
+    description: "Zamknięty nagłówek — sam kod, bez ikony QR.",
     kind: "qr",
     session: fixtureClosed,
   },
@@ -445,19 +445,6 @@ const sections: {
                     >
                       Wróć do panelu
                     </a>
-                    <p
-                      class="text-center font-mono text-4xl tracking-widest text-foreground sm:text-5xl"
-                      aria-label="Kod sesji"
-                    >
-                      {session.code}
-                    </p>
-                    <div class="flex flex-wrap items-center justify-center gap-3 text-sm text-muted-foreground">
-                      <span>
-                        {session.size}×{session.size}
-                      </span>
-                      <Badge variant="secondary">{statusLabel(session.status)}</Badge>
-                      <span>{formatCreated(session.created_at)}</span>
-                    </div>
                     {section.kind === "qr" ? (
                       <SessionJoinQr
                         sessionCode={session.code}
@@ -465,7 +452,21 @@ const sections: {
                         defaultOpen={section.qrDefaultOpen}
                         client:load
                       />
-                    ) : null}
+                    ) : (
+                      <p
+                        class="text-center font-mono text-4xl tracking-widest text-foreground sm:text-5xl"
+                        aria-label="Kod sesji"
+                      >
+                        {session.code}
+                      </p>
+                    )}
+                    <div class="flex flex-wrap items-center justify-center gap-3 text-sm text-muted-foreground">
+                      <span>
+                        {session.size}×{session.size}
+                      </span>
+                      <Badge variant="secondary">{statusLabel(session.status)}</Badge>
+                      <span>{formatCreated(session.created_at)}</span>
+                    </div>
                   </div>
 
                   {section.kind === "qr" ? null : section.kind === "incomplete" ? (
