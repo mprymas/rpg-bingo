@@ -5,6 +5,7 @@ import CloseRetryBanner from "@/components/sessions/CloseRetryBanner";
 import GmSuccessorNotice from "@/components/sessions/GmSuccessorNotice.astro";
 import GmBoard from "@/components/sessions/GmBoard";
 import GmRegenerateControls from "@/components/sessions/GmRegenerateControls";
+import SessionJoinQr from "@/components/sessions/SessionJoinQr";
 import { Badge } from "@/components/ui/badge";
 import type { SessionPlayerRosterEntry, SessionWithCells } from "@/types";
 
@@ -193,7 +194,7 @@ const fixtureRosterEmpty: SessionWithCells = {
 const loadErrorCopy = "Nie udało się wczytać sesji";
 const undoErrorCopy = "Nie udało się cofnąć oznaczenia";
 
-type BoardKind = "complete" | "incomplete" | "closed" | "focus" | "error" | "na" | "gm-board";
+type BoardKind = "complete" | "incomplete" | "closed" | "focus" | "error" | "na" | "gm-board" | "qr";
 
 interface GmBoardFixture {
   sessionStatus?: string;
@@ -213,6 +214,8 @@ const sections: {
   kind: BoardKind;
   session?: SessionWithCells;
   gmBoard?: GmBoardFixture;
+  /** Sink-only: start SessionJoinQr open. Omitted means collapsed. */
+  qrDefaultOpen?: boolean;
 }[] = [
   {
     id: "default",
@@ -220,6 +223,28 @@ const sections: {
     description: "Kompletna plansza 3×3 + legenda nagród (Badge).",
     kind: "complete",
     session: fixtureComplete,
+  },
+  {
+    id: "qr-collapsed",
+    title: "qr collapsed",
+    description: "Aktywny nagłówek — kod QR zwinięty (przycisk „Pokaż kod QR”).",
+    kind: "qr",
+    session: fixtureComplete,
+  },
+  {
+    id: "qr-expanded",
+    title: "qr expanded",
+    description: "Aktywny nagłówek — panel QR otwarty (defaultOpen, tylko sink).",
+    kind: "qr",
+    session: fixtureComplete,
+    qrDefaultOpen: true,
+  },
+  {
+    id: "qr-closed",
+    title: "qr closed",
+    description: "Zamknięty nagłówek — brak kontrolki QR (komponent zwraca null).",
+    kind: "qr",
+    session: fixtureClosed,
   },
   {
     id: "regenerate-confirm",
@@ -433,9 +458,17 @@ const sections: {
                       <Badge variant="secondary">{statusLabel(session.status)}</Badge>
                       <span>{formatCreated(session.created_at)}</span>
                     </div>
+                    {section.kind === "qr" ? (
+                      <SessionJoinQr
+                        sessionCode={session.code}
+                        sessionStatus={session.status}
+                        defaultOpen={section.qrDefaultOpen}
+                        client:load
+                      />
+                    ) : null}
                   </div>
 
-                  {section.kind === "incomplete" ? (
+                  {section.kind === "qr" ? null : section.kind === "incomplete" ? (
                     <p class="rounded-lg border border-dashed border-border px-4 py-6 text-center text-destructive">
                       Nie udało się wczytać planszy (oczekiwano {expectedCells} pól, jest {session.cells.length}).
                       Utwórz sesję ponownie.

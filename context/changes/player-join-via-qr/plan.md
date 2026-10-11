@@ -257,8 +257,8 @@ Visual gate + automated proof of payload + guard typed-code join.
 
 #### Automated
 
-- [x] 2.1 Lint clean with new island + dependency (`npm run lint`)
-- [x] 2.2 Production build succeeds (`npm run build`)
+- [x] 2.1 Lint clean with new island + dependency (`npm run lint`) — f5ec70b
+- [x] 2.2 Production build succeeds (`npm run build`) — f5ec70b
 
 #### Manual
 
@@ -270,9 +270,9 @@ Visual gate + automated proof of payload + guard typed-code join.
 
 #### Automated
 
-- [ ] 3.1 QR reveal e2e asserts `data-join-url` / payload equals `/play/{CODE}?join=1`
-- [ ] 3.2 Typed-code join e2e still passes (`public-join-path`)
-- [ ] 3.3 Unit + lint still green
+- [x] 3.1 QR reveal e2e asserts `data-join-url` / payload equals `/play/{CODE}?join=1`
+- [x] 3.2 Typed-code join e2e still passes (`public-join-path`)
+- [x] 3.3 Unit + lint still green
 
 #### Manual
 
