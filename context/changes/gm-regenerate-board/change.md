@@ -1,7 +1,7 @@
 ---
 change_id: gm-regenerate-board
 title: MG regenerates board with new code; players auto-rejoin
-status: implementing
+status: implemented
 created: 2026-10-11
 updated: 2026-10-11
 archived_at: null

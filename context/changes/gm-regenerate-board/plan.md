@@ -276,7 +276,7 @@ Active-default dashboard list with “Pokaż zamknięte”, plus full automated 
 
 #### Manual
 
-- [ ] 1.4 Closing session A with replacement B sets closed and FK; player active RPC no longer returns A as active
+- [x] 1.4 Closing session A with replacement B sets closed and FK; player active RPC no longer returns A as active — 4b57341
 
 ### Phase 2: MG regenerate path
 
@@ -287,8 +287,8 @@ Active-default dashboard list with “Pokaż zamknięte”, plus full automated 
 
 #### Manual
 
-- [ ] 2.3 Confirm → form prefills size/rewards, phrases empty → submit → new GM board; old session closed with successor
-- [ ] 2.4 Close-failure warning + successful retry close via UI
+- [x] 2.3 Confirm → form prefills size/rewards, phrases empty → submit → new GM board; old session closed with successor — 6cb1da9
+- [x] 2.4 Close-failure warning + successful retry close via UI — 6cb1da9
 
 ### Phase 3: Player closed board + auto-rejoin
 
@@ -299,17 +299,17 @@ Active-default dashboard list with “Pokaż zamknięte”, plus full automated 
 
 #### Manual
 
-- [ ] 3.3 Two browsers: player auto-lands on new board within ~10s; old code read-only closed when opened
+- [x] 3.3 Two browsers: player auto-lands on new board within ~10s; old code read-only closed when opened — 883957e
 
 ### Phase 4: Dashboard toggle + verification
 
 #### Automated
 
-- [x] 4.1 Integration suite includes regenerate/close/closed-board cases
-- [x] 4.2 Playwright covers regenerate → player auto-rejoin
-- [x] 4.3 npm run lint / unit suite green
+- [x] 4.1 Integration suite includes regenerate/close/closed-board cases — 49ecc9e
+- [x] 4.2 Playwright covers regenerate → player auto-rejoin — 49ecc9e
+- [x] 4.3 npm run lint / unit suite green — 49ecc9e
 
 #### Manual
 
-- [ ] 4.4 Dashboard toggle hides/shows closed after real regenerate
-- [ ] 4.5 GM new code matches where players land in a full table run
+- [x] 4.4 Dashboard toggle hides/shows closed after real regenerate — 49ecc9e
+- [x] 4.5 GM new code matches where players land in a full table run — 49ecc9e
