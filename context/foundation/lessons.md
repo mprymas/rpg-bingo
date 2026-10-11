@@ -22,3 +22,10 @@
 - **Problem**: użytkownik nie widzi, że coś się dzieje
 - **Rule**: after clicking button/ submit on a navigation form, show a loader
 - **Applies to**: implement
+
+## Buttons should use cursor-pointer
+
+- **Context**: UI
+- **Problem**: przyciski mają domyślny kursor
+- **Rule**: Przyciski powinny mieć cursor pointer
+- **Applies to**: implement, impl-review

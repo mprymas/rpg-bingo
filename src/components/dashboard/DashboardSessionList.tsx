@@ -42,7 +42,7 @@ function formatDate(iso: string) {
 
 function deleteWarningCopy(status: string) {
   if (status === "active") {
-    return "Tej operacji nie można cofnąć. Gracze stracą dostęp do żywej planszy — kod sesji przestanie działać.";
+    return "Tej operacji nie można cofnąć. Gracze stracą dostęp do aktywnej planszy — kod sesji przestanie działać.";
   }
   return "Tej operacji nie można cofnąć. Sesja zniknie z listy na stałe.";
 }
