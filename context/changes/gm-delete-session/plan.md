@@ -259,8 +259,8 @@ Additive RPC only; backward compatible. No backfill. Deploy migration before or 
 
 #### Automated
 
-- [x] 2.1 Lint including ui-literals passes (`npm run lint`)
-- [x] 2.2 Typecheck passes for UI changes
+- [x] 2.1 Lint including ui-literals passes (`npm run lint`) — 0fe7c19
+- [x] 2.2 Typecheck passes for UI changes — 0fe7c19
 
 #### Manual
 
@@ -273,7 +273,7 @@ Additive RPC only; backward compatible. No backfill. Deploy migration before or 
 #### Automated
 
 - [ ] 3.1 Integration delete suite passes (`npm run test:integration`)
-- [ ] 3.2 Unit suite still green (`npm run test:unit`)
+- [x] 3.2 Unit suite still green (`npm run test:unit`)
 
 #### Manual
 

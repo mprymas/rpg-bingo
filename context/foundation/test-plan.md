@@ -142,7 +142,7 @@ Reference: `src/lib/services/board-generator.test.ts` (fixed `random`, asserts c
 5. Env: `PREVIEW_BASE_URL` (preferred) or absolute `BASE_URL`; signed-in cases need `SMOKE_EMAIL`/`SMOKE_PASSWORD` or `TEST_EMAIL`/`TEST_PASSWORD`.
 6. Run against a healthy preview: `PREVIEW_BASE_URL=http://localhost:4321 npm run test:integration` (CI sets the same after `npm run smoke`).
 
-References: `tests/integration/create-session-board.test.ts`, `tests/integration/http-contract-matrix.test.ts`, `tests/integration/create-replace-session.test.ts`, `tests/integration/close-session.test.ts`, `tests/integration/play-closed-board-rejoin.test.ts`.
+References: `tests/integration/create-session-board.test.ts`, `tests/integration/http-contract-matrix.test.ts`, `tests/integration/create-replace-session.test.ts`, `tests/integration/close-session.test.ts`, `tests/integration/delete-session.test.ts`, `tests/integration/play-closed-board-rejoin.test.ts`.
 
 **Phase 1 exclusions / known gap:** blank catalog and RLS-bypass scenarios are out of Phase 1 scope. Orphan 0-cell session after failed cell insert (create returns 500; row may remain) is a **known deferred gap** — document only; no red test and no transactional rewrite in Phase 1 (see change notes for `testing-runner-bootstrap-board-integrity`).
 
@@ -159,7 +159,7 @@ References: `tests/integration/create-session-board.test.ts`, `tests/integration
 1. Put the file under `tests/e2e/<name>.spec.ts`. Name the test after the risk.
 2. Auth for GM setup: project `setup` + `storageState` (`tests/e2e/auth.setup.ts`); credentials `E2E_USERNAME` / `E2E_PASSWORD` (same account as `SMOKE_*` is fine). For a public player path, `clearCookies()` before hitting `/` so home stays unauthenticated.
 3. Prefer `getByRole` / `getByLabel` / `getByText`. Wait on URL / visibility / island hydration — never `waitForTimeout`.
-4. Use unique timestamped test data. Orphan sessions are acceptable when the product has no session-delete UI (same as seed).
+4. Use unique timestamped test data. Orphan sessions remain acceptable in e2e (cleanup is optional); `DELETE /api/sessions/[id]` is available for cleanup when desired — do not require every e2e path to delete.
 5. Run: `npm run test:e2e` (or a single file). Local reuse of an already-running preview is automatic outside CI; CI sets `E2E_REUSE_SERVER=1` after the smoke job’s preview is up.
 
 ### 6.4 Adding a test for a new API endpoint
@@ -197,9 +197,10 @@ Not a §3 rollout phase — tests landed with the feature change. Documented her
 
 1. **Create-then-close:** `POST /api/sessions` with `replaceSessionId` → `201` + new `{ id, code }`; source board `status === "closed"` and `replaced_by_session_id` = new id. Unknown / foreign `replaceSessionId` → create still `201` with `closeError`; retry `POST /api/sessions/{sourceId}/close` with `{ replacedBySessionId }` → `200` `{ ok: true }`. Reference: `tests/integration/create-replace-session.test.ts`.
 2. **Close auth matrix:** unauthenticated close → `401`; foreign GM / unknown id / already closed / missing replacement → expected 4xx + `{ error }`. Reference: `tests/integration/close-session.test.ts`.
-3. **Closed board + join successor:** after regenerate, `GET /api/play/board?code={old}` → `200` with `status: "closed"` + `successorCode`; claim on old → denied; join on successor with nick (no old claimToken) → success; unknown code still `404`. Reference: `tests/integration/play-closed-board-rejoin.test.ts`.
-4. **Unit helpers (no preview):** `src/lib/services/close-session-as-replaced.test.ts` (RPC error mapping), `src/lib/services/session-prefill.test.ts` (reward-count aggregation for `?from=`), `src/lib/player-cookie-auto-rejoin.test.ts` (`nickForAutoRejoin`: identity nick for old code else `lastNick`; session codes must match `SESSION_CODE_PATTERN`).
-5. Gate HTTP suites with `describe.skipIf(!hasBaseUrl() || !resolveTestCredentials())` (and `resolveSecondTestCredentials()` for cross-owner). Hosted migrations: human-approved `npx supabase db push --linked` — never hosted `db reset`.
+3. **Delete auth matrix:** unauthenticated delete → `401`; unknown / foreign id → `404` (owner row unchanged); owner deletes active or closed → `200` `{ ok: true }`, subsequent delete / `GET /api/play/board?code=…` → `404`. Reference: `tests/integration/delete-session.test.ts`.
+4. **Closed board + join successor:** after regenerate, `GET /api/play/board?code={old}` → `200` with `status: "closed"` + `successorCode`; claim on old → denied; join on successor with nick (no old claimToken) → success; unknown code still `404`. Reference: `tests/integration/play-closed-board-rejoin.test.ts`.
+5. **Unit helpers (no preview):** `src/lib/services/close-session-as-replaced.test.ts` (RPC error mapping), `src/lib/services/session-prefill.test.ts` (reward-count aggregation for `?from=`), `src/lib/player-cookie-auto-rejoin.test.ts` (`nickForAutoRejoin`: identity nick for old code else `lastNick`; session codes must match `SESSION_CODE_PATTERN`).
+6. Gate HTTP suites with `describe.skipIf(!hasBaseUrl() || !resolveTestCredentials())` (and `resolveSecondTestCredentials()` for cross-owner). Hosted migrations: human-approved `npx supabase db push --linked` — never hosted `db reset`.
 
 ### 6.6 Per-rollout-phase notes
 
