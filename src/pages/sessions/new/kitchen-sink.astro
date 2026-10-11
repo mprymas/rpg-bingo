@@ -25,8 +25,22 @@ const sections = [
   {
     id: "default",
     title: "default",
-    description: "Stan domyślny — 5×5, Inspiracja ×3.",
+    description: "Stan domyślny — 5×5, Inspiracja ×3; reguły wiersza/progu nic nie zaznaczone.",
     demoState: "default" as const,
+    rewards: fixtureRewards,
+  },
+  {
+    id: "rules-selected",
+    title: "rules selected",
+    description: "Obie reguły włączone — zaznaczona nagroda za wiersz/kolumnę i progowa (N = rozmiar).",
+    demoState: "rules-selected" as const,
+    rewards: fixtureRewards,
+  },
+  {
+    id: "rules-invalid-threshold",
+    title: "rules invalid threshold",
+    description: "Nagroda progowa zaznaczona, N poza zakresem (0) — komunikat walidacji.",
+    demoState: "rules-invalid-threshold" as const,
     rewards: fixtureRewards,
   },
   {

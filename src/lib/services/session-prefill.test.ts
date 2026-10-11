@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { aggregateRewardCountsFromCells, isBoardSize } from "@/lib/services/session-prefill";
+import { aggregateRewardCountsFromCells, isBoardSize, rewardRulesFromPoolRows } from "@/lib/services/session-prefill";
 
 describe("aggregateRewardCountsFromCells", () => {
   it("counts reward_id occurrences and ignores nulls", () => {
@@ -20,6 +20,45 @@ describe("aggregateRewardCountsFromCells", () => {
 
   it("returns empty array when no rewards", () => {
     expect(aggregateRewardCountsFromCells([{ reward_id: null }, { reward_id: null }])).toEqual([]);
+  });
+});
+
+describe("rewardRulesFromPoolRows", () => {
+  const lineA = "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa";
+  const lineB = "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb";
+  const thresh = "cccccccc-cccc-4ccc-8ccc-cccccccccccc";
+
+  it("splits pool rows by kind and keeps thresholdCount when threshold ids exist", () => {
+    const actual = rewardRulesFromPoolRows(
+      [
+        { kind: "threshold", reward_id: thresh },
+        { kind: "line", reward_id: lineB },
+        { kind: "line", reward_id: lineA },
+      ],
+      3,
+    );
+    expect(actual).toEqual({
+      lineRewardIds: [lineA, lineB],
+      thresholdRewardIds: [thresh],
+      thresholdCount: 3,
+    });
+  });
+
+  it("normalises thresholdCount to null when no threshold pool rows", () => {
+    const actual = rewardRulesFromPoolRows([{ kind: "line", reward_id: lineA }], 5);
+    expect(actual).toEqual({
+      lineRewardIds: [lineA],
+      thresholdRewardIds: [],
+      thresholdCount: null,
+    });
+  });
+
+  it("returns empty rules for empty pool", () => {
+    expect(rewardRulesFromPoolRows([], null)).toEqual({
+      lineRewardIds: [],
+      thresholdRewardIds: [],
+      thresholdCount: null,
+    });
   });
 });
 

@@ -10,6 +10,7 @@ const SCOPED_FILES = [
   "src/pages/sessions/new/index.astro",
   "src/pages/sessions/new/kitchen-sink.astro",
   "src/components/sessions/NewSessionForm.tsx",
+  "src/components/sessions/RewardRulesFields.tsx",
   "src/components/auth/ServerError.tsx",
   "src/pages/dashboard/index.astro",
   "src/pages/dashboard/kitchen-sink.astro",

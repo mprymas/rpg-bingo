@@ -2,53 +2,53 @@
 
 ## Overview
 
-Add two optional reward rules next to the existing per-field rewards: a **threshold reward** ("nagroda za N pól") earned by every player who holds at least N claimed fields, and **line rewards** for completed rows and columns, earned by the player who claimed the last free field of the line. The GM picks, per rule, a multi-select list of catalog rewards to draw from; nothing selected = rule off. Concrete rewards are pre-drawn (per line at board generation, per player at join), and earned state is **derived from current claims**, so GM undo revokes automatically. Players see their progress (X/N) and their earned list; the GM roster shows what each player earned. Roadmap S-02 (north star of M-2).
+Add two optional reward rules next to the existing per-field rewards: a **threshold reward** ("nagroda za N pÃ³l") earned by every player who holds at least N claimed fields, and **line rewards** for completed rows and columns, earned by the player who claimed the last free field of the line. The GM picks, per rule, a multi-select list of catalog rewards to draw from; nothing selected = rule off. Concrete rewards are pre-drawn (per line at board generation, per player at join), and earned state is **derived from current claims**, so GM undo revokes automatically. Players see their progress (X/N) and their earned list; the GM roster shows what each player earned. Roadmap S-02 (north star of M-2).
 
 ## Current State Analysis
 
-- Rewards exist only per field: nullable `board_cells.reward_id` set at create (`src/lib/services/sessions.service.ts:129-134`). There is no ledger of earned rewards — a grant *is* cell occupancy (`claimed_by_player_id`, `claimed_at`), pair-checked (`supabase/migrations/20261003140000_session_players_and_claims.sql:31-40`).
+- Rewards exist only per field: nullable `board_cells.reward_id` set at create (`src/lib/services/sessions.service.ts:129-134`). There is no ledger of earned rewards â a grant *is* cell occupancy (`claimed_by_player_id`, `claimed_at`), pair-checked (`supabase/migrations/20261003140000_session_players_and_claims.sql:31-40`).
 - Claim is first-wins via a conditional `UPDATE` in `claim_board_cell` (`supabase/migrations/20261003190000_player_claim_token.sql:118-221`); the API returns `{ cell }` (`src/pages/api/play/claim.ts:65`).
-- GM undo clears occupancy and keeps `reward_id` (`supabase/migrations/20261003200000_undo_board_cell.sql`), so the field returns to mystery and can be reclaimed — FR-012 semantics (`context/archive/2026-10-03-gm-undo-field-claim/plan-brief.md`).
-- Layout is a flat `position` 0…size²−1, row-major; sizes 3/4/5 (`src/types.ts:10-12`). No row/column derivation exists yet.
+- GM undo clears occupancy and keeps `reward_id` (`supabase/migrations/20261003200000_undo_board_cell.sql`), so the field returns to mystery and can be reclaimed â FR-012 semantics (`context/archive/2026-10-03-gm-undo-field-claim/plan-brief.md`).
+- Layout is a flat `position` 0â¦sizeÂ²â1, row-major; sizes 3/4/5 (`src/types.ts:10-12`). No row/column derivation exists yet.
 - Player colours repeat after 8 seats (`join_session_player`, `20261003190000_player_claim_token.sql:104`), so "my" identity must come from `claim_token` (cookie, `src/lib/player-cookie.ts`), never from colour.
-- Session creation: `generateBoard` (injectable `random`, `src/lib/services/board-generator.ts:49-56`) → insert `sessions` → insert `board_cells` with the GM's RLS client (`sessions.service.ts:102-141`). Validation in `createSessionSchema` (`src/lib/schemas/session.ts:17-48`). Regenerate prefills size + per-field reward counts (`src/lib/services/session-prefill.ts`, `src/pages/sessions/new/index.astro:31-39`).
+- Session creation: `generateBoard` (injectable `random`, `src/lib/services/board-generator.ts:49-56`) â insert `sessions` â insert `board_cells` with the GM's RLS client (`sessions.service.ts:102-141`). Validation in `createSessionSchema` (`src/lib/schemas/session.ts:17-48`). Regenerate prefills size + per-field reward counts (`src/lib/services/session-prefill.ts`, `src/pages/sessions/new/index.astro:31-39`).
 - Player hidden-info rule: unclaimed rewarded cells expose only `hasReward`; reward type is revealed after claim (`src/types.ts:68-78`, `get_active_board_by_code`).
-- UI: `NewSessionForm.tsx` (size radio, phrases, per-reward counts); `PlayerBoard.tsx` (5 s poll, claim → flip, roster nick/colour); `GmBoard.tsx` (5 s poll, undo confirm, roster nick/colour at ~L308-321). Primitives available: `checkbox`, `input`, `label`, `badge` in `src/components/ui/`.
+- UI: `NewSessionForm.tsx` (size radio, phrases, per-reward counts); `PlayerBoard.tsx` (5 s poll, claim â flip, roster nick/colour); `GmBoard.tsx` (5 s poll, undo confirm, roster nick/colour at ~L308-321). Primitives available: `checkbox`, `input`, `label`, `badge` in `src/components/ui/`.
 
 ## Desired End State
 
-- On `/sessions/new` the GM sees two new sections: **"Nagroda za wiersz/kolumnę"** (multi-select catalog checklist, nothing selected by default) and **"Nagroda za [N] pól"** (number input defaulting to the board size + multi-select catalog checklist, nothing selected by default). Empty selection = that rule is off.
+- On `/sessions/new` the GM sees two new sections: **"Nagroda za wiersz/kolumnÄ"** (multi-select catalog checklist, nothing selected by default) and **"Nagroda za [N] pÃ³l"** (number input defaulting to the board size + multi-select catalog checklist, nothing selected by default). Empty selection = that rule is off.
 - When line rewards are on, every row and every column of the board has one reward pre-drawn (with replacement) from the selected list. When the threshold rule is on, each player gets one reward pre-drawn from the threshold list when they first take a seat.
-- A line is **complete** when all its fields are claimed (by anyone); its reward goes to the player who claimed the line's field with the latest `claimed_at`. Each completed line is a separate reward. The threshold reward is earned once per player when their claimed count ≥ N; every such player earns it.
+- A line is **complete** when all its fields are claimed (by anyone); its reward goes to the player who claimed the line's field with the latest `claimed_at`. Each completed line is a separate reward. The threshold reward is earned once per player when their claimed count â¥ N; every such player earns it.
 - Undo of any field automatically revokes a broken line and a threshold the player no longer meets; reclaiming restores the same pre-drawn reward (to the new completer, for lines).
-- Player board shows "X/N pól" (threshold rule on) and "Twoje nagrody" with earned threshold/line rewards, updated straight from the claim response and on each poll. GM roster lists earned threshold/line rewards per player.
+- Player board shows "X/N pÃ³l" (threshold rule on) and "Twoje nagrody" with earned threshold/line rewards, updated straight from the claim response and on each poll. GM roster lists earned threshold/line rewards per player.
 - Sessions without rules (all existing ones, and new ones with nothing selected) behave exactly as today; per-field rewards unchanged.
 
-Verify: `npm run test:unit`, `npm run test:integration` (new suite), `npm run lint`, `npx astro check`, `npm run build`; manual walkthrough on the kitchen sinks and a 3×3 table run.
+Verify: `npm run test:unit`, `npm run test:integration` (new suite), `npm run lint`, `npx astro check`, `npm run build`; manual walkthrough on the kitchen sinks and a 3Ã3 table run.
 
 ### Key Discoveries:
 
 - Grant = occupancy pattern makes derivation natural; no undo RPC change needed (`20261003200000_undo_board_cell.sql`).
 - Row-major positions: `row = floor(pos / size)`, `column = pos % size` (`PlayerBoard.tsx` grid ordering by `position`).
-- Colours are not unique (`20261003190000_player_claim_token.sql:104`) — key progress on `claim_token`.
-- `generateBoard` already takes an injectable `random` for deterministic unit tests (`board-generator.ts:54-56`; cookbook `context/foundation/test-plan.md` §6).
+- Colours are not unique (`20261003190000_player_claim_token.sql:104`) â key progress on `claim_token`.
+- `generateBoard` already takes an injectable `random` for deterministic unit tests (`board-generator.ts:54-56`; cookbook `context/foundation/test-plan.md` Â§6).
 - Test-plan risk #7 (undo looks free but grant wrong) is the integration layer for this change (`context/foundation/test-plan.md:48,63`).
 
 ## What We're NOT Doing
 
-- Diagonals or other patterns (full board, corners) — rows and columns only.
-- Per-player-owned lines (all fields by one player) or team-wide line rewards — completer rule only.
-- Repeated threshold rewards (every multiple of N) — threshold pays once per player.
-- Drawing rewards at the moment of earning or a grant ledger — rewards are pre-drawn, state is derived.
-- New claim animations, banners, toasts or confetti — satisfaction comes from visible progress and the earned list (existing flip stays).
+- Diagonals or other patterns (full board, corners) â rows and columns only.
+- Per-player-owned lines (all fields by one player) or team-wide line rewards â completer rule only.
+- Repeated threshold rewards (every multiple of N) â threshold pays once per player.
+- Drawing rewards at the moment of earning or a grant ledger â rewards are pre-drawn, state is derived.
+- New claim animations, banners, toasts or confetti â satisfaction comes from visible progress and the earned list (existing flip stays).
 - Showing other players' earned rewards on the player board; showing line-reward markers on the board edges.
 - Forcing rules onto existing sessions or migrating them; changing per-field reward behaviour, undo RPC, or join-by-code flow.
-- E2E (Playwright) coverage for this change — unit + integration only.
+- E2E (Playwright) coverage for this change â unit + integration only.
 - Custom (non-catalog) rewards or catalog changes.
 
 ## Implementation Approach
 
-Store **rules and pre-drawn rewards**, derive **earned state**. One pure TypeScript function `deriveRewardProgress` computes counts, completed lines, completers and threshold earnings from claim data; both the GM snapshot (RLS-scoped reads) and the player snapshot (new SECURITY DEFINER RPC keyed by `claim_token`) feed it. The player RPC only reveals a line reward once the line is fully claimed and the player's threshold reward once they hold ≥ N fields, preserving the existing mystery rule. Order: schema → pure logic → create/regenerate → boards.
+Store **rules and pre-drawn rewards**, derive **earned state**. One pure TypeScript function `deriveRewardProgress` computes counts, completed lines, completers and threshold earnings from claim data; both the GM snapshot (RLS-scoped reads) and the player snapshot (new SECURITY DEFINER RPC keyed by `claim_token`) feed it. The player RPC only reveals a line reward once the line is fully claimed and the player's threshold reward once they hold â¥ N fields, preserving the existing mystery rule. Order: schema â pure logic â create/regenerate â boards.
 
 ## Critical Implementation Details
 
@@ -71,9 +71,9 @@ Persist rules and pre-drawn rewards, draw threshold rewards on join, and expose 
 **Intent**: Add storage for the GM's selected reward lists, the per-line pre-drawn rewards, the threshold value and the per-player drawn threshold reward, with RLS matching `board_cells`.
 
 **Contract**:
-- `sessions.threshold_count smallint NULL` — CHECK `threshold_count IS NULL OR threshold_count BETWEEN 1 AND size*size`. NULL = threshold rule off.
-- `session_reward_pool (session_id uuid FK sessions ON DELETE CASCADE, kind text CHECK IN ('line','threshold'), reward_id uuid FK rewards, PRIMARY KEY (session_id, kind, reward_id))` — the GM's selections (source for regenerate prefill and join draw).
-- `board_lines (session_id uuid FK sessions ON DELETE CASCADE, axis text CHECK IN ('row','column'), index smallint CHECK >= 0, reward_id uuid NOT NULL FK rewards, PRIMARY KEY (session_id, axis, index))` — rows exist only when line rewards are on (2×size rows).
+- `sessions.threshold_count smallint NULL` â CHECK `threshold_count IS NULL OR threshold_count BETWEEN 1 AND size*size`. NULL = threshold rule off.
+- `session_reward_pool (session_id uuid FK sessions ON DELETE CASCADE, kind text CHECK IN ('line','threshold'), reward_id uuid FK rewards, PRIMARY KEY (session_id, kind, reward_id))` â the GM's selections (source for regenerate prefill and join draw).
+- `board_lines (session_id uuid FK sessions ON DELETE CASCADE, axis text CHECK IN ('row','column'), index smallint CHECK >= 0, reward_id uuid NOT NULL FK rewards, PRIMARY KEY (session_id, axis, index))` â rows exist only when line rewards are on (2Ãsize rows).
 - `session_players.threshold_reward_id uuid NULL FK rewards`.
 - RLS enabled on both new tables: `SELECT` and `INSERT` for `authenticated` where the session's `gm_id = auth.uid()`; no UPDATE/DELETE policies; no `anon` policies (players read via RPC).
 
@@ -91,7 +91,7 @@ Persist rules and pre-drawn rewards, draw threshold rewards on join, and expose 
 
 **Intent**: Give the server everything `deriveRewardProgress` needs for one player without leaking undrawn/unearned rewards.
 
-**Contract**: `get_player_reward_inputs(p_code text, p_claim_token uuid) RETURNS jsonb`, SECURITY DEFINER, `GRANT EXECUTE TO anon, authenticated`; works for active and closed sessions (like `get_active_board_by_code`). Returns NULL when the code is unknown or the token is not a seat of that session. Shape: `{ size, threshold_count, threshold_reward: {slug,label} | null (only when the player's claimed count ≥ threshold_count), cells: [{ position, claimed_at, is_mine }] (claimed cells only), lines: [{ axis, index, slug, label }] (only lines whose every cell is claimed) }`.
+**Contract**: `get_player_reward_inputs(p_code text, p_claim_token uuid) RETURNS jsonb`, SECURITY DEFINER, `GRANT EXECUTE TO anon, authenticated`; works for active and closed sessions (like `get_active_board_by_code`). Returns NULL when the code is unknown or the token is not a seat of that session. Shape: `{ size, threshold_count, threshold_reward: {slug,label} | null (only when the player's claimed count â¥ threshold_count), cells: [{ position, claimed_at, is_mine }] (claimed cells only), lines: [{ axis, index, slug, label }] (only lines whose every cell is claimed) }`.
 
 #### 4. Types
 
@@ -140,7 +140,7 @@ Line-reward drawing and earned-state derivation as pure, unit-tested functions.
 
 **Intent**: Draw one reward per row and per column from the line list (with replacement) using the injected `random`.
 
-**Contract**: `drawLineRewards(input: { size: number; lineRewardIds: string[]; random?: () => number }): GeneratedLine[]` with `GeneratedLine { axis: LineAxis; index: number; rewardId: string }` (in `src/types.ts`); returns `[]` when the list is empty, else exactly `2 × size` entries (rows 0…size−1, columns 0…size−1).
+**Contract**: `drawLineRewards(input: { size: number; lineRewardIds: string[]; random?: () => number }): GeneratedLine[]` with `GeneratedLine { axis: LineAxis; index: number; rewardId: string }` (in `src/types.ts`); returns `[]` when the list is empty, else exactly `2 Ã size` entries (rows 0â¦sizeâ1, columns 0â¦sizeâ1).
 
 #### 2. Derivation
 
@@ -151,10 +151,10 @@ Line-reward drawing and earned-state derivation as pure, unit-tested functions.
 **Contract**:
 `deriveRewardProgress(input: { size: number; cells: { position: number; claimedBy: string | null; claimedAt: string | null }[]; lines: { axis: LineAxis; index: number; reward: RewardRef }[]; thresholdCount: number | null; thresholdRewardByPlayer: Map<string, RewardRef | null> }): Map<string, PlayerRewardProgress>`
 - `claimedBy` is an opaque player key (GM: player id; player path: `"me"` / `"other"`).
-- Line membership: row r = positions `r*size … r*size+size-1`; column c = positions `c, c+size, …`.
-- Line complete ⇔ every member cell claimed; completer = latest `claimedAt`, tie → higher `position`.
-- Threshold earned ⇔ `thresholdCount != null` and `claimedCount >= thresholdCount` and player has a drawn reward; earned once.
-- Every key with ≥ 1 claim or a threshold entry appears in the result.
+- Line membership: row r = positions `r*size â¦ r*size+size-1`; column c = positions `c, c+size, â¦`.
+- Line complete â every member cell claimed; completer = latest `claimedAt`, tie â higher `position`.
+- Threshold earned â `thresholdCount != null` and `claimedCount >= thresholdCount` and player has a drawn reward; earned once.
+- Every key with â¥ 1 claim or a threshold entry appears in the result.
 
 #### 3. Unit tests
 
@@ -194,13 +194,13 @@ GM configures the rules on create; regenerate carries them over.
 
 **Intent**: Validate the new optional inputs.
 
-**Contract**: `lineRewardIds: uuid[]` (default `[]`, unique), `thresholdRewardIds: uuid[]` (default `[]`, unique), `thresholdCount: int | null` (optional). `superRefine`: when `thresholdRewardIds` is non-empty, `thresholdCount` is required and in `1…size²`; when empty, `thresholdCount` is normalised to `null`.
+**Contract**: `lineRewardIds: uuid[]` (default `[]`, unique), `thresholdRewardIds: uuid[]` (default `[]`, unique), `thresholdCount: int | null` (optional). `superRefine`: when `thresholdRewardIds` is non-empty, `thresholdCount` is required and in `1â¦sizeÂ²`; when empty, `thresholdCount` is normalised to `null`.
 
 #### 2. Service
 
 **File**: `src/lib/services/sessions.service.ts` (`createSession`)
 
-**Intent**: Validate all selected ids against the catalog (same `UNKNOWN_REWARD`-style error as per-field rewards → 400), store `threshold_count` on the session insert, then insert `session_reward_pool` rows and `drawLineRewards` output into `board_lines` after `board_cells`.
+**Intent**: Validate all selected ids against the catalog (same `UNKNOWN_REWARD`-style error as per-field rewards â 400), store `threshold_count` on the session insert, then insert `session_reward_pool` rows and `drawLineRewards` output into `board_lines` after `board_cells`.
 
 **Contract**: Same RLS client and sequential-insert pattern as `board_cells` (`sessions.service.ts:112-141`); errors propagate as today.
 
@@ -216,7 +216,7 @@ GM configures the rules on create; regenerate carries them over.
 
 **Files**: `src/components/sessions/NewSessionForm.tsx` (optionally a new `RewardRulesFields.tsx` beside it), `src/components/hooks/useCreateSession.ts`
 
-**Intent**: Two sections after the per-field rewards: "Nagroda za wiersz/kolumnę" (catalog checklist using `Checkbox` + `Label`, none checked) and "Nagroda za [N] pól" (number `Input`, default = board size, follows size changes until the GM edits it, clamped 1…size²; catalog checklist, none checked). Helper text: nothing selected = no reward of this kind; several selected = drawn randomly.
+**Intent**: Two sections after the per-field rewards: "Nagroda za wiersz/kolumnÄ" (catalog checklist using `Checkbox` + `Label`, none checked) and "Nagroda za [N] pÃ³l" (number `Input`, default = board size, follows size changes until the GM edits it, clamped 1â¦sizeÂ²; catalog checklist, none checked). Helper text: nothing selected = no reward of this kind; several selected = drawn randomly.
 
 **Contract**: Submit payload includes `lineRewardIds`, `thresholdRewardIds`, `thresholdCount` (null when no threshold rewards selected). Tokens/role classes only; `cursor-pointer` on interactive labels/buttons (lessons); any new file added to `SCOPED_FILES` in `scripts/check-ui-literals.mjs`.
 
@@ -240,7 +240,7 @@ GM configures the rules on create; regenerate carries them over.
 
 **File**: `tests/integration/threshold-pattern-rewards.test.ts` (new; create-validation cases)
 
-**Intent**: See Testing Strategy — create cases.
+**Intent**: See Testing Strategy â create cases.
 
 **Contract**: Follows `tests/integration/create-session-board.test.ts` setup.
 
@@ -276,7 +276,7 @@ Serve derived progress to players and earned rewards to the GM roster.
 
 **File**: `src/lib/services/sessions.service.ts`
 
-**Intent**: `getPlayerRewardProgress(supabase, code, claimToken)` calls `get_player_reward_inputs`, maps `is_mine` → `"me"`/`"other"`, runs `deriveRewardProgress`, returns the `"me"` entry, or `null` when the RPC returns NULL or the session has no rules (`threshold_count` null and no lines).
+**Intent**: `getPlayerRewardProgress(supabase, code, claimToken)` calls `get_player_reward_inputs`, maps `is_mine` â `"me"`/`"other"`, runs `deriveRewardProgress`, returns the `"me"` entry, or `null` when the RPC returns NULL or the session has no rules (`threshold_count` null and no lines).
 
 **Contract**: Returns `PlayerRewardProgress | null`; RPC errors propagate.
 
@@ -284,7 +284,7 @@ Serve derived progress to players and earned rewards to the GM roster.
 
 **Files**: `src/pages/api/play/board.ts`, `src/pages/api/play/claim.ts`
 
-**Intent**: Board GET reads the player cookie (`readPlayerIdentity`) and attaches `progress` (null without a valid identity — board itself still served). Claim success attaches `progress` computed after the claim so the player sees it immediately.
+**Intent**: Board GET reads the player cookie (`readPlayerIdentity`) and attaches `progress` (null without a valid identity â board itself still served). Claim success attaches `progress` computed after the claim so the player sees it immediately.
 
 **Contract**: `PlayerBoard.progress`, `ClaimSuccessResponse.progress`; status codes and conflict body unchanged. A progress failure is reported via `reportError` and yields `progress: null` rather than failing the claim.
 
@@ -341,7 +341,7 @@ Serve derived progress to players and earned rewards to the GM roster.
 
 #### Manual Verification:
 
-- 3×3 session with both rules, two browsers: completing a row shows the line reward for the completer immediately; reaching N shows the threshold reward; GM roster shows both
+- 3Ã3 session with both rules, two browsers: completing a row shows the line reward for the completer immediately; reaching N shows the threshold reward; GM roster shows both
 - GM undo of a field in the completed line removes the line reward on GM roster at once and on the player board within one poll
 - An existing (pre-change) session plays exactly as before; no progress section shown
 - Kitchen sinks for player board and GM board render new states token-clean on a phone-width viewport
@@ -354,30 +354,30 @@ Serve derived progress to players and earned rewards to the GM roster.
 
 ### Unit Tests:
 
-- `deriveRewardProgress`: row/column membership for sizes 3, 4, 5; completer = latest `claimedAt` (row claimed A, A, then B → B); tie → higher position; one claim completing a row and a column at once → 2 line rewards; two completed rows by one player → 2 entries; threshold at exactly N and above → earned once; below N → not earned; `thresholdCount` null → never; no lines → `lines: []`; player without drawn reward → no threshold.
-- `drawLineRewards`: empty list → `[]`; `2 × size` entries with ids from the list; deterministic with fixed RNG.
+- `deriveRewardProgress`: row/column membership for sizes 3, 4, 5; completer = latest `claimedAt` (row claimed A, A, then B â B); tie â higher position; one claim completing a row and a column at once â 2 line rewards; two completed rows by one player â 2 entries; threshold at exactly N and above â earned once; below N â not earned; `thresholdCount` null â never; no lines â `lines: []`; player without drawn reward â no threshold.
+- `drawLineRewards`: empty list â `[]`; `2 Ã size` entries with ids from the list; deterministic with fixed RNG.
 - Prefill helper returns rules from source rows.
 
 ### Integration Tests:
 
-- Create: rules stored (`board_lines` = 2×size with selected ids, pool rows, `threshold_count`); unknown reward id → 400; threshold ids with `thresholdCount` 0 or > size² → 400; body without new fields → rule-less session (backward compat).
+- Create: rules stored (`board_lines` = 2Ãsize with selected ids, pool rows, `threshold_count`); unknown reward id â 400; threshold ids with `thresholdCount` 0 or > sizeÂ² â 400; body without new fields â rule-less session (backward compat).
 - Join: player on threshold session gets `threshold_reward_id` from the pool; rejoin via token keeps it.
-- Claim 3×3, threshold N = 2: A claims 0, 1; B claims 2 → B earns row 0, A earns threshold, B no threshold; claim response `progress` matches.
-- GM undo position 1 → A loses threshold, B loses row 0 (player board + GM snapshot).
-- A reclaims 1 → A is completer of row 0 with the same reward; A threshold restored.
+- Claim 3Ã3, threshold N = 2: A claims 0, 1; B claims 2 â B earns row 0, A earns threshold, B no threshold; claim response `progress` matches.
+- GM undo position 1 â A loses threshold, B loses row 0 (player board + GM snapshot).
+- A reclaims 1 â A is completer of row 0 with the same reward; A threshold restored.
 - Hidden info: before the line is complete, `progress` holds no line rewards; before N, `thresholdReward` is null.
 - Rule-less session: `progress` null, roster `earned` empty, per-field reward reveal unchanged.
 
 ### Manual Testing Steps:
 
-1. Create a 3×3 session selecting two line rewards and one threshold reward with N = 3; join with two phones.
+1. Create a 3Ã3 session selecting two line rewards and one threshold reward with N = 3; join with two phones.
 2. Complete a row with the second player claiming the last field; check both boards and GM roster.
 3. Undo a field in that row as GM; confirm revocation, then reclaim.
-4. Open an old session from the dashboard and play a claim — no new UI.
+4. Open an old session from the dashboard and play a claim â no new UI.
 
 ## Performance Considerations
 
-Derivation is O(size²) per snapshot (≤ 25 cells, ≤ 10 lines) on every 5 s poll — negligible. The player board poll adds one RPC call; acceptable at table scale (≤ 10 players).
+Derivation is O(sizeÂ²) per snapshot (â¤ 25 cells, â¤ 10 lines) on every 5 s poll â negligible. The player board poll adds one RPC call; acceptable at table scale (â¤ 10 players).
 
 ## Migration Notes
 
@@ -386,26 +386,26 @@ Additive only: nullable column, nullable FK, two new tables. Existing sessions h
 ## References
 
 - Roadmap item: `context/foundation/roadmap.md` (S-02)
-- PRD: `context/foundation/prd-v2.md` (Scope §Nagrody, Business Logic Changes, Constraints)
+- PRD: `context/foundation/prd-v2.md` (Scope Â§Nagrody, Business Logic Changes, Constraints)
 - Claim RPC: `supabase/migrations/20261003190000_player_claim_token.sql:118-221`
 - Undo RPC: `supabase/migrations/20261003200000_undo_board_cell.sql`
 - Board generator: `src/lib/services/board-generator.ts:49-125`
 - Create flow: `src/lib/services/sessions.service.ts:75-145`, `src/lib/schemas/session.ts:17-48`
 - Prior undo semantics: `context/archive/2026-10-03-gm-undo-field-claim/plan-brief.md`
-- Test cookbook: `context/foundation/test-plan.md` §6
+- Test cookbook: `context/foundation/test-plan.md` Â§6
 
 ## Progress
 
-> Convention: `- [ ]` pending, `- [x]` done. Append ` — <commit sha>` when a step lands. Do not rename step titles. See `references/progress-format.md`.
+> Convention: `- [ ]` pending, `- [x]` done. Append ` â <commit sha>` when a step lands. Do not rename step titles. See `references/progress-format.md`.
 
 ### Phase 1: Data model & RPCs
 
 #### Automated
 
-- [x] 1.1 Migration applies on local Supabase: `npx supabase migration up --local` — 956b324
-- [x] 1.2 Regenerated types compile: `npx astro check` — 956b324
-- [x] 1.3 Lint passes: `npm run lint` — 956b324
-- [x] 1.4 Existing integration suite still green (join, claim, undo, delete cascade): `npm run test:integration` — 956b324
+- [x] 1.1 Migration applies on local Supabase: `npx supabase migration up --local` â 956b324
+- [x] 1.2 Regenerated types compile: `npx astro check` â 956b324
+- [x] 1.3 Lint passes: `npm run lint` â 956b324
+- [x] 1.4 Existing integration suite still green (join, claim, undo, delete cascade): `npm run test:integration` â 956b324
 
 #### Manual
 
@@ -415,9 +415,9 @@ Additive only: nullable column, nullable FK, two new tables. Existing sessions h
 
 #### Automated
 
-- [x] 2.1 Unit tests pass: `npm run test:unit` � 1406e05
-- [x] 2.2 Type check passes: `npx astro check` � 1406e05
-- [x] 2.3 Lint passes: `npm run lint` � 1406e05
+- [x] 2.1 Unit tests pass: `npm run test:unit` â 1406e05
+- [x] 2.2 Type check passes: `npx astro check` â 1406e05
+- [x] 2.3 Lint passes: `npm run lint` â 1406e05
 
 #### Manual
 
@@ -427,11 +427,11 @@ Additive only: nullable column, nullable FK, two new tables. Existing sessions h
 
 #### Automated
 
-- [ ] 3.1 Unit tests pass (incl. prefill): `npm run test:unit`
-- [ ] 3.2 Integration create cases pass: `npm run test:integration`
-- [ ] 3.3 Type check: `npx astro check`
-- [ ] 3.4 Lint incl. UI literals: `npm run lint`
-- [ ] 3.5 Build: `npm run build`
+- [x] 3.1 Unit tests pass (incl. prefill): `npm run test:unit`
+- [x] 3.2 Integration create cases pass: `npm run test:integration`
+- [x] 3.3 Type check: `npx astro check`
+- [x] 3.4 Lint incl. UI literals: `npm run lint`
+- [x] 3.5 Build: `npm run build`
 
 #### Manual
 
@@ -452,7 +452,7 @@ Additive only: nullable column, nullable FK, two new tables. Existing sessions h
 
 #### Manual
 
-- [ ] 4.7 3×3 session with both rules, two browsers: completing a row shows the line reward for the completer immediately; reaching N shows the threshold reward; GM roster shows both
+- [ ] 4.7 3Ã3 session with both rules, two browsers: completing a row shows the line reward for the completer immediately; reaching N shows the threshold reward; GM roster shows both
 - [ ] 4.8 GM undo of a field in the completed line removes the line reward on GM roster at once and on the player board within one poll
 - [ ] 4.9 An existing (pre-change) session plays exactly as before; no progress section shown
 - [ ] 4.10 Kitchen sinks for player board and GM board render new states token-clean on a phone-width viewport

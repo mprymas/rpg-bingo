@@ -2,7 +2,7 @@
 import Layout from "@/layouts/Layout.astro";
 import NewSessionForm from "@/components/sessions/NewSessionForm";
 import type { NewSessionFormPrefill } from "@/components/sessions/NewSessionForm";
-import { aggregateRewardCountsFromCells, isBoardSize } from "@/lib/services/session-prefill";
+import { aggregateRewardCountsFromCells, isBoardSize, rewardRulesFromPoolRows } from "@/lib/services/session-prefill";
 import { reportError } from "@/lib/report-error";
 import { getSessionWithCells } from "@/lib/services/sessions.service";
 import { createClient } from "@/lib/supabase";
@@ -32,10 +32,17 @@ if (!catalogError && fromParam && UUID_RE.test(fromParam) && user) {
   try {
     const source = await getSessionWithCells(supabase, fromParam, user.id);
     if (source?.status === "active" && isBoardSize(source.size)) {
+      const { data: poolRows, error: poolError } = await supabase
+        .from("session_reward_pool")
+        .select("kind, reward_id")
+        .eq("session_id", source.id);
+      if (poolError) throw poolError;
+
       prefill = {
         size: source.size,
         rewards: aggregateRewardCountsFromCells(source.cells),
         replaceSessionId: source.id,
+        rewardRules: rewardRulesFromPoolRows(poolRows, source.threshold_count),
       };
     }
   } catch (prefillError) {

@@ -6,18 +6,21 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { ServerError } from "@/components/auth/ServerError";
+import { RewardRulesFields } from "@/components/sessions/RewardRulesFields";
 import { useCreateSession } from "@/components/hooks/useCreateSession";
 import { cn } from "@/lib/utils";
-import { BOARD_SIZES, type BoardSize, type Reward, type RewardCountInput } from "@/types";
+import { BOARD_SIZES, type BoardSize, type Reward, type RewardCountInput, type SessionRewardRules } from "@/types";
 
 type RewardOption = Pick<Reward, "id" | "slug" | "label" | "description">;
 
-export type NewSessionDemoState = "default" | "focus" | "disabled" | "error" | "empty" | "loading";
+export type NewSessionDemoState =
+  "default" | "focus" | "disabled" | "error" | "empty" | "loading" | "rules-selected" | "rules-invalid-threshold";
 
 export interface NewSessionFormPrefill {
   size: BoardSize;
   rewards: RewardCountInput[];
   replaceSessionId: string;
+  rewardRules?: SessionRewardRules;
 }
 
 interface CustomPhraseRow {
@@ -78,15 +81,71 @@ function initialPhrases(demoState?: NewSessionDemoState): CustomPhraseRow[] {
   return [{ text: "", guaranteed: false }];
 }
 
+function filterCatalogIds(ids: string[] | undefined, catalogIds: Set<string>): string[] {
+  if (!ids) return [];
+  return ids.filter((id) => catalogIds.has(id));
+}
+
+function initialLineRewardIds(
+  rewards: RewardOption[],
+  prefill: NewSessionFormPrefill | null,
+  demoState?: NewSessionDemoState,
+): string[] {
+  if (demoState === "rules-selected" && rewards.length > 0) {
+    return [rewards[0].id];
+  }
+  const catalogIds = new Set(rewards.map((r) => r.id));
+  return filterCatalogIds(prefill?.rewardRules?.lineRewardIds, catalogIds);
+}
+
+function initialThresholdRewardIds(
+  rewards: RewardOption[],
+  prefill: NewSessionFormPrefill | null,
+  demoState?: NewSessionDemoState,
+): string[] {
+  if ((demoState === "rules-selected" || demoState === "rules-invalid-threshold") && rewards.length > 0) {
+    return [rewards[rewards.length > 1 ? 1 : 0].id];
+  }
+  const catalogIds = new Set(rewards.map((r) => r.id));
+  return filterCatalogIds(prefill?.rewardRules?.thresholdRewardIds, catalogIds);
+}
+
+function initialThresholdCount(
+  size: BoardSize,
+  prefill: NewSessionFormPrefill | null,
+  demoState?: NewSessionDemoState,
+): { count: number; edited: boolean } {
+  if (demoState === "rules-invalid-threshold") {
+    return { count: 0, edited: true };
+  }
+  if (demoState === "rules-selected") {
+    return { count: size, edited: false };
+  }
+  const prefillCount = prefill?.rewardRules?.thresholdCount;
+  if (prefillCount != null && prefillCount >= 1) {
+    return { count: prefillCount, edited: true };
+  }
+  return { count: size, edited: false };
+}
+
 export default function NewSessionForm({ rewards, prefill = null, demoState }: Props) {
   const [size, setSize] = useState<BoardSize>(prefill?.size ?? 5);
   const [customPhrases, setCustomPhrases] = useState<CustomPhraseRow[]>(() => initialPhrases(demoState));
   const [rewardCounts, setRewardCounts] = useState<Record<string, number>>(() =>
     initialRewardCounts(rewards, prefill?.rewards, demoState),
   );
+  const [lineRewardIds, setLineRewardIds] = useState<string[]>(() => initialLineRewardIds(rewards, prefill, demoState));
+  const [thresholdRewardIds, setThresholdRewardIds] = useState<string[]>(() =>
+    initialThresholdRewardIds(rewards, prefill, demoState),
+  );
+  const [thresholdState, setThresholdState] = useState(() =>
+    initialThresholdCount(prefill?.size ?? 5, prefill, demoState),
+  );
   const { pending, error, createSession } = useCreateSession();
 
   const maxCells = size * size;
+  const thresholdCount = Math.max(1, Math.min(maxCells, thresholdState.count || 1));
+  const displayThresholdCount = demoState === "rules-invalid-threshold" ? thresholdState.count : thresholdCount;
   const guaranteedCount = customPhrases.filter((row) => row.text.trim() && row.guaranteed).length;
   const rewardTotal = Object.values(rewardCounts).reduce((sum, count) => sum + count, 0);
   const overLimit = guaranteedCount > maxCells || rewardTotal > maxCells;
@@ -94,6 +153,9 @@ export default function NewSessionForm({ rewards, prefill = null, demoState }: P
   const effectivePending = demoState === "loading" ? true : pending;
   const effectiveOverLimit = demoState === "disabled" ? true : overLimit;
   const effectiveError = demoState === "error" ? "Nie udało się utworzyć sesji" : error;
+  const thresholdInvalid =
+    demoState === "rules-invalid-threshold" ||
+    (thresholdRewardIds.length > 0 && (thresholdState.count < 1 || thresholdState.count > maxCells));
 
   function updatePhrase(index: number, patch: Partial<CustomPhraseRow>) {
     setCustomPhrases((rows) => rows.map((row, i) => (i === index ? { ...row, ...patch } : row)));
@@ -105,6 +167,25 @@ export default function NewSessionForm({ rewards, prefill = null, demoState }: P
 
   function addPhrase() {
     setCustomPhrases((rows) => [...rows, { text: "", guaranteed: false }]);
+  }
+
+  function toggleId(ids: string[], rewardId: string, checked: boolean): string[] {
+    if (checked) {
+      return ids.includes(rewardId) ? ids : [...ids, rewardId];
+    }
+    return ids.filter((id) => id !== rewardId);
+  }
+
+  function handleSizeChange(value: string) {
+    const next = Number(value) as BoardSize;
+    setSize(next);
+    setThresholdState((prev) => {
+      if (prev.edited) {
+        const nextMax = next * next;
+        return { ...prev, count: Math.max(1, Math.min(nextMax, prev.count || 1)) };
+      }
+      return { count: next, edited: false };
+    });
   }
 
   function handleSubmit(e: React.SubmitEvent<HTMLFormElement>) {
@@ -122,9 +203,9 @@ export default function NewSessionForm({ rewards, prefill = null, demoState }: P
         rewardId: reward.id,
         count: rewardCounts[reward.id] ?? 0,
       })),
-      lineRewardIds: [],
-      thresholdRewardIds: [],
-      thresholdCount: null,
+      lineRewardIds,
+      thresholdRewardIds,
+      thresholdCount: thresholdRewardIds.length > 0 ? thresholdCount : null,
       ...(prefill?.replaceSessionId ? { replaceSessionId: prefill.replaceSessionId } : {}),
     });
   }
@@ -133,13 +214,7 @@ export default function NewSessionForm({ rewards, prefill = null, demoState }: P
     <form onSubmit={handleSubmit} className="space-y-8" noValidate>
       <fieldset className="space-y-3">
         <legend className="text-muted-foreground text-sm font-medium">Rozmiar planszy</legend>
-        <RadioGroup
-          value={String(size)}
-          onValueChange={(value) => {
-            setSize(Number(value) as BoardSize);
-          }}
-          className="flex flex-wrap gap-3"
-        >
+        <RadioGroup value={String(size)} onValueChange={handleSizeChange} className="flex flex-wrap gap-3">
           {BOARD_SIZES.map((option) => {
             const id = demoState ? `size-${demoState}-${option}` : `size-${option}`;
             return (
@@ -253,6 +328,25 @@ export default function NewSessionForm({ rewards, prefill = null, demoState }: P
           Nagrody: {rewardTotal} / {maxCells}
         </p>
       </fieldset>
+
+      <RewardRulesFields
+        rewards={rewards}
+        lineRewardIds={lineRewardIds}
+        thresholdRewardIds={thresholdRewardIds}
+        thresholdCount={displayThresholdCount}
+        maxCells={maxCells}
+        thresholdInvalid={thresholdInvalid}
+        idPrefix={demoState ? `rules-${demoState}` : "rules"}
+        onLineRewardToggle={(rewardId, checked) => {
+          setLineRewardIds((ids) => toggleId(ids, rewardId, checked));
+        }}
+        onThresholdRewardToggle={(rewardId, checked) => {
+          setThresholdRewardIds((ids) => toggleId(ids, rewardId, checked));
+        }}
+        onThresholdCountChange={(value) => {
+          setThresholdState({ count: value, edited: true });
+        }}
+      />
 
       <ServerError message={effectiveError} />
 

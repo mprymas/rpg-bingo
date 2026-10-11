@@ -25,8 +25,18 @@ export const createSessionSchema = z
       .refine((rewards) => new Set(rewards.map((r) => r.rewardId)).size === rewards.length, {
         message: "Identyfikatory nagród muszą być unikalne",
       }),
-    lineRewardIds: z.array(z.uuid()).default([]),
-    thresholdRewardIds: z.array(z.uuid()).default([]),
+    lineRewardIds: z
+      .array(z.uuid({ error: "Nieprawidłowy identyfikator nagrody" }))
+      .default([])
+      .refine((ids) => new Set(ids).size === ids.length, {
+        message: "Identyfikatory nagród za wiersz/kolumnę muszą być unikalne",
+      }),
+    thresholdRewardIds: z
+      .array(z.uuid({ error: "Nieprawidłowy identyfikator nagrody" }))
+      .default([])
+      .refine((ids) => new Set(ids).size === ids.length, {
+        message: "Identyfikatory nagród progowych muszą być unikalne",
+      }),
     thresholdCount: z.number().int().nullable().optional().default(null),
     replaceSessionId: z.uuid({ error: "Nieprawidłowy identyfikator sesji" }).optional(),
   })
@@ -48,6 +58,26 @@ export const createSessionSchema = z
         path: ["rewards"],
       });
     }
-  });
+
+    if (data.thresholdRewardIds.length > 0) {
+      if (data.thresholdCount == null) {
+        ctx.addIssue({
+          code: "custom",
+          message: "Podaj liczbę pól dla nagrody progowej",
+          path: ["thresholdCount"],
+        });
+      } else if (data.thresholdCount < 1 || data.thresholdCount > maxCells) {
+        ctx.addIssue({
+          code: "custom",
+          message: `Liczba pól dla nagrody progowej musi być między 1 a ${maxCells}`,
+          path: ["thresholdCount"],
+        });
+      }
+    }
+  })
+  .transform((data) => ({
+    ...data,
+    thresholdCount: data.thresholdRewardIds.length === 0 ? null : (data.thresholdCount ?? null),
+  }));
 
 export type CreateSessionSchemaInput = z.infer<typeof createSessionSchema>;

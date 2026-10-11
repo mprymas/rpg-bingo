@@ -1,6 +1,6 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "@/db/database.types";
-import { generateBoard } from "@/lib/services/board-generator";
+import { drawLineRewards, generateBoard } from "@/lib/services/board-generator";
 import { generateSessionCode } from "@/lib/services/session-code";
 import type {
   ClaimOccupant,
@@ -98,12 +98,26 @@ export async function createSession(
       throw new SessionServiceError("UNKNOWN_REWARD");
     }
   }
+  for (const rewardId of command.lineRewardIds) {
+    if (!rewardIds.has(rewardId)) {
+      throw new SessionServiceError("UNKNOWN_REWARD");
+    }
+  }
+  for (const rewardId of command.thresholdRewardIds) {
+    if (!rewardIds.has(rewardId)) {
+      throw new SessionServiceError("UNKNOWN_REWARD");
+    }
+  }
 
   const generatedCells = generateBoard({
     size: command.size,
     predefined: phrases.map((p) => p.text),
     customPhrases: command.customPhrases,
     rewards: command.rewards,
+  });
+  const generatedLines = drawLineRewards({
+    size: command.size,
+    lineRewardIds: command.lineRewardIds,
   });
 
   for (let attempt = 0; attempt < MAX_CODE_ATTEMPTS; attempt++) {
@@ -115,6 +129,7 @@ export async function createSession(
         code,
         size: command.size,
         gm_id: user.id,
+        threshold_count: command.thresholdCount,
       })
       .select("id, code")
       .single();
@@ -136,6 +151,38 @@ export async function createSession(
     const { error: cellsError } = await supabase.from("board_cells").insert(cellRows);
     if (cellsError) {
       throw cellsError;
+    }
+
+    const poolRows = [
+      ...command.lineRewardIds.map((rewardId) => ({
+        session_id: session.id,
+        kind: "line" as const,
+        reward_id: rewardId,
+      })),
+      ...command.thresholdRewardIds.map((rewardId) => ({
+        session_id: session.id,
+        kind: "threshold" as const,
+        reward_id: rewardId,
+      })),
+    ];
+    if (poolRows.length > 0) {
+      const { error: poolError } = await supabase.from("session_reward_pool").insert(poolRows);
+      if (poolError) {
+        throw poolError;
+      }
+    }
+
+    if (generatedLines.length > 0) {
+      const lineRows = generatedLines.map((line) => ({
+        session_id: session.id,
+        axis: line.axis,
+        index: line.index,
+        reward_id: line.rewardId,
+      }));
+      const { error: linesError } = await supabase.from("board_lines").insert(lineRows);
+      if (linesError) {
+        throw linesError;
+      }
     }
 
     return { id: session.id, code: session.code };
