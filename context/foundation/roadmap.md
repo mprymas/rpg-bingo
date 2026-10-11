@@ -44,7 +44,7 @@ Po rozegranej sesji przy stole wyszły trzy braki: MG nie sprząta starych sesji
 | ---- | -------------------------- | ------------------------------------------------------------------------------------ | ------------- | ------------ | ------ |
 | S-01 | player-join-via-qr         | gracz dołącza skanując QR; join wpisanym kodem nadal działa                          | —             | US-01        | in-progress |
 | S-02 | threshold-pattern-rewards  | gracz zdobywa nagrody za liczbę pól / układ; przy claimie czuje satysfakcję; per-pole bez regresji | —             | US-01        | ready  |
-| S-03 | gm-delete-session          | MG usuwa sesję (dowolny status) po potwierdzeniu; bez potwierdzenia nic nie znika      | —             | US-02        | in-progress |
+| S-03 | gm-delete-session          | MG usuwa sesję (dowolny status) po potwierdzeniu; bez potwierdzenia nic nie znika      | —             | US-02        | done |
 
 ## Streams
 
@@ -109,7 +109,7 @@ Brak nowych Foundations — baseline pokrywa warstwy potrzebne do S-01…S-03; k
 - **Blockers:** —
 - **Unknowns:** —
 - **Risk:** Niezależny od stołu QR/nagród; przy `speed` warto brać równolegle, żeby MG nie utknął w zaśmieconej liście.
-- **Status:** in-progress
+- **Status:** done
 
 ## Backlog Handoff
 
@@ -145,3 +145,4 @@ This table is the clean handoff to Jira/Linear or any MCP-backed backlog. Includ
 - **S-03: gracz oznacza wolne pole jako swoje, natychmiast widzi czy zdobył nagrodę; pole staje się niedostępne dla innych (zajętość widoczna u innych i u MG w ~10s przez polling ~5s); MG mapuje kolor → nick → nagrodę przez roster.** — Archived 2026-10-03 → context/archive/2026-10-03-player-claim-field-reward/. Lesson: —.
 - **S-04: MG cofa błędne oznaczenie pola; pole wraca do puli wolnych, powiązana nagroda jest unieważniona.** — Archived 2026-10-03 → `context/archive/2026-10-03-gm-undo-field-claim/`. Lesson: —.
 - **S-05: MG generuje nową planszę z nowym kodem; gracze muszą dołączyć do niej od nowa.** — Archived 2026-10-11 → `context/archive/2026-10-11-gm-regenerate-board/`. Lesson: —.
+- **S-03: MG widzi listę sesji, wybiera usunięcie i po potwierdzeniu sesja znika niezależnie od statusu; bez potwierdzenia nic się nie kasuje (aktywna sesja nie znika przypadkiem).** — Archived 2026-10-11 → `context/archive/2026-10-11-gm-delete-session/`. Lesson: —.
