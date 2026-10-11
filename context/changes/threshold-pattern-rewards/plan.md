@@ -409,7 +409,7 @@ Additive only: nullable column, nullable FK, two new tables. Existing sessions h
 
 #### Manual
 
-- [x] 1.5 In local Supabase Studio, as `anon`, direct `SELECT` on `board_lines` / `session_reward_pool` returns no rows; `get_player_reward_inputs` with a foreign token returns NULL
+- [x] 1.5 In local Supabase Studio, as `anon`, direct `SELECT` on `board_lines` / `session_reward_pool` returns no rows; `get_player_reward_inputs` with a foreign token returns NULL — 457c9b1
 
 ### Phase 2: Pure reward logic
 
@@ -421,7 +421,7 @@ Additive only: nullable column, nullable FK, two new tables. Existing sessions h
 
 #### Manual
 
-- [x] 2.4 Reviewer reads the test names and confirms they match the agreed rules (completer, once-threshold, each line counts, rows/columns only)
+- [x] 2.4 Reviewer reads the test names and confirms they match the agreed rules (completer, once-threshold, each line counts, rows/columns only) — 457c9b1
 
 ### Phase 3: Create session & regenerate
 
@@ -435,9 +435,9 @@ Additive only: nullable column, nullable FK, two new tables. Existing sessions h
 
 #### Manual
 
-- [x] 3.6 `/sessions/new/kitchen-sink` rules sections render in all states, token-clean, keyboard-focusable
-- [x] 3.7 Changing board size updates the default N until it is edited manually
-- [x] 3.8 Regenerating a session with rules prefills both checklists and N
+- [x] 3.6 `/sessions/new/kitchen-sink` rules sections render in all states, token-clean, keyboard-focusable — 457c9b1
+- [x] 3.7 Changing board size updates the default N until it is edited manually — 457c9b1
+- [x] 3.8 Regenerating a session with rules prefills both checklists and N — 457c9b1
 
 ### Phase 4: Progress on player & GM boards
 
@@ -452,7 +452,7 @@ Additive only: nullable column, nullable FK, two new tables. Existing sessions h
 
 #### Manual
 
-- [x] 4.7 3×3 session with both rules, two browsers: completing a row shows the line reward for the completer immediately; reaching N shows the threshold reward; GM roster shows both
-- [x] 4.8 GM undo of a field in the completed line removes the line reward on GM roster at once and on the player board within one poll
-- [x] 4.9 An existing (pre-change) session plays exactly as before; no progress section shown
-- [x] 4.10 Kitchen sinks for player board and GM board render new states token-clean on a phone-width viewport
+- [x] 4.7 3×3 session with both rules, two browsers: completing a row shows the line reward for the completer immediately; reaching N shows the threshold reward; GM roster shows both — 457c9b1
+- [x] 4.8 GM undo of a field in the completed line removes the line reward on GM roster at once and on the player board within one poll — 457c9b1
+- [x] 4.9 An existing (pre-change) session plays exactly as before; no progress section shown — 457c9b1
+- [x] 4.10 Kitchen sinks for player board and GM board render new states token-clean on a phone-width viewport — 457c9b1
