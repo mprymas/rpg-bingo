@@ -1,4 +1,4 @@
-import type { BoardSize, CustomPhraseInput, GeneratedCell, RewardCountInput } from "@/types";
+import type { BoardSize, CustomPhraseInput, GeneratedCell, GeneratedLine, RewardCountInput } from "@/types";
 
 export type BoardGenerationErrorCode = "TOO_MANY_GUARANTEED" | "POOL_TOO_SMALL" | "TOO_MANY_REWARDS";
 
@@ -122,5 +122,27 @@ export function generateBoard(input: {
     result[positions[i]].rewardId = rewardList[i];
   }
 
+  return result;
+}
+
+/** Draw one reward per row and per column from the list (with replacement). */
+export function drawLineRewards(input: {
+  size: number;
+  lineRewardIds: string[];
+  random?: () => number;
+}): GeneratedLine[] {
+  if (input.lineRewardIds.length === 0) return [];
+
+  const random = input.random ?? defaultRandom;
+  const { size, lineRewardIds } = input;
+  const pick = (): string => lineRewardIds[Math.floor(random() * lineRewardIds.length)];
+
+  const result: GeneratedLine[] = [];
+  for (let index = 0; index < size; index++) {
+    result.push({ axis: "row", index, rewardId: pick() });
+  }
+  for (let index = 0; index < size; index++) {
+    result.push({ axis: "column", index, rewardId: pick() });
+  }
   return result;
 }

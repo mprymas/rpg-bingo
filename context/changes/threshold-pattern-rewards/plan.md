@@ -415,9 +415,9 @@ Additive only: nullable column, nullable FK, two new tables. Existing sessions h
 
 #### Automated
 
-- [ ] 2.1 Unit tests pass: `npm run test:unit`
-- [ ] 2.2 Type check passes: `npx astro check`
-- [ ] 2.3 Lint passes: `npm run lint`
+- [x] 2.1 Unit tests pass: `npm run test:unit`
+- [x] 2.2 Type check passes: `npx astro check`
+- [x] 2.3 Lint passes: `npm run lint`
 
 #### Manual
 

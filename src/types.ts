@@ -74,6 +74,12 @@ export interface GeneratedCell {
   rewardId: string | null;
 }
 
+export interface GeneratedLine {
+  axis: LineAxis;
+  index: number;
+  rewardId: string;
+}
+
 /** GM roster entry: nick shown in the player's assigned color. */
 export type SessionPlayerRosterEntry = Pick<SessionPlayer, "id" | "nick" | "color" | "created_at"> & {
   earned: {
