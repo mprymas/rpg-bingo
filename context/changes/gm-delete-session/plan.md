@@ -246,9 +246,9 @@ Additive RPC only; backward compatible. No backfill. Deploy migration before or 
 #### Automated
 
 - [ ] 1.1 Migration applies on local Supabase
-- [x] 1.2 Unit tests for delete error mapper pass (`npm run test:unit`)
-- [x] 1.3 Typecheck passes for touched TS
-- [x] 1.4 Lint passes on new API/service files (`npm run lint`)
+- [x] 1.2 Unit tests for delete error mapper pass (`npm run test:unit`) — 55bab84
+- [x] 1.3 Typecheck passes for touched TS — 55bab84
+- [x] 1.4 Lint passes on new API/service files (`npm run lint`) — 55bab84
 
 #### Manual
 
@@ -259,8 +259,8 @@ Additive RPC only; backward compatible. No backfill. Deploy migration before or 
 
 #### Automated
 
-- [ ] 2.1 Lint including ui-literals passes (`npm run lint`)
-- [ ] 2.2 Typecheck passes for UI changes
+- [x] 2.1 Lint including ui-literals passes (`npm run lint`)
+- [x] 2.2 Typecheck passes for UI changes
 
 #### Manual
 

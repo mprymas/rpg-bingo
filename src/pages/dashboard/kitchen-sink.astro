@@ -62,6 +62,24 @@ const sections = [
     kind: "error" as const,
   },
   {
+    id: "delete-confirm-active",
+    title: "Usuń — confirm (aktywna)",
+    description: "AlertDialog otwarty dla sesji aktywnej — mocniejsze ostrzeżenie o żywej planszy.",
+    kind: "delete-confirm-active" as const,
+  },
+  {
+    id: "delete-confirm-closed",
+    title: "Usuń — confirm (zamknięta)",
+    description: "AlertDialog otwarty dla sesji zamkniętej — krótkie ostrzeżenie o nieodwracalności.",
+    kind: "delete-confirm-closed" as const,
+  },
+  {
+    id: "delete-error",
+    title: "Usuń — błąd",
+    description: "Confirm otwarty z komunikatem błędu (demo nie woła API).",
+    kind: "delete-error" as const,
+  },
+  {
     id: "disabled",
     title: "disabled",
     description: "N/A — brak wyłączonych kontrolek na happy path panelu MG.",
@@ -74,6 +92,8 @@ const sections = [
     kind: "na" as const,
   },
 ];
+
+const deleteErrorCopy = "Nie udało się usunąć sesji";
 ---
 
 <Layout title="Kitchen sink — Panel MG">
@@ -114,6 +134,29 @@ const sections = [
               sessions={fixtureSessions}
               demo
               initialShowClosed
+              joinInputId={`dashboard-join-${section.id}`}
+            />
+          ) : section.kind === "delete-confirm-active" ? (
+            <DashboardPanel
+              sessions={fixtureSessions}
+              demo
+              initialDeleteOpenId="demo-active"
+              joinInputId={`dashboard-join-${section.id}`}
+            />
+          ) : section.kind === "delete-confirm-closed" ? (
+            <DashboardPanel
+              sessions={fixtureSessions}
+              demo
+              initialShowClosed
+              initialDeleteOpenId="demo-closed"
+              joinInputId={`dashboard-join-${section.id}`}
+            />
+          ) : section.kind === "delete-error" ? (
+            <DashboardPanel
+              sessions={fixtureSessions}
+              demo
+              initialDeleteOpenId="demo-active"
+              initialDeleteError={deleteErrorCopy}
               joinInputId={`dashboard-join-${section.id}`}
             />
           ) : (

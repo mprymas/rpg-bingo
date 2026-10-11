@@ -13,6 +13,10 @@ interface Props {
   focusDemo?: boolean;
   /** Kitchen-sink: start with closed sessions visible */
   initialShowClosed?: boolean;
+  /** Kitchen-sink: open delete confirm for this session id */
+  initialDeleteOpenId?: string;
+  /** Kitchen-sink: seed delete error in the open dialog */
+  initialDeleteError?: string | null;
   /** Disambiguate join input ids when multiple panels mount (kitchen-sink). */
   joinInputId?: string;
 }
@@ -23,6 +27,8 @@ const {
   demo = false,
   focusDemo = false,
   initialShowClosed = false,
+  initialDeleteOpenId,
+  initialDeleteError = null,
   joinInputId = "dashboard-session-code",
 } = Astro.props;
 ---
@@ -54,6 +60,8 @@ const {
       demo={demo}
       focusDemo={focusDemo}
       initialShowClosed={initialShowClosed}
+      initialDeleteOpenId={initialDeleteOpenId}
+      initialDeleteError={initialDeleteError}
       client:load
     />
 
