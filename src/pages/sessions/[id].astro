@@ -3,6 +3,7 @@ import Layout from "@/layouts/Layout.astro";
 import CloseRetryBanner from "@/components/sessions/CloseRetryBanner";
 import GmBoard from "@/components/sessions/GmBoard";
 import GmRegenerateControls from "@/components/sessions/GmRegenerateControls";
+import SessionJoinQr from "@/components/sessions/SessionJoinQr";
 import GmSuccessorNotice from "@/components/sessions/GmSuccessorNotice.astro";
 import { Badge } from "@/components/ui/badge";
 import { CLOSE_ERROR_MESSAGES, parseCloseErrorReason } from "@/lib/close-error-messages";
@@ -126,6 +127,7 @@ const showCloseRetry = Boolean(session && closeFailedReason && UUID_RE.test(clos
               <Badge variant="secondary">{statusLabel}</Badge>
               <span>{createdLabel}</span>
             </div>
+            <SessionJoinQr sessionCode={session.code} sessionStatus={session.status} client:load />
           </div>
 
           {showCloseRetry ? (

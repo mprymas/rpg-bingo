@@ -250,15 +250,15 @@ Visual gate + automated proof of payload + guard typed-code join.
 
 #### Automated
 
-- [x] 1.1 Unit tests pass for join URL helper (`npm run test:unit`)
-- [x] 1.2 Lint clean for new helper files (`npm run lint`)
+- [x] 1.1 Unit tests pass for join URL helper (`npm run test:unit`) — 93adaac
+- [x] 1.2 Lint clean for new helper files (`npm run lint`) — 93adaac
 
 ### Phase 2: SessionJoinQr island + board wiring
 
 #### Automated
 
-- [ ] 2.1 Lint clean with new island + dependency (`npm run lint`)
-- [ ] 2.2 Production build succeeds (`npm run build`)
+- [x] 2.1 Lint clean with new island + dependency (`npm run lint`)
+- [x] 2.2 Production build succeeds (`npm run build`)
 
 #### Manual
 
