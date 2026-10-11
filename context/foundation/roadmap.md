@@ -42,7 +42,7 @@ Po rozegranej sesji przy stole wyszły trzy braki: MG nie sprząta starych sesji
 
 | ID   | Change ID                  | Outcome (user can …)                                                                 | Prerequisites | PRD refs     | Status |
 | ---- | -------------------------- | ------------------------------------------------------------------------------------ | ------------- | ------------ | ------ |
-| S-01 | player-join-via-qr         | gracz dołącza skanując QR; join wpisanym kodem nadal działa                          | —             | US-01        | planning |
+| S-01 | player-join-via-qr         | gracz dołącza skanując QR; join wpisanym kodem nadal działa                          | —             | US-01        | in-progress |
 | S-02 | threshold-pattern-rewards  | gracz zdobywa nagrody za liczbę pól / układ; przy claimie czuje satysfakcję; per-pole bez regresji | —             | US-01        | ready  |
 | S-03 | gm-delete-session          | MG usuwa sesję (dowolny status) po potwierdzeniu; bez potwierdzenia nic nie znika      | —             | US-02        | in-progress |
 
@@ -84,7 +84,7 @@ Brak nowych Foundations — baseline pokrywa warstwy potrzebne do S-01…S-03; k
 - **Blockers:** —
 - **Unknowns:** —
 - **Risk:** Pierwszy widoczny win przy stole; regresja joinu kodem to hard guardrail — sekwencjonowane równolegle z nagradami, nie przed nimi na siłę.
-- **Status:** planning
+- **Status:** in-progress
 
 ### S-02: Nagrody za liczbę pól / układ + satysfakcja przy claim
 
