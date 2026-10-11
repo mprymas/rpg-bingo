@@ -282,8 +282,8 @@ Active-default dashboard list with “Pokaż zamknięte”, plus full automated 
 
 #### Automated
 
-- [x] 2.1 Integration: create with replaceSessionId closes source; foreign from rejected; close retry endpoint works after simulated close failure path
-- [x] 2.2 Lint / astro check clean for touched files
+- [x] 2.1 Integration: create with replaceSessionId closes source; foreign from rejected; close retry endpoint works after simulated close failure path — 6cb1da9
+- [x] 2.2 Lint / astro check clean for touched files — 6cb1da9
 
 #### Manual
 
@@ -294,8 +294,8 @@ Active-default dashboard list with “Pokaż zamknięte”, plus full automated 
 
 #### Automated
 
-- [ ] 3.1 Integration: old code returns closed + successorCode; claim on old fails; join successor succeeds; unknown still 404
-- [ ] 3.2 Lint clean
+- [x] 3.1 Integration: old code returns closed + successorCode; claim on old fails; join successor succeeds; unknown still 404
+- [x] 3.2 Lint clean
 
 #### Manual
 

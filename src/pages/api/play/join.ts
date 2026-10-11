@@ -14,12 +14,31 @@ function isUrlEncodedForm(request: Request): boolean {
   return contentType.split(";")[0].trim().toLowerCase() === "application/x-www-form-urlencoded";
 }
 
+function wantsJson(request: Request): boolean {
+  const accept = request.headers.get("accept");
+  if (!accept) return false;
+  return accept
+    .split(",")
+    .map((part) => part.split(";")[0].trim().toLowerCase())
+    .includes("application/json");
+}
+
+function json(body: unknown, status: number): Response {
+  return new Response(JSON.stringify(body), {
+    status,
+    headers: { "Content-Type": "application/json" },
+  });
+}
+
 export const POST: APIRoute = async (context) => {
   if (!isAllowedRequestOrigin(context.request)) {
     return new Response("Forbidden", { status: 403 });
   }
 
+  const asJson = wantsJson(context.request);
+
   if (!isUrlEncodedForm(context.request)) {
+    if (asJson) return json({ error: "Nieprawidłowe żądanie" }, 400);
     return context.redirect("/play");
   }
 
@@ -27,11 +46,13 @@ export const POST: APIRoute = async (context) => {
   try {
     form = await context.request.formData();
   } catch {
+    if (asJson) return json({ error: "Nieprawidłowe żądanie" }, 400);
     return context.redirect("/play");
   }
 
   const codeParsed = playJoinCodeSchema.safeParse(form.get("code"));
   if (!codeParsed.success) {
+    if (asJson) return json({ error: "Nieprawidłowy kod sesji" }, 400);
     return context.redirect("/play");
   }
   const code = codeParsed.data;
@@ -43,16 +64,19 @@ export const POST: APIRoute = async (context) => {
 
   try {
     const board = await getActiveBoardByCode(supabase, code);
-    if (!board) {
+    if (board?.status !== "active") {
+      if (asJson) return json({ error: "Nie znaleziono sesji" }, 404);
       return context.redirect(`/play/${code}`);
     }
   } catch (error) {
     reportError(error, { route: "POST /api/play/join", sessionCode: code });
+    if (asJson) return json({ error: "Nie udało się dołączyć" }, 500);
     return context.redirect(`/play/${code}`);
   }
 
   const nickParsed = playJoinNickSchema.safeParse(form.get("nick"));
   if (!nickParsed.success) {
+    if (asJson) return json({ error: "Nieprawidłowy nick" }, 400);
     return context.redirect(`/play/${code}?join=1&error=nick`);
   }
 
@@ -69,13 +93,19 @@ export const POST: APIRoute = async (context) => {
   } catch (error) {
     if (error instanceof JoinSessionPlayerError) {
       if (error.code === "SESSION_FULL") {
+        if (asJson) return json({ error: "Stół jest pełny" }, 409);
         return context.redirect(`/play/${code}?join=1&error=full`);
       }
       if (error.code === "INVALID_NICK") {
+        if (asJson) return json({ error: "Nieprawidłowy nick" }, 400);
         return context.redirect(`/play/${code}?join=1&error=nick`);
       }
+      // Remaining JoinSessionPlayerErrorCode: SESSION_NOT_FOUND
+      if (asJson) return json({ error: "Nie znaleziono sesji" }, 404);
+      return context.redirect(`/play/${code}`);
     }
     reportError(error, { route: "POST /api/play/join", sessionCode: code });
+    if (asJson) return json({ error: "Nie udało się dołączyć" }, 500);
     return context.redirect(`/play/${code}?join=1`);
   }
 
@@ -98,5 +128,7 @@ export const POST: APIRoute = async (context) => {
     secure: written.secure,
   });
 
-  return context.redirect(`/play/${code}`);
+  const redirectTo = `/play/${code}`;
+  if (asJson) return json({ redirect: redirectTo }, 200);
+  return context.redirect(redirectTo);
 };

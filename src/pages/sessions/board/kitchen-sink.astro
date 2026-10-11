@@ -141,6 +141,18 @@ const fixtureClosed: SessionWithCells = {
   players: [],
 };
 
+const fixtureClosedReplaced: SessionWithCells = {
+  id: "demo-closed-replaced",
+  code: "OLD999",
+  size: 3,
+  status: "closed",
+  replaced_by_session_id: "demo-complete",
+  gm_id: "demo-gm",
+  created_at: "2026-08-01T10:00:00.000Z",
+  cells: makeClaimedCells("demo-closed-replaced"),
+  players: demoPlayers,
+};
+
 const fixtureClaimed: SessionWithCells = {
   id: "demo-claimed",
   code: "CLM321",
@@ -189,6 +201,8 @@ interface GmBoardFixture {
   initialError?: string | null;
   regenerateConfirmOpen?: boolean;
   showCloseRetry?: boolean;
+  /** Kitchen-only handoff copy when the closed session has a successor. */
+  successorCode?: string;
 }
 
 const sections: {
@@ -222,6 +236,15 @@ const sections: {
     kind: "gm-board",
     session: fixtureClosed,
     gmBoard: { sessionStatus: "closed" },
+  },
+  {
+    id: "closed-replaced",
+    title: "closed + successor",
+    description:
+      "Zamknięta po regeneracji — Badge „Zamknięta”, brak CTA, handoff: gracze przechodzą na nowy kod (tu: ABC123).",
+    kind: "gm-board",
+    session: fixtureClosedReplaced,
+    gmBoard: { sessionStatus: "closed", successorCode: "ABC123" },
   },
   {
     id: "close-retry",
@@ -425,6 +448,12 @@ const sections: {
                           preview
                           client:load
                         />
+                      ) : null}
+                      {section.gmBoard?.successorCode ? (
+                        <p class="border-border bg-muted/40 rounded-lg border px-4 py-3 text-center text-sm text-muted-foreground">
+                          Sesja zamknięta — następczy kod graczy:{" "}
+                          <span class="text-foreground font-mono tracking-widest">{section.gmBoard.successorCode}</span>
+                        </p>
                       ) : null}
                       <GmRegenerateControls
                         sessionId={session.id}

@@ -2,7 +2,7 @@
 import Layout from "@/layouts/Layout.astro";
 import JoinNickForm from "@/components/play/JoinNickForm";
 import PlayerBoard from "@/components/play/PlayerBoard";
-import { PLAYER_COOKIE_NAME, readLastNick, readPlayerIdentity } from "@/lib/player-cookie";
+import { PLAYER_COOKIE_NAME, nickForAutoRejoin, readPlayerIdentity } from "@/lib/player-cookie";
 import { reportError } from "@/lib/report-error";
 import { SESSION_CODE_PATTERN } from "@/lib/services/session-code";
 import { getActiveBoardByCode } from "@/lib/services/sessions.service";
@@ -54,16 +54,17 @@ if (!SESSION_CODE_PATTERN.test(code)) {
   }
 }
 
+const isClosed = board?.status === "closed";
 const rawCookie = board ? (Astro.cookies.get(PLAYER_COOKIE_NAME)?.value ?? null) : null;
 const identity = board ? readPlayerIdentity(rawCookie, code) : null;
-const lastNick = board ? readLastNick(rawCookie) : null;
+const rejoinNick = board ? nickForAutoRejoin(rawCookie, code) : null;
 const swatchClass = identity ? swatchFor(identity.color) : null;
 const joinRequested = Astro.url.searchParams.get("join") === "1";
 const joinError = Astro.url.searchParams.get("error");
 const nickError = joinError === "nick";
 const fullError = joinError === "full";
-const showForm = Boolean(board) && (joinRequested || !swatchClass);
-const prefill = identity?.nick ?? lastNick ?? "";
+const showForm = Boolean(board) && !isClosed && (joinRequested || !swatchClass);
+const prefill = rejoinNick ?? "";
 
 const expectedCells = board ? board.size * board.size : 0;
 const boardComplete = board ? board.cells.length === expectedCells : false;
@@ -124,9 +125,11 @@ if (board && !showForm && !boardComplete) {
                 >
                   Wróć
                 </a>
-                <p class:list={["text-center text-3xl font-medium break-words sm:text-4xl", swatchClass]}>
-                  {identity?.nick}
-                </p>
+                {identity?.nick ? (
+                  <p class:list={["text-center text-3xl font-medium break-words sm:text-4xl", swatchClass]}>
+                    {identity.nick}
+                  </p>
+                ) : null}
               </div>
 
               {boardComplete ? (
@@ -135,6 +138,9 @@ if (board && !showForm && !boardComplete) {
                   size={board.size}
                   initialCells={board.cells}
                   initialPlayers={board.players}
+                  initialStatus={board.status}
+                  initialSuccessorCode={board.successorCode}
+                  rejoinNick={rejoinNick}
                   client:load
                 />
               ) : (

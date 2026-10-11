@@ -12,6 +12,7 @@ import type {
   PlayerRosterEntry,
   Session,
   SessionPlayerRosterEntry,
+  SessionStatus,
   SessionWithCells,
 } from "@/types";
 
@@ -202,6 +203,12 @@ export async function getSessionWithCells(
   };
 }
 
+function mapSessionStatus(value: string): SessionStatus | null {
+  if (value === "active" || value === "closed") return value;
+  return null;
+}
+
+/** Active or closed player board by code; unknown / non-matching codes return null. */
 export async function getActiveBoardByCode(supabase: AppSupabaseClient, code: string): Promise<PlayerBoard | null> {
   const [{ data, error }, { data: playersData, error: playersError }] = await Promise.all([
     supabase.rpc("get_active_board_by_code", { p_code: code }),
@@ -216,6 +223,9 @@ export async function getActiveBoardByCode(supabase: AppSupabaseClient, code: st
   if (boardRows.length === 0) return null;
 
   const head = boardRows[0];
+  const status = mapSessionStatus(head.status);
+  if (!status) return null;
+
   const players: PlayerRosterEntry[] = playerRows.map((player) => ({
     nick: player.nick,
     color: player.color,
@@ -225,6 +235,8 @@ export async function getActiveBoardByCode(supabase: AppSupabaseClient, code: st
   return {
     code: head.code,
     size: head.size,
+    status,
+    successorCode: head.successor_code,
     cells: boardRows.map((row) => mapPlayerBoardCell(row)),
     players,
   };

@@ -215,6 +215,8 @@ export type Database = {
           reward_label: string | null
           reward_slug: string | null
           size: number
+          status: string
+          successor_code: string | null
         }[]
       }
       get_session_players_by_code: {

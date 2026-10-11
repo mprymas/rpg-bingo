@@ -77,6 +77,9 @@ export interface PlayerBoardCell {
 export interface PlayerBoard {
   code: string;
   size: number;
+  status: SessionStatus;
+  /** Present when this closed session was replaced; null for active or closed-without-successor. */
+  successorCode: string | null;
   cells: PlayerBoardCell[];
   players: PlayerRosterEntry[];
 }

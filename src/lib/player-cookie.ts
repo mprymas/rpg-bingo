@@ -135,6 +135,11 @@ export function readLastNick(cookie: string | null | undefined): string | null {
   return parsePlayerCookie(cookie).lastNick;
 }
 
+/** Nick for closed-board auto-rejoin: prefer identity on the old code, else lastNick. */
+export function nickForAutoRejoin(cookie: string | null | undefined, code: string): string | null {
+  return readPlayerIdentity(cookie, code)?.nick ?? readLastNick(cookie);
+}
+
 export function writePlayerIdentity(
   cookie: string | null | undefined,
   code: string,

@@ -156,7 +156,37 @@ const sections = [
     description: "Komunikat „Pole jest zajęte” jako toast po przegranej rywalizacji o pole.",
     kind: "board" as const,
     cells: conflictCells,
-    conflictMessage: "Pole jest zajęte",
+    conflictMessage: "Pole jest zajęte" as string | null,
+  },
+  {
+    id: "closed-readonly",
+    title: "closed — read-only",
+    description: "Zamknięta sesja bez następcy — plansza tylko do odczytu, bez claimów.",
+    kind: "board" as const,
+    cells: mixedBoardCells,
+    conflictMessage: null as string | null,
+    closedChrome: "closed" as "closed" | "closed-successor" | "redirecting" | undefined,
+    successorCode: null as string | null,
+  },
+  {
+    id: "closed-successor",
+    title: "closed — successor manual",
+    description: "Zamknięta z następcą, bez nicka — kod następcy do ręcznego wejścia.",
+    kind: "board" as const,
+    cells: mixedBoardCells,
+    conflictMessage: null as string | null,
+    closedChrome: "closed-successor" as "closed" | "closed-successor" | "redirecting" | undefined,
+    successorCode: "N3WCD2" as string | null,
+  },
+  {
+    id: "closed-redirecting",
+    title: "closed — auto-rejoin",
+    description: "Zamknięta z następcą + nick — loader „Przechodzenie do nowej sesji…”.",
+    kind: "board" as const,
+    cells: mixedBoardCells,
+    conflictMessage: null as string | null,
+    closedChrome: "redirecting" as "closed" | "closed-successor" | "redirecting" | undefined,
+    successorCode: "N3WCD2" as string | null,
   },
   {
     id: "not-found",
@@ -227,7 +257,10 @@ const sections = [
                 size={3}
                 initialCells={section.cells}
                 initialPlayers={demoPlayers}
+                initialStatus={section.closedChrome ? "closed" : "active"}
+                initialSuccessorCode={"successorCode" in section ? section.successorCode : null}
                 preview
+                previewClosedChrome={"closedChrome" in section ? section.closedChrome : undefined}
                 initialConflictMessage={section.conflictMessage}
                 client:load
               />

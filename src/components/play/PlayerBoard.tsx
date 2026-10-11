@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useEffectEvent, useRef, useState } from "react";
 import { cn } from "@/lib/utils";
 import type {
   ClaimConflictResponse,
@@ -6,6 +6,7 @@ import type {
   PlayerBoard as PlayerBoardData,
   PlayerBoardCell,
   PlayerRosterEntry,
+  SessionStatus,
 } from "@/types";
 
 const POLL_MS = 5000;
@@ -67,16 +68,27 @@ interface Props {
   size: number;
   initialCells: PlayerBoardCell[];
   initialPlayers?: PlayerRosterEntry[];
+  initialStatus?: SessionStatus;
+  initialSuccessorCode?: string | null;
+  /** Nick for auto-rejoin (old-code identity else lastNick); null → manual successor entry. */
+  rejoinNick?: string | null;
   /** Kitchen-sink fixtures: no claim POSTs and no polling. */
   preview?: boolean;
   /** Seed conflict copy for preview sections. */
   initialConflictMessage?: string | null;
+  /** Kitchen-sink: force closed chrome / redirecting loader without live join. */
+  previewClosedChrome?: "closed" | "closed-successor" | "redirecting";
 }
 
 function isPlayerBoard(value: unknown): value is PlayerBoardData {
   if (!value || typeof value !== "object") return false;
   const record = value as Record<string, unknown>;
-  return typeof record.size === "number" && Array.isArray(record.cells) && Array.isArray(record.players);
+  return (
+    typeof record.size === "number" &&
+    Array.isArray(record.cells) &&
+    Array.isArray(record.players) &&
+    (record.status === "active" || record.status === "closed")
+  );
 }
 
 function isClaimSuccess(value: unknown): value is ClaimSuccessResponse {
@@ -96,17 +108,40 @@ export default function PlayerBoard({
   size,
   initialCells,
   initialPlayers = [],
+  initialStatus = "active",
+  initialSuccessorCode = null,
+  rejoinNick = null,
   preview = false,
   initialConflictMessage = null,
+  previewClosedChrome,
 }: Props) {
   const [cells, setCells] = useState(initialCells);
   const [players, setPlayers] = useState(initialPlayers);
+  const [status, setStatus] = useState<SessionStatus>(initialStatus);
+  const [successorCode, setSuccessorCode] = useState<string | null>(initialSuccessorCode);
+  const [redirecting, setRedirecting] = useState(
+    () => !preview && initialStatus === "closed" && Boolean(initialSuccessorCode) && Boolean(rejoinNick),
+  );
+  const [rejoinFailed, setRejoinFailed] = useState(false);
   const [conflictMessage, setConflictMessage] = useState<string | null>(initialConflictMessage);
   const [claimingPosition, setClaimingPosition] = useState<number | null>(null);
   const [flippingPosition, setFlippingPosition] = useState<number | null>(null);
   const flipTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const toastTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const pollCancelledRef = useRef(false);
+  const rejoinStartedRef = useRef(false);
+
+  const closed = status === "closed" || previewClosedChrome != null;
+  const readOnly = preview || closed;
+  const showRedirecting = redirecting || previewClosedChrome === "redirecting";
+  const displaySuccessor =
+    previewClosedChrome === "closed-successor" || previewClosedChrome === "redirecting"
+      ? (successorCode ?? "N3WCD2")
+      : successorCode;
+  const showManualSuccessor =
+    Boolean(displaySuccessor) &&
+    !showRedirecting &&
+    (previewClosedChrome === "closed-successor" || (closed && (!rejoinNick || rejoinFailed)));
 
   function showConflictToast(message: string) {
     setConflictMessage(message);
@@ -118,10 +153,64 @@ export default function PlayerBoard({
     }, TOAST_MS);
   }
 
+  const autoRejoin = useEffectEvent(async (nextCode: string, nick: string) => {
+    if (rejoinStartedRef.current || preview) return;
+    rejoinStartedRef.current = true;
+    setRedirecting(true);
+    setRejoinFailed(false);
+    try {
+      const body = new URLSearchParams();
+      body.set("code", nextCode);
+      body.set("nick", nick);
+      const response = await fetch("/api/play/join", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/x-www-form-urlencoded",
+          Accept: "application/json",
+        },
+        body,
+        credentials: "same-origin",
+      });
+      const data: unknown = await response.json().catch(() => null);
+      const redirect =
+        data && typeof data === "object" && "redirect" in data && typeof data.redirect === "string"
+          ? data.redirect
+          : null;
+      if (response.ok && redirect) {
+        window.location.assign(redirect);
+        return;
+      }
+      rejoinStartedRef.current = false;
+      setRedirecting(false);
+      setRejoinFailed(true);
+    } catch {
+      rejoinStartedRef.current = false;
+      setRedirecting(false);
+      setRejoinFailed(true);
+    }
+  });
+
+  const onPolledBoard = useEffectEvent((data: PlayerBoardData) => {
+    setCells(data.cells);
+    setPlayers(data.players);
+    setStatus(data.status);
+    setSuccessorCode(data.successorCode);
+    if (data.status !== "closed" || !data.successorCode || !rejoinNick) return;
+    void autoRejoin(data.successorCode, rejoinNick);
+  });
+
   useEffect(() => {
     if (preview) return;
 
     pollCancelledRef.current = false;
+
+    // Defer past the effect body so auto-rejoin setState is not synchronous-in-effect.
+    let rejoinTimer: ReturnType<typeof setTimeout> | null = null;
+    if (initialStatus === "closed" && initialSuccessorCode && rejoinNick) {
+      rejoinTimer = setTimeout(() => {
+        void autoRejoin(initialSuccessorCode, rejoinNick);
+      }, 0);
+    }
 
     async function poll() {
       try {
@@ -129,8 +218,7 @@ export default function PlayerBoard({
         const data: unknown = await response.json();
         if (!response.ok || pollCancelledRef.current) return;
         if (isPlayerBoard(data)) {
-          setCells(data.cells);
-          setPlayers(data.players);
+          onPolledBoard(data);
         }
       } catch {
         // Poll failures are non-blocking; next tick retries.
@@ -145,8 +233,9 @@ export default function PlayerBoard({
     return () => {
       pollCancelledRef.current = true;
       clearInterval(intervalId);
+      if (rejoinTimer) clearTimeout(rejoinTimer);
     };
-  }, [code, preview]);
+  }, [code, preview, initialStatus, initialSuccessorCode, rejoinNick]);
 
   useEffect(() => {
     return () => {
@@ -168,7 +257,7 @@ export default function PlayerBoard({
   }
 
   async function handleClaim(position: number) {
-    if (preview || claimingPosition !== null) return;
+    if (readOnly || claimingPosition !== null) return;
     const target = cells.find((cell) => cell.position === position);
     if (!target || target.claimedByColor != null) return;
 
@@ -214,6 +303,29 @@ export default function PlayerBoard({
 
   return (
     <div className="relative space-y-4">
+      {closed ? (
+        <div
+          className="border-border bg-muted/40 space-y-2 rounded-lg border px-4 py-3 text-center"
+          role="status"
+          aria-live="polite"
+        >
+          <p className="text-foreground text-sm font-medium">Sesja zamknięta</p>
+          {showRedirecting ? (
+            <p className="text-muted-foreground text-sm">Przechodzenie do nowej sesji…</p>
+          ) : showManualSuccessor ? (
+            <p className="text-muted-foreground text-sm">
+              Nowy kod:{" "}
+              <a
+                href={`/play/${displaySuccessor}?join=1`}
+                className="text-primary focus-visible:ring-ring font-mono tracking-widest outline-none hover:underline focus-visible:ring-2"
+              >
+                {displaySuccessor}
+              </a>
+            </p>
+          ) : null}
+        </div>
+      ) : null}
+
       {conflictMessage ? (
         <div
           className="pointer-events-none absolute inset-x-0 top-0 z-10 flex justify-center"
@@ -246,8 +358,8 @@ export default function PlayerBoard({
             claimed && color != null && PLAYER_BG[color],
             claimed && !claimedWithReward && color != null && PLAYER_BORDER[color],
             claimed && color != null && PLAYER_FG[color],
-            free && !preview && "hover:bg-accent/40 cursor-pointer",
-            (claimed || preview) && "cursor-default",
+            free && !readOnly && "hover:bg-accent/40 cursor-pointer",
+            (claimed || readOnly) && "cursor-default",
             isClaiming && "opacity-70",
             isFlipping && "animate-player-cell-flip",
           );
@@ -258,7 +370,7 @@ export default function PlayerBoard({
             <span className="player-board-cell-reward">{cell.reward.label}</span>
           ) : null;
 
-          if (free && !preview) {
+          if (free && !readOnly) {
             return (
               <button
                 key={cell.position}
