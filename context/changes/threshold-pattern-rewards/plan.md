@@ -443,12 +443,12 @@ Additive only: nullable column, nullable FK, two new tables. Existing sessions h
 
 #### Automated
 
-- [x] 4.1 Unit tests pass: `npm run test:unit`
-- [x] 4.2 Integration suite passes (new + existing claim/undo/join): `npm run test:integration`
-- [x] 4.3 Type check: `npx astro check`
-- [x] 4.4 Lint incl. UI literals: `npm run lint`
-- [x] 4.5 Build: `npm run build`
-- [x] 4.6 Smoke passes against preview: `npm run smoke`
+- [x] 4.1 Unit tests pass: `npm run test:unit` — d55a189
+- [x] 4.2 Integration suite passes (new + existing claim/undo/join): `npm run test:integration` — d55a189
+- [x] 4.3 Type check: `npx astro check` — d55a189
+- [x] 4.4 Lint incl. UI literals: `npm run lint` — d55a189
+- [x] 4.5 Build: `npm run build` — d55a189
+- [x] 4.6 Smoke passes against preview: `npm run smoke` — d55a189
 
 #### Manual
 
