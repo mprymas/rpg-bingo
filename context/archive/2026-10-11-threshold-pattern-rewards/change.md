@@ -1,10 +1,10 @@
 ---
 change_id: threshold-pattern-rewards
 title: Rewards for claimed-field count and completed rows/columns
-status: impl_reviewed
+status: archived
 created: 2026-10-11
 updated: 2026-10-11
-archived_at: null
+archived_at: 2026-10-11T18:34:31Z
 ---
 
 ## Notes
