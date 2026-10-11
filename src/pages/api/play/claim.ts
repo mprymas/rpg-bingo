@@ -3,9 +3,9 @@ import { PLAYER_COOKIE_NAME, readPlayerIdentity } from "@/lib/player-cookie";
 import { reportError } from "@/lib/report-error";
 import { isAllowedRequestOrigin } from "@/lib/request-origin";
 import { playClaimBodySchema } from "@/lib/schemas/play-claim";
-import { ClaimBoardCellError, claimBoardCell } from "@/lib/services/sessions.service";
+import { ClaimBoardCellError, claimBoardCell, getPlayerRewardProgress } from "@/lib/services/sessions.service";
 import { createClient } from "@/lib/supabase";
-import type { ClaimConflictResponse, ClaimSuccessResponse } from "@/types";
+import type { ClaimConflictResponse, ClaimSuccessResponse, PlayerRewardProgress } from "@/types";
 
 export const prerender = false;
 
@@ -62,7 +62,20 @@ export const POST: APIRoute = async (context) => {
       return json(conflict, 409);
     }
 
-    const success: ClaimSuccessResponse = { cell: result.cell, progress: null };
+    let progress: PlayerRewardProgress | null = null;
+    try {
+      progress = await getPlayerRewardProgress(supabase, code, identity.claimToken);
+    } catch (progressError) {
+      reportError(progressError, {
+        route: "POST /api/play/claim (progress)",
+        httpStatus: 200,
+        sessionCode: code,
+        position,
+      });
+      progress = null;
+    }
+
+    const success: ClaimSuccessResponse = { cell: result.cell, progress };
     return json(success, 200);
   } catch (error) {
     if (error instanceof ClaimBoardCellError) {

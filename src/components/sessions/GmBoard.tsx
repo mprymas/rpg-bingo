@@ -1,9 +1,9 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useEffectEvent, useRef, useState } from "react";
 import { Check, X } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import type { SessionPlayerRosterEntry, SessionWithCells, UndoClaimSuccessResponse } from "@/types";
+import type { EarnedLineReward, SessionPlayerRosterEntry, SessionWithCells, UndoClaimSuccessResponse } from "@/types";
 
 const POLL_MS = 5000;
 
@@ -65,10 +65,53 @@ interface Props {
   initialError?: string | null;
 }
 
+function isEarnedRoster(value: unknown): value is SessionPlayerRosterEntry["earned"] {
+  if (!value || typeof value !== "object") return false;
+  const record = value as Record<string, unknown>;
+  if (typeof record.claimedCount !== "number" || !Array.isArray(record.lines)) return false;
+  if (record.thresholdReward != null) {
+    if (typeof record.thresholdReward !== "object") return false;
+    const reward = record.thresholdReward as Record<string, unknown>;
+    if (typeof reward.slug !== "string" || typeof reward.label !== "string") return false;
+  }
+  for (const line of record.lines) {
+    if (!line || typeof line !== "object") return false;
+    const entry = line as Record<string, unknown>;
+    if (
+      (entry.axis !== "row" && entry.axis !== "column") ||
+      typeof entry.index !== "number" ||
+      !entry.reward ||
+      typeof entry.reward !== "object"
+    ) {
+      return false;
+    }
+    const reward = entry.reward as Record<string, unknown>;
+    if (typeof reward.slug !== "string" || typeof reward.label !== "string") return false;
+  }
+  return true;
+}
+
 function isSessionWithCells(value: unknown): value is SessionWithCells {
   if (!value || typeof value !== "object") return false;
   const record = value as Record<string, unknown>;
-  return Array.isArray(record.cells) && Array.isArray(record.players) && typeof record.size === "number";
+  if (!Array.isArray(record.cells) || !Array.isArray(record.players) || typeof record.size !== "number") {
+    return false;
+  }
+  for (const player of record.players) {
+    if (!player || typeof player !== "object") return false;
+    const entry = player as Record<string, unknown>;
+    if (entry.earned != null && !isEarnedRoster(entry.earned)) return false;
+  }
+  return true;
+}
+
+function lineRewardBadgeLabel(line: EarnedLineReward): string {
+  const axisLabel = line.axis === "row" ? "Wiersz" : "Kolumna";
+  return `${axisLabel} ${String(line.index + 1)}: ${line.reward.label}`;
+}
+
+function playerHasEarnedRewards(player: SessionPlayerRosterEntry): boolean {
+  return Boolean(player.earned.thresholdReward) || player.earned.lines.length > 0;
 }
 
 function isUndoClaimSuccess(value: unknown): value is UndoClaimSuccessResponse {
@@ -104,6 +147,7 @@ export default function GmBoard({
   const [confirmPosition, setConfirmPosition] = useState<number | null>(initialConfirmPosition);
   const [pending, setPending] = useState(initialPending);
   const [error, setError] = useState<string | null>(initialError);
+  const [refreshTick, setRefreshTick] = useState(0);
   const pollCancelledRef = useRef(false);
   const confirmPositionRef = useRef<number | null>(initialConfirmPosition);
 
@@ -113,43 +157,48 @@ export default function GmBoard({
     confirmPositionRef.current = confirmPosition;
   }, [confirmPosition]);
 
+  const refreshSnapshot = useEffectEvent(async () => {
+    try {
+      const response = await fetch(`/api/sessions/${encodeURIComponent(sessionId)}/board`);
+      const data: unknown = await response.json();
+      if (!response.ok || pollCancelledRef.current) return;
+      if (isSessionWithCells(data)) {
+        const lockPosition = confirmPositionRef.current;
+
+        setCells((prev) => {
+          if (lockPosition == null) return data.cells;
+          return data.cells.map((incoming) => {
+            if (incoming.position !== lockPosition) return incoming;
+            return prev.find((cell) => cell.position === lockPosition) ?? incoming;
+          });
+        });
+        setPlayers(data.players);
+      }
+    } catch {
+      // Poll failures are non-blocking; next tick retries.
+    }
+  });
+
   useEffect(() => {
     if (preview) return;
 
     pollCancelledRef.current = false;
 
-    async function poll() {
-      try {
-        const response = await fetch(`/api/sessions/${encodeURIComponent(sessionId)}/board`);
-        const data: unknown = await response.json();
-        if (!response.ok || pollCancelledRef.current) return;
-        if (isSessionWithCells(data)) {
-          const lockPosition = confirmPositionRef.current;
-
-          setCells((prev) => {
-            if (lockPosition == null) return data.cells;
-            return data.cells.map((incoming) => {
-              if (incoming.position !== lockPosition) return incoming;
-              return prev.find((cell) => cell.position === lockPosition) ?? incoming;
-            });
-          });
-          setPlayers(data.players);
-        }
-      } catch {
-        // Poll failures are non-blocking; next tick retries.
-      }
-    }
-
     const intervalId = setInterval(() => {
-      void poll();
+      void refreshSnapshot();
     }, POLL_MS);
-    void poll();
+    void refreshSnapshot();
 
     return () => {
       pollCancelledRef.current = true;
       clearInterval(intervalId);
     };
   }, [sessionId, preview]);
+
+  useEffect(() => {
+    if (preview || refreshTick === 0) return;
+    void refreshSnapshot();
+  }, [preview, refreshTick]);
 
   function enterConfirm(position: number) {
     if (!undoEnabled || pending) return;
@@ -193,6 +242,7 @@ export default function GmBoard({
       setCells((prev) => prev.map((cell) => (cell.position === data.cell.position ? data.cell : cell)));
       setConfirmPosition(null);
       setPending(false);
+      setRefreshTick((tick) => tick + 1);
     } catch {
       setError("Nie udało się cofnąć oznaczenia");
       setPending(false);
@@ -310,10 +360,26 @@ export default function GmBoard({
         {players.length === 0 ? (
           <p className="text-muted-foreground text-sm">Nikt jeszcze nie dołączył</p>
         ) : (
-          <ul className="flex flex-wrap gap-x-4 gap-y-2">
+          <ul className="flex flex-col gap-3">
             {players.map((player) => (
-              <li key={player.id} className={cn("text-sm font-medium", PLAYER_NICK[player.color] ?? "text-foreground")}>
-                {player.nick}
+              <li key={player.id} className="space-y-1.5">
+                <span className={cn("text-sm font-medium", PLAYER_NICK[player.color] ?? "text-foreground")}>
+                  {player.nick}
+                </span>
+                {playerHasEarnedRewards(player) ? (
+                  <ul className="flex flex-wrap gap-1.5">
+                    {player.earned.thresholdReward ? (
+                      <li>
+                        <Badge variant="secondary">{player.earned.thresholdReward.label}</Badge>
+                      </li>
+                    ) : null}
+                    {player.earned.lines.map((line) => (
+                      <li key={`${line.axis}-${String(line.index)}`}>
+                        <Badge variant="outline">{lineRewardBadgeLabel(line)}</Badge>
+                      </li>
+                    ))}
+                  </ul>
+                ) : null}
               </li>
             ))}
           </ul>

@@ -259,6 +259,9 @@ export interface CreateActiveSessionBody {
   size: 3 | 4 | 5;
   customPhrases: { text: string; guaranteed: boolean }[];
   rewards: { rewardId: string; count: number }[];
+  lineRewardIds?: string[];
+  thresholdRewardIds?: string[];
+  thresholdCount?: number | null;
 }
 
 export interface CreatedSession {

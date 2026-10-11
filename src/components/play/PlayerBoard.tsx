@@ -3,8 +3,10 @@ import { cn } from "@/lib/utils";
 import type {
   ClaimConflictResponse,
   ClaimSuccessResponse,
+  EarnedLineReward,
   PlayerBoard as PlayerBoardData,
   PlayerBoardCell,
+  PlayerRewardProgress,
   PlayerRosterEntry,
   SessionStatus,
 } from "@/types";
@@ -70,6 +72,7 @@ interface Props {
   initialPlayers?: PlayerRosterEntry[];
   initialStatus?: SessionStatus;
   initialSuccessorCode?: string | null;
+  initialProgress?: PlayerRewardProgress | null;
   /** Nick for auto-rejoin (old-code identity else lastNick); null → manual successor entry. */
   rejoinNick?: string | null;
   /** Kitchen-sink fixtures: no claim POSTs and no polling. */
@@ -80,21 +83,62 @@ interface Props {
   previewClosedChrome?: "closed" | "closed-successor" | "redirecting";
 }
 
-function isPlayerBoard(value: unknown): value is PlayerBoardData {
+function isRewardRef(value: unknown): value is PlayerRewardProgress["thresholdReward"] {
+  if (value === null) return true;
+  if (!value || typeof value !== "object") return false;
+  const record = value as Record<string, unknown>;
+  return typeof record.slug === "string" && typeof record.label === "string";
+}
+
+function isEarnedLine(value: unknown): value is EarnedLineReward {
   if (!value || typeof value !== "object") return false;
   const record = value as Record<string, unknown>;
   return (
-    typeof record.size === "number" &&
-    Array.isArray(record.cells) &&
-    Array.isArray(record.players) &&
-    (record.status === "active" || record.status === "closed")
+    (record.axis === "row" || record.axis === "column") &&
+    typeof record.index === "number" &&
+    isRewardRef(record.reward) &&
+    record.reward !== null
   );
+}
+
+function isPlayerRewardProgress(value: unknown): value is PlayerRewardProgress {
+  if (!value || typeof value !== "object") return false;
+  const record = value as Record<string, unknown>;
+  return (
+    typeof record.claimedCount === "number" &&
+    (record.thresholdCount === null || typeof record.thresholdCount === "number") &&
+    isRewardRef(record.thresholdReward) &&
+    Array.isArray(record.lines) &&
+    record.lines.every(isEarnedLine)
+  );
+}
+
+function isPlayerBoard(value: unknown): value is PlayerBoardData {
+  if (!value || typeof value !== "object") return false;
+  const record = value as Record<string, unknown>;
+  if (
+    typeof record.size !== "number" ||
+    !Array.isArray(record.cells) ||
+    !Array.isArray(record.players) ||
+    (record.status !== "active" && record.status !== "closed")
+  ) {
+    return false;
+  }
+  if (record.progress != null && !isPlayerRewardProgress(record.progress)) return false;
+  return true;
 }
 
 function isClaimSuccess(value: unknown): value is ClaimSuccessResponse {
   if (!value || typeof value !== "object") return false;
   const record = value as Record<string, unknown>;
-  return record.cell != null && typeof record.cell === "object" && record.error !== "conflict";
+  if (record.cell == null || typeof record.cell !== "object" || record.error === "conflict") return false;
+  if (record.progress != null && !isPlayerRewardProgress(record.progress)) return false;
+  return true;
+}
+
+function lineRewardLabel(line: EarnedLineReward): string {
+  const axisLabel = line.axis === "row" ? "Wiersz" : "Kolumna";
+  return `${axisLabel} ${String(line.index + 1)}: ${line.reward.label}`;
 }
 
 function isClaimConflict(value: unknown): value is ClaimConflictResponse {
@@ -110,6 +154,7 @@ export default function PlayerBoard({
   initialPlayers = [],
   initialStatus = "active",
   initialSuccessorCode = null,
+  initialProgress = null,
   rejoinNick = null,
   preview = false,
   initialConflictMessage = null,
@@ -117,6 +162,7 @@ export default function PlayerBoard({
 }: Props) {
   const [cells, setCells] = useState(initialCells);
   const [players, setPlayers] = useState(initialPlayers);
+  const [progress, setProgress] = useState<PlayerRewardProgress | null>(initialProgress);
   const [status, setStatus] = useState<SessionStatus>(initialStatus);
   const [successorCode, setSuccessorCode] = useState<string | null>(initialSuccessorCode);
   const [redirecting, setRedirecting] = useState(
@@ -190,6 +236,7 @@ export default function PlayerBoard({
   const onPolledBoard = useEffectEvent((data: PlayerBoardData) => {
     setCells(data.cells);
     setPlayers(data.players);
+    setProgress(data.progress);
     setStatus(data.status);
     setSuccessorCode(data.successorCode);
     if (data.status !== "closed" || !data.successorCode || !rejoinNick) return;
@@ -278,6 +325,7 @@ export default function PlayerBoard({
 
       if (response.ok && isClaimSuccess(body)) {
         mergeCell(body.cell);
+        setProgress(body.progress);
         triggerFlip(position);
         return;
       }
@@ -297,6 +345,8 @@ export default function PlayerBoard({
 
   const rewardCount = cells.filter((cell) => cell.hasReward).length;
   const sorted = [...cells].sort((a, b) => a.position - b.position);
+  const earnedLines = progress?.lines ?? [];
+  const hasEarnedRewards = Boolean(progress?.thresholdReward) || earnedLines.length > 0;
 
   return (
     <div className="relative space-y-4">
@@ -398,6 +448,29 @@ export default function PlayerBoard({
 
       {rewardCount > 0 ? (
         <p className="text-muted-foreground text-center text-sm">{rewardCount} pól z nagrodą</p>
+      ) : null}
+
+      {progress ? (
+        <div className="space-y-2">
+          {progress.thresholdCount != null ? (
+            <p className="text-foreground text-center text-sm font-medium">
+              Zdobyte pola: {progress.claimedCount}/{progress.thresholdCount}
+            </p>
+          ) : null}
+          <div>
+            <h2 className="text-muted-foreground mb-2 text-sm font-medium">Twoje nagrody</h2>
+            {hasEarnedRewards ? (
+              <ul className="text-foreground space-y-1 text-sm">
+                {progress.thresholdReward ? <li>{progress.thresholdReward.label}</li> : null}
+                {earnedLines.map((line) => (
+                  <li key={`${line.axis}-${String(line.index)}`}>{lineRewardLabel(line)}</li>
+                ))}
+              </ul>
+            ) : (
+              <p className="text-muted-foreground text-sm">Nie zdobyłeś jeszcze żadnej nagrody</p>
+            )}
+          </div>
+        </div>
       ) : null}
 
       <div>

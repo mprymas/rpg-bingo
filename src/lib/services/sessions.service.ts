@@ -1,6 +1,7 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
-import type { Database } from "@/db/database.types";
+import type { Database, Json } from "@/db/database.types";
 import { drawLineRewards, generateBoard } from "@/lib/services/board-generator";
+import { deriveRewardProgress } from "@/lib/services/reward-progress";
 import { generateSessionCode } from "@/lib/services/session-code";
 import type {
   ClaimOccupant,
@@ -8,9 +9,12 @@ import type {
   DeleteSessionSuccessResponse,
   CreateSessionCommand,
   CreateSessionResponse,
+  LineAxis,
   PlayerBoard,
   PlayerBoardCell,
+  PlayerRewardProgress,
   PlayerRosterEntry,
+  RewardRef,
   Session,
   SessionPlayerRosterEntry,
   SessionStatus,
@@ -213,6 +217,131 @@ export async function getSessionCodeForGm(
   return data?.code ?? null;
 }
 
+function isLineAxis(value: string): value is LineAxis {
+  return value === "row" || value === "column";
+}
+
+function isRewardRef(value: unknown): value is RewardRef {
+  if (!value || typeof value !== "object") return false;
+  const record = value as Record<string, unknown>;
+  return typeof record.slug === "string" && typeof record.label === "string";
+}
+
+interface PlayerRewardInputs {
+  size: number;
+  threshold_count: number | null;
+  has_line_rules: boolean;
+  threshold_reward: RewardRef | null;
+  cells: { position: number; claimed_at: string; is_mine: boolean }[];
+  lines: { axis: LineAxis; index: number; slug: string; label: string }[];
+}
+
+function parsePlayerRewardInputs(data: Json): PlayerRewardInputs | null {
+  if (data === null || typeof data !== "object" || Array.isArray(data)) return null;
+  const record = data as Record<string, unknown>;
+  if (typeof record.size !== "number" || !Number.isInteger(record.size)) return null;
+
+  const thresholdCount =
+    record.threshold_count === null || record.threshold_count === undefined
+      ? null
+      : typeof record.threshold_count === "number" && Number.isInteger(record.threshold_count)
+        ? record.threshold_count
+        : null;
+  if (record.threshold_count != null && thresholdCount === null) return null;
+
+  let thresholdReward: RewardRef | null = null;
+  if (record.threshold_reward != null) {
+    if (!isRewardRef(record.threshold_reward)) return null;
+    thresholdReward = { slug: record.threshold_reward.slug, label: record.threshold_reward.label };
+  }
+
+  if (typeof record.has_line_rules !== "boolean") return null;
+  if (!Array.isArray(record.cells) || !Array.isArray(record.lines)) return null;
+
+  const cells: PlayerRewardInputs["cells"] = [];
+  for (const cell of record.cells) {
+    if (!cell || typeof cell !== "object") return null;
+    const c = cell as Record<string, unknown>;
+    if (typeof c.position !== "number" || typeof c.claimed_at !== "string" || typeof c.is_mine !== "boolean") {
+      return null;
+    }
+    cells.push({ position: c.position, claimed_at: c.claimed_at, is_mine: c.is_mine });
+  }
+
+  const lines: PlayerRewardInputs["lines"] = [];
+  for (const line of record.lines) {
+    if (!line || typeof line !== "object") return null;
+    const l = line as Record<string, unknown>;
+    if (
+      typeof l.axis !== "string" ||
+      !isLineAxis(l.axis) ||
+      typeof l.index !== "number" ||
+      typeof l.slug !== "string" ||
+      typeof l.label !== "string"
+    ) {
+      return null;
+    }
+    lines.push({ axis: l.axis, index: l.index, slug: l.slug, label: l.label });
+  }
+
+  return {
+    size: record.size,
+    threshold_count: thresholdCount,
+    has_line_rules: record.has_line_rules,
+    threshold_reward: thresholdReward,
+    cells,
+    lines,
+  };
+}
+
+/** Derived progress for one player seat; null when token/code invalid or session has no rules. */
+export async function getPlayerRewardProgress(
+  supabase: AppSupabaseClient,
+  code: string,
+  claimToken: string,
+): Promise<PlayerRewardProgress | null> {
+  const { data, error } = await supabase.rpc("get_player_reward_inputs", {
+    p_code: code,
+    p_claim_token: claimToken,
+  });
+
+  if (error) throw error;
+  if (data == null) return null;
+
+  const inputs = parsePlayerRewardInputs(data);
+  if (!inputs) {
+    throw new Error("get_player_reward_inputs returned unexpected shape");
+  }
+
+  const hasRules = inputs.threshold_count != null || inputs.has_line_rules;
+  if (!hasRules) return null;
+
+  const progressByKey = deriveRewardProgress({
+    size: inputs.size,
+    cells: inputs.cells.map((cell) => ({
+      position: cell.position,
+      claimedBy: cell.is_mine ? "me" : "other",
+      claimedAt: cell.claimed_at,
+    })),
+    lines: inputs.lines.map((line) => ({
+      axis: line.axis,
+      index: line.index,
+      reward: { slug: line.slug, label: line.label },
+    })),
+    thresholdCount: inputs.threshold_count,
+    thresholdRewardByPlayer: new Map([["me", inputs.threshold_reward]]),
+  });
+
+  return (
+    progressByKey.get("me") ?? {
+      claimedCount: 0,
+      thresholdCount: inputs.threshold_count,
+      thresholdReward: null,
+      lines: [],
+    }
+  );
+}
+
 export async function getSessionWithCells(
   supabase: AppSupabaseClient,
   id: string,
@@ -227,7 +356,20 @@ export async function getSessionWithCells(
         *,
         reward:rewards ( slug, label )
       ),
-      players:session_players ( id, nick, color, created_at )
+      players:session_players (
+        id,
+        nick,
+        color,
+        created_at,
+        threshold_reward_id,
+        threshold_reward:rewards ( slug, label )
+      ),
+      pool:session_reward_pool ( kind, reward_id ),
+      lines:board_lines (
+        axis,
+        index,
+        reward:rewards ( slug, label )
+      )
     `,
     )
     .eq("id", id)
@@ -237,15 +379,60 @@ export async function getSessionWithCells(
   if (error) throw error;
   if (!data) return null;
 
+  const pool = data.pool;
+  const thresholdRewardIds = pool.filter((row) => row.kind === "threshold").map((row) => row.reward_id);
+  const lineRewardIds = pool.filter((row) => row.kind === "line").map((row) => row.reward_id);
+
+  const boardLines = data.lines
+    .filter((line) => isLineAxis(line.axis) && isRewardRef(line.reward))
+    .map((line) => ({
+      axis: line.axis as LineAxis,
+      index: line.index,
+      reward: { slug: line.reward.slug, label: line.reward.label },
+    }));
+
+  const thresholdRewardByPlayer = new Map<string, RewardRef | null>();
+  for (const player of data.players) {
+    const drawn =
+      player.threshold_reward && isRewardRef(player.threshold_reward)
+        ? { slug: player.threshold_reward.slug, label: player.threshold_reward.label }
+        : null;
+    thresholdRewardByPlayer.set(player.id, drawn);
+  }
+
+  const progressByPlayer = deriveRewardProgress({
+    size: data.size,
+    cells: data.cells.map((cell) => ({
+      position: cell.position,
+      claimedBy: cell.claimed_by_player_id,
+      claimedAt: cell.claimed_at,
+    })),
+    lines: boardLines,
+    thresholdCount: data.threshold_count,
+    thresholdRewardByPlayer,
+  });
+
   const players: SessionPlayerRosterEntry[] = [...data.players]
     .sort((a, b) => (a.created_at < b.created_at ? -1 : a.created_at > b.created_at ? 1 : 0))
-    .map((player) => ({
-      id: player.id,
-      nick: player.nick,
-      color: player.color,
-      created_at: player.created_at,
-      earned: { claimedCount: 0, thresholdReward: null, lines: [] },
-    }));
+    .map((player) => {
+      const earned = progressByPlayer.get(player.id) ?? {
+        claimedCount: 0,
+        thresholdCount: data.threshold_count,
+        thresholdReward: null,
+        lines: [],
+      };
+      return {
+        id: player.id,
+        nick: player.nick,
+        color: player.color,
+        created_at: player.created_at,
+        earned: {
+          claimedCount: earned.claimedCount,
+          thresholdReward: earned.thresholdReward,
+          lines: earned.lines,
+        },
+      };
+    });
   const colorByPlayerId = new Map(players.map((player) => [player.id, player.color]));
 
   const cells = [...data.cells]
@@ -266,8 +453,11 @@ export async function getSessionWithCells(
     threshold_count: data.threshold_count,
     cells,
     players,
-    // Stubs until Phase 4 loads real threshold/line rules.
-    rewardRules: { thresholdCount: null, thresholdRewardIds: [], lineRewardIds: [] },
+    rewardRules: {
+      thresholdCount: data.threshold_count,
+      thresholdRewardIds,
+      lineRewardIds,
+    },
   };
 }
 

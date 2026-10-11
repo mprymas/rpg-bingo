@@ -69,6 +69,38 @@ const demoPlayers: SessionPlayerRosterEntry[] = [
   },
 ];
 
+const demoPlayersWithEarned: SessionPlayerRosterEntry[] = [
+  {
+    id: "demo-player-aria",
+    nick: "Aria",
+    color: 1,
+    created_at: "2026-09-15T14:31:00.000Z",
+    earned: {
+      claimedCount: 3,
+      thresholdReward: rewardInspiration,
+      lines: [{ axis: "row", index: 0, reward: rewardExperience }],
+    },
+  },
+  {
+    id: "demo-player-borin",
+    nick: "Borin",
+    color: 2,
+    created_at: "2026-09-15T14:32:00.000Z",
+    earned: {
+      claimedCount: 2,
+      thresholdReward: null,
+      lines: [{ axis: "column", index: 1, reward: rewardInspiration }],
+    },
+  },
+  {
+    id: "demo-player-cyra",
+    nick: "Cyra",
+    color: 3,
+    created_at: "2026-09-15T14:33:00.000Z",
+    earned: { claimedCount: 1, thresholdReward: null, lines: [] },
+  },
+];
+
 function makeClaimedCells(sessionId: string): SessionWithCells["cells"] {
   const cells = makeCells(sessionId, 9);
   const claims: { position: number; playerId: string; color: number; at: string }[] = [
@@ -214,6 +246,38 @@ const fixtureRosterEmpty: SessionWithCells = {
   rewardRules: emptyRewardRules,
 };
 
+const fixtureRosterEarned: SessionWithCells = {
+  id: "demo-roster-earned",
+  code: "ERN111",
+  size: 3,
+  status: "active",
+  replaced_by_session_id: null,
+  gm_id: "demo-gm",
+  created_at: "2026-09-15T14:30:00.000Z",
+  threshold_count: 3,
+  cells: makeClaimedCells("demo-roster-earned"),
+  players: demoPlayersWithEarned,
+  rewardRules: {
+    thresholdCount: 3,
+    thresholdRewardIds: ["demo-inspiration"],
+    lineRewardIds: ["demo-experience", "demo-inspiration"],
+  },
+};
+
+const fixtureRosterNoRules: SessionWithCells = {
+  id: "demo-roster-no-rules",
+  code: "NOR000",
+  size: 3,
+  status: "active",
+  replaced_by_session_id: null,
+  gm_id: "demo-gm",
+  created_at: "2026-09-15T14:30:00.000Z",
+  threshold_count: null,
+  cells: makeClaimedCells("demo-roster-no-rules"),
+  players: demoPlayers,
+  rewardRules: emptyRewardRules,
+};
+
 const loadErrorCopy = "Nie udało się wczytać sesji";
 const undoErrorCopy = "Nie udało się cofnąć oznaczenia";
 
@@ -353,6 +417,22 @@ const sections: {
     description: "GmBoard bez graczy — copy „Nikt jeszcze nie dołączył”; etykiety nagród na wolnych polach.",
     kind: "gm-board",
     session: fixtureRosterEmpty,
+    gmBoard: { sessionStatus: "active" },
+  },
+  {
+    id: "roster-earned",
+    title: "roster — earned rewards",
+    description: "Lista graczy z badge’ami zdobytych nagród progowych i za wiersz/kolumnę.",
+    kind: "gm-board",
+    session: fixtureRosterEarned,
+    gmBoard: { sessionStatus: "active" },
+  },
+  {
+    id: "roster-no-rules",
+    title: "roster — no rules",
+    description: "Sesja bez reguł progowych/liniowych — same nicki, bez badge’ów nagród.",
+    kind: "gm-board",
+    session: fixtureRosterNoRules,
     gmBoard: { sessionStatus: "active" },
   },
   {
