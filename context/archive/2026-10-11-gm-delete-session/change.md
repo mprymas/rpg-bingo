@@ -1,10 +1,10 @@
 ---
 change_id: gm-delete-session
 title: MG usuwa sesję po potwierdzeniu
-status: impl_reviewed
+status: archived
 created: 2026-10-11
 updated: 2026-10-11
-archived_at: null
+archived_at: 2026-10-11T15:24:44Z
 ---
 
 ## Notes
