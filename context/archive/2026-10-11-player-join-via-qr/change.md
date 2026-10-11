@@ -1,10 +1,10 @@
 ---
 change_id: player-join-via-qr
 title: Player joins by scanning QR on the GM board
-status: impl_reviewed
+status: archived
 created: 2026-10-11
 updated: 2026-10-11
-archived_at: null
+archived_at: 2026-10-11T16:14:17Z
 ---
 
 ## Notes
