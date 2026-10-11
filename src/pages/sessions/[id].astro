@@ -1,6 +1,8 @@
 ---
 import Layout from "@/layouts/Layout.astro";
+import CloseRetryBanner from "@/components/sessions/CloseRetryBanner";
 import GmBoard from "@/components/sessions/GmBoard";
+import GmRegenerateControls from "@/components/sessions/GmRegenerateControls";
 import { Badge } from "@/components/ui/badge";
 import { reportError } from "@/lib/report-error";
 import { createClient } from "@/lib/supabase";
@@ -54,6 +56,10 @@ const boardComplete = session ? session.cells.length === expectedCells : false;
 if (session && !boardComplete) {
   Astro.response.status = 422;
 }
+
+const closeFailed = Astro.url.searchParams.get("closeFailed") === "1";
+const closeSourceId = Astro.url.searchParams.get("sourceId") ?? "";
+const showCloseRetry = Boolean(session && closeFailed && UUID_RE.test(closeSourceId));
 ---
 
 {notFound ? (
@@ -111,15 +117,22 @@ if (session && !boardComplete) {
             </div>
           </div>
 
+          {showCloseRetry ? (
+            <CloseRetryBanner sourceSessionId={closeSourceId} replacedBySessionId={session.id} client:load />
+          ) : null}
+
           {boardComplete ? (
-            <GmBoard
-              sessionId={session.id}
-              size={session.size}
-              initialCells={session.cells}
-              initialPlayers={session.players}
-              sessionStatus={session.status}
-              client:load
-            />
+            <>
+              <GmRegenerateControls sessionId={session.id} sessionStatus={session.status} client:load />
+              <GmBoard
+                sessionId={session.id}
+                size={session.size}
+                initialCells={session.cells}
+                initialPlayers={session.players}
+                sessionStatus={session.status}
+                client:load
+              />
+            </>
           ) : (
             <p class="rounded-lg border border-dashed border-border px-4 py-6 text-center text-destructive">
               Nie udało się wczytać planszy (oczekiwano {expectedCells} pól, jest {session.cells.length}). Utwórz sesję

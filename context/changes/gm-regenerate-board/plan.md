@@ -270,9 +270,9 @@ Active-default dashboard list with “Pokaż zamknięte”, plus full automated 
 
 #### Automated
 
-- [x] 1.1 Migration applies on local Supabase; generated types include replaced_by_session_id and the RPC
-- [x] 1.2 Unit/service tests for close happy path + foreign GM / already closed / missing replacement (if pure error mapping is extracted)
-- [x] 1.3 npm run lint passes for touched files
+- [x] 1.1 Migration applies on local Supabase; generated types include replaced_by_session_id and the RPC — 4b57341
+- [x] 1.2 Unit/service tests for close happy path + foreign GM / already closed / missing replacement (if pure error mapping is extracted) — 4b57341
+- [x] 1.3 npm run lint passes for touched files — 4b57341
 
 #### Manual
 
@@ -282,8 +282,8 @@ Active-default dashboard list with “Pokaż zamknięte”, plus full automated 
 
 #### Automated
 
-- [ ] 2.1 Integration: create with replaceSessionId closes source; foreign from rejected; close retry endpoint works after simulated close failure path
-- [ ] 2.2 Lint / astro check clean for touched files
+- [x] 2.1 Integration: create with replaceSessionId closes source; foreign from rejected; close retry endpoint works after simulated close failure path
+- [x] 2.2 Lint / astro check clean for touched files
 
 #### Manual
 

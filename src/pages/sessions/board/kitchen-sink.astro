@@ -1,7 +1,9 @@
 ---
 import Layout from "@/layouts/Layout.astro";
 import BoardGrid from "@/components/sessions/BoardGrid.astro";
+import CloseRetryBanner from "@/components/sessions/CloseRetryBanner";
 import GmBoard from "@/components/sessions/GmBoard";
+import GmRegenerateControls from "@/components/sessions/GmRegenerateControls";
 import { Badge } from "@/components/ui/badge";
 import type { SessionPlayerRosterEntry, SessionWithCells } from "@/types";
 
@@ -185,6 +187,8 @@ interface GmBoardFixture {
   initialConfirmPosition?: number | null;
   initialPending?: boolean;
   initialError?: string | null;
+  regenerateConfirmOpen?: boolean;
+  showCloseRetry?: boolean;
 }
 
 const sections: {
@@ -201,6 +205,31 @@ const sections: {
     description: "Kompletna plansza 3×3 + legenda nagród (Badge).",
     kind: "complete",
     session: fixtureComplete,
+  },
+  {
+    id: "regenerate-confirm",
+    title: "regenerate confirm",
+    description:
+      "CTA regeneracji otwarte — potwierdzenie nowej planszy + nowego kodu; gracze przechodzą do nowej sesji.",
+    kind: "gm-board",
+    session: fixtureComplete,
+    gmBoard: { sessionStatus: "active", regenerateConfirmOpen: true },
+  },
+  {
+    id: "regenerate-closed",
+    title: "regenerate closed",
+    description: "Zamknięta sesja — brak CTA „Wygeneruj nową planszę”.",
+    kind: "gm-board",
+    session: fixtureClosed,
+    gmBoard: { sessionStatus: "closed" },
+  },
+  {
+    id: "close-retry",
+    title: "close retry",
+    description: "Ostrzeżenie po nieudanym zamknięciu źródła + przycisk ponowienia close.",
+    kind: "gm-board",
+    session: fixtureComplete,
+    gmBoard: { sessionStatus: "active", showCloseRetry: true },
   },
   {
     id: "claimed",
@@ -389,6 +418,21 @@ const sections: {
                     </p>
                   ) : section.kind === "gm-board" ? (
                     <>
+                      {section.gmBoard?.showCloseRetry ? (
+                        <CloseRetryBanner
+                          sourceSessionId="demo-source"
+                          replacedBySessionId={session.id}
+                          preview
+                          client:load
+                        />
+                      ) : null}
+                      <GmRegenerateControls
+                        sessionId={session.id}
+                        sessionStatus={section.gmBoard?.sessionStatus}
+                        initialConfirmOpen={section.gmBoard?.regenerateConfirmOpen}
+                        preview
+                        client:load
+                      />
                       <GmBoard
                         sessionId={session.id}
                         size={session.size}

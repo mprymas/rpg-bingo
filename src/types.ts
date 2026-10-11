@@ -26,11 +26,15 @@ export interface CreateSessionCommand {
   size: BoardSize;
   customPhrases: CustomPhraseInput[];
   rewards: RewardCountInput[];
+  /** When set, create closes this owned active session after the new board succeeds. */
+  replaceSessionId?: string;
 }
 
 export interface CreateSessionResponse {
   id: string;
   code: string;
+  /** Present when the new session was created but closing the source failed. */
+  closeError?: string;
 }
 
 export interface ApiErrorResponse {

@@ -6,6 +6,7 @@ export interface ReportErrorContext {
   sessionId?: string;
   sessionCode?: string;
   position?: number;
+  replacedBySessionId?: string;
 }
 
 interface ExtractedErrorFields {
@@ -154,6 +155,9 @@ export function reportError(error: unknown, context: ReportErrorContext): void {
       }
       if (context.position !== undefined) {
         scope.setTag("position", String(context.position));
+      }
+      if (context.replacedBySessionId !== undefined) {
+        scope.setTag("replacedBySessionId", context.replacedBySessionId);
       }
       if (extracted.code !== undefined) {
         scope.setTag("code", extracted.code);

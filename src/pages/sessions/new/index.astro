@@ -1,7 +1,12 @@
 ---
 import Layout from "@/layouts/Layout.astro";
 import NewSessionForm from "@/components/sessions/NewSessionForm";
+import type { NewSessionFormPrefill } from "@/components/sessions/NewSessionForm";
+import { aggregateRewardCountsFromCells, isBoardSize } from "@/lib/services/session-prefill";
+import { getSessionWithCells } from "@/lib/services/sessions.service";
 import { createClient } from "@/lib/supabase";
+
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 const supabase = createClient(Astro.request.headers, Astro.cookies);
 if (!supabase) {
@@ -16,6 +21,25 @@ const { data: rewards, error } = await supabase
 const catalogError = error ? "Nie udało się wczytać nagród" : null;
 if (catalogError) {
   Astro.response.status = 503;
+}
+
+let prefill: NewSessionFormPrefill | null = null;
+const fromParam = Astro.url.searchParams.get("from");
+const user = Astro.locals.user;
+
+if (!catalogError && fromParam && UUID_RE.test(fromParam) && user) {
+  try {
+    const source = await getSessionWithCells(supabase, fromParam, user.id);
+    if (source && isBoardSize(source.size)) {
+      prefill = {
+        size: source.size,
+        rewards: aggregateRewardCountsFromCells(source.cells),
+        replaceSessionId: source.id,
+      };
+    }
+  } catch {
+    // Unauthorized / missing / load failure → plain new session (ignore prefill).
+  }
 }
 ---
 
@@ -43,7 +67,7 @@ if (catalogError) {
             Wróć do panelu
           </a>
         </div>
-        <NewSessionForm rewards={rewards ?? []} client:load />
+        <NewSessionForm rewards={rewards ?? []} prefill={prefill} client:load />
       </div>
     </div>
   </Layout>

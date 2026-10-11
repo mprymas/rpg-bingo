@@ -18,7 +18,13 @@ export function useCreateSession() {
 
       if (response.status === 201) {
         const data = (await response.json()) as CreateSessionResponse;
-        window.location.assign(`/sessions/${data.id}`);
+        const params = new URLSearchParams();
+        if (data.closeError && body.replaceSessionId) {
+          params.set("closeFailed", "1");
+          params.set("sourceId", body.replaceSessionId);
+        }
+        const query = params.toString();
+        window.location.assign(`/sessions/${data.id}${query ? `?${query}` : ""}`);
         return;
       }
 
@@ -30,9 +36,9 @@ export function useCreateSession() {
         // keep default message
       }
       setError(message);
+      setPending(false);
     } catch {
       setError("Nie udało się utworzyć sesji");
-    } finally {
       setPending(false);
     }
   }

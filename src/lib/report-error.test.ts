@@ -112,6 +112,7 @@ describe("reportError", () => {
       sessionId: "sess-1",
       sessionCode: "ABCD12",
       position: 4,
+      replacedBySessionId: "sess-2",
     });
 
     expect(tagMap()).toEqual({
@@ -120,6 +121,7 @@ describe("reportError", () => {
       sessionId: "sess-1",
       sessionCode: "ABCD12",
       position: "4",
+      replacedBySessionId: "sess-2",
     });
   });
 
@@ -131,6 +133,7 @@ describe("reportError", () => {
     expect(Object.keys(tagMap())).not.toContain("sessionId");
     expect(Object.keys(tagMap())).not.toContain("sessionCode");
     expect(Object.keys(tagMap())).not.toContain("position");
+    expect(Object.keys(tagMap())).not.toContain("replacedBySessionId");
   });
 
   it("handles non-Error string throwables", () => {

@@ -25,6 +25,7 @@ export const createSessionSchema = z
       .refine((rewards) => new Set(rewards.map((r) => r.rewardId)).size === rewards.length, {
         message: "Identyfikatory nagród muszą być unikalne",
       }),
+    replaceSessionId: z.uuid({ error: "Nieprawidłowy identyfikator sesji" }).optional(),
   })
   .superRefine((data, ctx) => {
     const maxCells = data.size * data.size;

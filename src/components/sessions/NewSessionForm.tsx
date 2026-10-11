@@ -8,11 +8,17 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { ServerError } from "@/components/auth/ServerError";
 import { useCreateSession } from "@/components/hooks/useCreateSession";
 import { cn } from "@/lib/utils";
-import { BOARD_SIZES, type BoardSize, type Reward } from "@/types";
+import { BOARD_SIZES, type BoardSize, type Reward, type RewardCountInput } from "@/types";
 
 type RewardOption = Pick<Reward, "id" | "slug" | "label" | "description">;
 
 export type NewSessionDemoState = "default" | "focus" | "disabled" | "error" | "empty" | "loading";
+
+export interface NewSessionFormPrefill {
+  size: BoardSize;
+  rewards: RewardCountInput[];
+  replaceSessionId: string;
+}
 
 interface CustomPhraseRow {
   text: string;
@@ -21,6 +27,8 @@ interface CustomPhraseRow {
 
 interface Props {
   rewards: RewardOption[];
+  /** Owned-session regenerate prefill (`?from=`). */
+  prefill?: NewSessionFormPrefill | null;
   /** Kitchen-sink only — omit on the production create page. */
   demoState?: NewSessionDemoState;
 }
@@ -32,6 +40,27 @@ function defaultRewardCounts(rewards: RewardOption[], demoState?: NewSessionDemo
   }
   if (demoState === "disabled" && rewards.length > 0) {
     counts[rewards[0].id] = 99;
+  }
+  return counts;
+}
+
+function initialRewardCounts(
+  rewards: RewardOption[],
+  prefillRewards: RewardCountInput[] | undefined,
+  demoState?: NewSessionDemoState,
+): Record<string, number> {
+  if (!prefillRewards) {
+    return defaultRewardCounts(rewards, demoState);
+  }
+  const catalogIds = new Set(rewards.map((r) => r.id));
+  const counts: Record<string, number> = {};
+  for (const reward of rewards) {
+    counts[reward.id] = 0;
+  }
+  for (const { rewardId, count } of prefillRewards) {
+    if (catalogIds.has(rewardId)) {
+      counts[rewardId] = count;
+    }
   }
   return counts;
 }
@@ -49,11 +78,11 @@ function initialPhrases(demoState?: NewSessionDemoState): CustomPhraseRow[] {
   return [{ text: "", guaranteed: false }];
 }
 
-export default function NewSessionForm({ rewards, demoState }: Props) {
-  const [size, setSize] = useState<BoardSize>(5);
+export default function NewSessionForm({ rewards, prefill = null, demoState }: Props) {
+  const [size, setSize] = useState<BoardSize>(prefill?.size ?? 5);
   const [customPhrases, setCustomPhrases] = useState<CustomPhraseRow[]>(() => initialPhrases(demoState));
   const [rewardCounts, setRewardCounts] = useState<Record<string, number>>(() =>
-    defaultRewardCounts(rewards, demoState),
+    initialRewardCounts(rewards, prefill?.rewards, demoState),
   );
   const { pending, error, createSession } = useCreateSession();
 
@@ -93,6 +122,7 @@ export default function NewSessionForm({ rewards, demoState }: Props) {
         rewardId: reward.id,
         count: rewardCounts[reward.id] ?? 0,
       })),
+      ...(prefill?.replaceSessionId ? { replaceSessionId: prefill.replaceSessionId } : {}),
     });
   }
 
