@@ -20,7 +20,7 @@ test("player claim on free cell reveals reward on the board", async ({ page }) =
   await page.getByRole("radio", { name: "3×3" }).click();
   await page.getByPlaceholder("Wpisz hasło…").fill(phrase);
   await page.getByRole("checkbox", { name: "Gwarantowane na planszy" }).check();
-  await page.getByLabel("Liczba nagród: Inspiracja").fill("9");
+  await page.getByLabel("Liczba nagród na polach: Inspiracja").fill("9");
   await page.getByRole("button", { name: "Generuj planszę" }).click();
 
   await page.waitForURL(/\/sessions\/[0-9a-f-]{36}/i);
