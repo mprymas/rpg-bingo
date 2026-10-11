@@ -204,6 +204,10 @@ export type Database = {
         Args: { p_replaced_by: string; p_session_id: string }
         Returns: undefined
       }
+      delete_session: {
+        Args: { p_session_id: string }
+        Returns: undefined
+      }
       get_active_board_by_code: {
         Args: { p_code: string }
         Returns: {

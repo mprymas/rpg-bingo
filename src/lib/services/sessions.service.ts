@@ -5,6 +5,7 @@ import { generateSessionCode } from "@/lib/services/session-code";
 import type {
   ClaimOccupant,
   CloseSessionSuccessResponse,
+  DeleteSessionSuccessResponse,
   CreateSessionCommand,
   CreateSessionResponse,
   PlayerBoard,
@@ -418,6 +419,41 @@ export async function closeSessionAsReplaced(
 
   if (error) {
     const mapped = closeSessionAsReplacedErrorFromMessage(error.message);
+    if (mapped) throw mapped;
+    throw error;
+  }
+
+  return { ok: true };
+}
+
+export type DeleteSessionErrorCode = "SESSION_NOT_FOUND";
+
+export class DeleteSessionError extends Error {
+  readonly code: DeleteSessionErrorCode;
+
+  constructor(code: DeleteSessionErrorCode) {
+    super(code);
+    this.name = "DeleteSessionError";
+    this.code = code;
+  }
+}
+
+/** Pure mapper from Postgres RAISE messages — unit-testable without a live DB. */
+export function deleteSessionErrorFromMessage(message: string): DeleteSessionError | null {
+  if (message.includes("session_not_found")) return new DeleteSessionError("SESSION_NOT_FOUND");
+  return null;
+}
+
+export async function deleteSession(
+  supabase: AppSupabaseClient,
+  input: { sessionId: string },
+): Promise<DeleteSessionSuccessResponse> {
+  const { error } = await supabase.rpc("delete_session", {
+    p_session_id: input.sessionId,
+  });
+
+  if (error) {
+    const mapped = deleteSessionErrorFromMessage(error.message);
     if (mapped) throw mapped;
     throw error;
   }

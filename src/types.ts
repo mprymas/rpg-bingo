@@ -109,3 +109,7 @@ export interface UndoClaimSuccessResponse {
 export interface CloseSessionSuccessResponse {
   ok: true;
 }
+
+export interface DeleteSessionSuccessResponse {
+  ok: true;
+}
