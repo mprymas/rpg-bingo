@@ -3,7 +3,7 @@ project: RPG Bingo
 version: 2
 status: draft
 created: 2026-10-11
-updated: 2026-10-11
+updated: 2026-10-14
 prd_version: 2
 main_goal: speed
 top_blocker: none
@@ -115,23 +115,32 @@ Brak nowych Foundations — baseline pokrywa warstwy potrzebne do S-01…S-03; k
 
 | Roadmap ID | Change ID                 | Suggested issue title                                      | Ready for `/10x-plan` | Notes                                      |
 | ---------- | ------------------------- | ---------------------------------------------------------- | --------------------- | ------------------------------------------ |
-| S-01       | player-join-via-qr        | Gracz dołącza skanując QR; join kodem bez regresji         | yes                   | Run `/10x-plan player-join-via-qr`         |
-| S-02       | threshold-pattern-rewards | Nagrody za liczbę pól / układ + satysfakcja przy claim     | yes                   | North star — Run `/10x-plan threshold-pattern-rewards` |
-| S-03       | gm-delete-session         | MG usuwa sesję po potwierdzeniu (dowolny status)           | yes                   | Parallel — Run `/10x-plan gm-delete-session` |
+| S-01       | player-join-via-qr        | Gracz dołącza skanując QR; join kodem bez regresji         | —                     | [#23](https://github.com/mprymas/rpg-bingo/issues/23) — done |
+| S-02       | threshold-pattern-rewards | Nagrody za liczbę pól / układ + satysfakcja przy claim     | —                     | [#24](https://github.com/mprymas/rpg-bingo/issues/24) — done (north star) |
+| S-03       | gm-delete-session         | MG usuwa sesję po potwierdzeniu (dowolny status)           | —                     | [#25](https://github.com/mprymas/rpg-bingo/issues/25) — done |
 
 This table is the clean handoff to Jira/Linear or any MCP-backed backlog. Include one row for every `F-NN` and `S-NN`. It should be compact enough to copy into issues, but it must not duplicate the detailed roadmap body.
 
 ## Open Roadmap Questions
 
-1. **What is the one-sentence system purpose of the current product?** — Owner: user. Block: no (Current System Overview is partial until filled). Source: prd-v2 Open Questions.
-2. **What is the key architecture of the current system?** — Owner: user. Block: no. Source: prd-v2 Open Questions.
-3. **What is the current tech stack?** — Owner: user (or fill from known deployment reality). Block: no. Source: prd-v2 Open Questions.
+Pytania o cel, architekturę i stack z prd-v2 są zamknięte (Current System Overview, 2026-10-14). Z roadmapy M-1 zostają:
+
+1. **Jak zdefiniowany jest "układ" dający nagrodę drużynową (FR-014)?** — pełna linia (wiersz/kolumna/przekątna) przez dowolnych graczy, cała plansza, inny wzór? Owner: użytkownik. Block: nie (FR nice-to-have) — `roadmap-wide` dopiero gdy FR-014 wejdzie do scope. S-02 (progi oraz wiersz/kolumna indywidualne) tego nie rozstrzyga. Issue: [#7](https://github.com/mprymas/rpg-bingo/issues/7).
+2. **Co dzieje się, gdy haseł (predefiniowane + własne) jest mniej niż pól na wybranej planszy?** — Założenie MVP: baza predefiniowana jest zawsze większa niż 25 haseł, więc przypadek nie występuje przy domyślnym 5x5. Do rozstrzygnięcia dla większych plansz. Owner: użytkownik. Block: nie (gates soft: S-01 M-1). Issue: [#8](https://github.com/mprymas/rpg-bingo/issues/8).
 
 ## Parked
 
-- **Konta graczy i historia między sesjami** — Why parked: prd-v2 §Non-Goals.
-- **Wymuszanie nowych nagród / progów na starych sesjach** — Why parked: prd-v2 §Non-Goals; nowe zachowanie opcjonalne.
-- **Natywna aplikacja mobilna** — Why parked: prd-v2 §Non-Goals; QR w przeglądarce wystarczy.
+- **Konta graczy i historia między sesjami** — Why parked: prd-v2 §Non-Goals. Issue: [#9](https://github.com/mprymas/rpg-bingo/issues/9).
+- **Wymuszanie nowych nagród / progów na starych sesjach** — Why parked: prd-v2 §Non-Goals; nowe zachowanie opcjonalne. Issue: [#18](https://github.com/mprymas/rpg-bingo/issues/18).
+- **Natywna aplikacja mobilna** — Why parked: prd-v2 §Non-Goals; QR w przeglądarce wystarczy. Issue: [#19](https://github.com/mprymas/rpg-bingo/issues/19).
+
+### Nice-to-have (prd.md v1, poza milestone)
+
+Przywrócone z roadmapy M-1 (stan sprzed otwarcia M-2, 2026-10-11).
+
+- **FR-003 — plansza przed rejestracją** — Why parked: nice-to-have; `capacity` + market-feedback → poza pierwszym milestone i poza M-2. Issue: [#15](https://github.com/mprymas/rpg-bingo/issues/15).
+- **FR-014 / FR-015 — nagrody drużynowe i własne nagrody MG** — Why parked: nice-to-have; Secondary SC i Open Q1. S-02 domknęło progi i układy indywidualne, nie nagrodę drużynową ani własne nagrody MG. Issue: [#16](https://github.com/mprymas/rpg-bingo/issues/16).
+- **FR-016 / FR-017 — ekran admina haseł i filtry kategorii** — Why parked: nice-to-have; MVP = seed (F-01), bez ekranu edycji. Issue: [#17](https://github.com/mprymas/rpg-bingo/issues/17).
 
 ## Milestone History
 

@@ -19,11 +19,13 @@ timeline_budget:
 
 MG może utworzyć planszę; gracze mogą dołączyć i oznaczać pola. Dołączenie wymaga wpisania adresu aplikacji, a potem kodu sesji. Nie ma usuwania starych sesji przez MG. Pola bez nagrody nie dają graczom wyraźnego celu.
 
-User base: small (własny stół / garść znajomych).
+**Cel (jedno zdanie):** Wspólna plansza bingo na sesję papierowego RPG — hasła z bazy RPG i własne MG, pole zajęte raz, nagroda na widocznym polu — żeby inspiracja wynikała z reguły, a nie z uznania MG.
 
-# TODO: key architecture — see Open Questions
-# TODO: tech stack — see Open Questions
-# TODO: one-sentence system purpose — see Open Questions
+**Architektura:** Aplikacja webowa SSR: Astro serwuje strony, React obsługuje interakcję. Supabase daje logowanie MG i Postgres, który ograniczeniami pilnuje „jedno pole, jeden właściciel”. Dołączenie gracza kodem sesji to logika aplikacji, bez konta. Plansza odświeża się pollingiem (bez websocketów); Supabase Realtime jest wyłączone. Wdrożenie na Cloudflare Workers; CI to GitHub Actions z auto-deploy po merge.
+
+**Stack:** Astro 7 + React 19 + TypeScript + Tailwind 4 + Supabase (auth i Postgres) + Cloudflare Workers; npm; starter `10x-astro-starter`.
+
+User base: small (własny stół / garść znajomych).
 
 ## Problem Statement & Motivation
 
@@ -123,6 +125,4 @@ Funkcjonalne:
 
 ## Open Questions
 
-1. **What is the one-sentence system purpose of the current product?** — TBD by user. Block: no (Current System Overview is partial until filled). Source: shape-notes Current System lacked an explicit purpose sentence.
-2. **What is the key architecture of the current system?** — TBD by user. Block: no. Source: not captured in shape-notes.
-3. **What is the current tech stack?** — TBD by user (or fill from known deployment reality in Current System Overview). Block: no. Source: not captured in shape-notes.
+Brak. Pytania o cel systemu, architekturę i stack uzupełnione 2026-10-14 w Current System Overview z `prd.md` (v1) i `tech-stack.md`.
