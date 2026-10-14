@@ -247,13 +247,14 @@
 }
 
 /* Free-cell Badge: phrase-matched size + end-ellipsis.
-   Layout overrides (block / min-w-0 / max-w-full / w-auto / shrink) live on the GmBoard
-   className so twMerge drops Badge inline-flex / w-fit / shrink-0 — raw CSS alone loses that fight. */
+   Layout/weight overrides (block / min-w-0 / max-w-full / w-auto / shrink / font-normal)
+   live on the GmBoard className so twMerge drops Badge inline-flex / w-fit / shrink-0 / font-medium.
+   font-size needs !important — twMerge cannot drop text-xs in favor of a custom clamp utility. */
 @utility player-board-cell-reward-badge {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  font-size: clamp(0.55rem, 12cqmin, 0.75rem);
+  font-size: clamp(0.55rem, 12cqmin, 0.75rem) !important;
   line-height: 1.15;
 }
 

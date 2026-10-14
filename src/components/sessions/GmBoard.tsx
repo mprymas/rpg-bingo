@@ -301,7 +301,7 @@ export default function GmBoard({
                   {cell.reward ? (
                     <Badge
                       variant="secondary"
-                      className="player-board-cell-reward-badge mt-1 block w-auto max-w-full min-w-0 shrink"
+                      className="player-board-cell-reward-badge mt-1 block w-auto max-w-full min-w-0 shrink font-normal"
                     >
                       {cell.reward.label}
                     </Badge>
