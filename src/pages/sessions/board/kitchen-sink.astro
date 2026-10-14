@@ -15,6 +15,11 @@ if (import.meta.env.PROD) {
 
 const rewardInspiration = { slug: "inspiration", label: "Inspiracja" };
 const rewardExperience = { slug: "experience", label: "Doświadczenie" };
+/** Intentional overflow on phone-width MG tiles (free Badge + claimed span gate). */
+const rewardLongLabel = {
+  slug: "long-label",
+  label: "Bardzo długa nazwa nagrody która nie mieści się na kafelku telefonu",
+};
 
 const PHRASES = [
   "Trafienie krytyczne",
@@ -147,6 +152,17 @@ function makeClaimedCells(sessionId: string): SessionWithCells["cells"] {
   return cells;
 }
 
+/** Claimed board with long reward labels on both free (Badge) and claimed (span) cells. */
+function makeLongLabelClaimedCells(sessionId: string): SessionWithCells["cells"] {
+  const cells = makeClaimedCells(sessionId);
+  for (const cell of cells) {
+    if (!cell.reward) continue;
+    cell.reward = rewardLongLabel;
+    cell.reward_id = "demo-long-label";
+  }
+  return cells;
+}
+
 function statusLabel(status: SessionWithCells["status"]) {
   return status === "active" ? "Aktywna" : "Zamknięta";
 }
@@ -248,6 +264,21 @@ const fixtureClaimed: SessionWithCells = {
   created_at: "2026-09-15T14:30:00.000Z",
   threshold_count: null,
   cells: makeClaimedCells("demo-claimed"),
+  players: demoPlayers,
+  rewardRules: emptyRewardRules,
+  lineRewards: [],
+};
+
+const fixtureLongLabel: SessionWithCells = {
+  id: "demo-long-label",
+  code: "LNG777",
+  size: 3,
+  status: "active",
+  replaced_by_session_id: null,
+  gm_id: "demo-gm",
+  created_at: "2026-09-15T14:30:00.000Z",
+  threshold_count: null,
+  cells: makeLongLabelClaimedCells("demo-long-label"),
   players: demoPlayers,
   rewardRules: emptyRewardRules,
   lineRewards: [],
@@ -419,6 +450,15 @@ const sections: {
     description: "GmBoard (active): zajęte pola gotowe do undo — klik otwiera confirm; lista dołączonych pod planszą.",
     kind: "gm-board",
     session: fixtureClaimed,
+    gmBoard: { sessionStatus: "active" },
+  },
+  {
+    id: "long-label",
+    title: "long reward label",
+    description:
+      "GmBoard: długa etykieta nagrody na wolnym polu (Badge) i zajętym (span) — start widoczny, ellipsis na końcu, rozmiar jak hasło.",
+    kind: "gm-board",
+    session: fixtureLongLabel,
     gmBoard: { sessionStatus: "active" },
   },
   {

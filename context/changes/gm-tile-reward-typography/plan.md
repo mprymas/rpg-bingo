@@ -148,7 +148,7 @@ None — no schema or data migration.
 
 #### Automated
 
-- [x] 1.1 npm run lint passes (ESLint + ui-literals on scoped files including GmBoard.tsx)
+- [x] 1.1 npm run lint passes (ESLint + ui-literals on scoped files including GmBoard.tsx) — 368ff45
 
 #### Manual
 
@@ -158,7 +158,7 @@ None — no schema or data migration.
 
 #### Automated
 
-- [ ] 2.1 npm run lint passes
+- [x] 2.1 npm run lint passes
 
 #### Manual
 
