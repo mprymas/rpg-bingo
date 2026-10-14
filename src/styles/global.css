@@ -246,12 +246,10 @@
   opacity: 0.9;
 }
 
-/* Free-cell Badge: phrase-matched size + end-ellipsis; overrides Badge text-xs / w-fit / shrink-0. */
+/* Free-cell Badge: phrase-matched size + end-ellipsis.
+   Layout overrides (block / min-w-0 / max-w-full / w-auto / shrink) live on the GmBoard
+   className so twMerge drops Badge inline-flex / w-fit / shrink-0 — raw CSS alone loses that fight. */
 @utility player-board-cell-reward-badge {
-  min-width: 0;
-  max-width: 100%;
-  width: auto;
-  flex-shrink: 1;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
