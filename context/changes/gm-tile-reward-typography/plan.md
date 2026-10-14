@@ -152,14 +152,14 @@ None — no schema or data migration.
 
 #### Manual
 
-- [ ] 1.2 On MG board short reward fully visible; long label start + end ellipsis, no bilateral clip; size similar to phrase; claimed long label ellipsizes
+- [x] 1.2 On MG board short reward fully visible; long label start + end ellipsis, no bilateral clip; size similar to phrase; claimed long label ellipsizes — 60fde79
 
 ### Phase 2: Kitchen-sink long-label gate
 
 #### Automated
 
-- [x] 2.1 npm run lint passes
+- [x] 2.1 npm run lint passes — 6c5c4af
 
 #### Manual
 
-- [ ] 2.2 /sessions/board/kitchen-sink long-label section shows free Badge and claimed span with start-visible end-ellipsis and phrase-matched sizing
+- [x] 2.2 /sessions/board/kitchen-sink long-label section shows free Badge and claimed span with start-visible end-ellipsis and phrase-matched sizing — 60fde79

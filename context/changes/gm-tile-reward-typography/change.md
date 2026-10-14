@@ -1,7 +1,7 @@
 ---
 change_id: gm-tile-reward-typography
 title: Fix MG tile reward font size and ellipsis
-status: implementing
+status: implemented
 created: 2026-10-14
 updated: 2026-10-14
 archived_at: null
