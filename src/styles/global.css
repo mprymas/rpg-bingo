@@ -234,6 +234,7 @@
 }
 
 @utility player-board-cell-reward {
+  display: block;
   max-width: 100%;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -243,6 +244,19 @@
   line-height: 1.15;
   font-weight: 500;
   opacity: 0.9;
+}
+
+/* Free-cell Badge: phrase-matched size + end-ellipsis; overrides Badge text-xs / w-fit / shrink-0. */
+@utility player-board-cell-reward-badge {
+  min-width: 0;
+  max-width: 100%;
+  width: auto;
+  flex-shrink: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: clamp(0.55rem, 12cqmin, 0.75rem);
+  line-height: 1.15;
 }
 
 /* Row edge labels: rotated so reading direction is bottom → top. */

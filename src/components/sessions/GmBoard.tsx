@@ -299,7 +299,7 @@ export default function GmBoard({
                 <>
                   <p className="player-board-cell-phrase">{cell.phrase}</p>
                   {cell.reward ? (
-                    <Badge variant="secondary" className="mt-1 max-w-full truncate">
+                    <Badge variant="secondary" className="player-board-cell-reward-badge mt-1">
                       {cell.reward.label}
                     </Badge>
                   ) : null}
