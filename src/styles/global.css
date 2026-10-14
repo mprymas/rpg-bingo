@@ -233,6 +233,12 @@
   hyphens: none;
 }
 
+/* Free cell with reward chip: leave vertical room for the Badge on phone tiles. */
+@utility player-board-cell-phrase-with-reward {
+  -webkit-line-clamp: 2;
+  min-height: 0;
+}
+
 @utility player-board-cell-reward {
   display: block;
   max-width: 100%;
@@ -247,8 +253,10 @@
 }
 
 /* Free-cell Badge: phrase-matched size + end-ellipsis.
-   Layout/weight overrides (block / min-w-0 / max-w-full / w-auto / shrink / font-normal)
-   live on the GmBoard className so twMerge drops Badge inline-flex / w-fit / shrink-0 / font-medium.
+   Layout/weight overrides (block / min-w-0 / max-w-full / w-auto / shrink-0 / font-normal)
+   live on the GmBoard className so twMerge drops Badge inline-flex / w-fit / font-medium.
+   Keep shrink-0: column flex main axis is height — we must reserve chip height, not shrink it.
+   Width is bounded by max-w-full / min-w-0 (not flex-shrink).
    font-size needs !important — twMerge cannot drop text-xs in favor of a custom clamp utility. */
 @utility player-board-cell-reward-badge {
   overflow: hidden;
@@ -256,6 +264,8 @@
   white-space: nowrap;
   font-size: clamp(0.55rem, 12cqmin, 0.75rem) !important;
   line-height: 1.15;
+  padding-block: 0.05rem;
+  padding-inline: 0.35rem;
 }
 
 /* Row edge labels: rotated so reading direction is bottom → top. */
