@@ -1,10 +1,10 @@
 ---
 change_id: expand-phrase-catalog
 title: Zasilenie puli haseł kolejną partią ze stagingu
-status: implemented
+status: archived
 created: 2026-10-25
 updated: 2026-10-25
-archived_at: null
+archived_at: 2026-10-25T14:39:48Z
 ---
 
 ## Notes
