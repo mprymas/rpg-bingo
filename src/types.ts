@@ -187,3 +187,11 @@ export interface CloseSessionSuccessResponse {
 export interface DeleteSessionSuccessResponse {
   ok: true;
 }
+
+export interface RerollPhraseSuccessResponse {
+  phrase: string;
+}
+
+export interface CommitPhraseRerollsSuccessResponse {
+  cells: SessionWithCells["cells"];
+}

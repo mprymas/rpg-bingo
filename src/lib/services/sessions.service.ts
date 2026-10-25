@@ -1,6 +1,7 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database, Json } from "@/db/database.types";
 import { drawLineRewards, generateBoard } from "@/lib/services/board-generator";
+import { pickCatalogPhrase, RerollPhraseError } from "@/lib/services/reroll-phrase";
 import { buildLineSlots } from "@/lib/services/line-slots";
 import { deriveRewardProgress } from "@/lib/services/reward-progress";
 import { generateSessionCode } from "@/lib/services/session-code";
@@ -852,4 +853,181 @@ export async function undoBoardCell(
           : null,
     },
   };
+}
+
+export type PhraseRerollErrorCode =
+  | "SESSION_NOT_FOUND"
+  | "INVALID_POSITION"
+  | "CELL_NOT_FOUND"
+  | "PHRASE_NOT_IN_CATALOG"
+  | "DUPLICATE_PHRASE"
+  | "CELL_CLAIMED"
+  | "POOL_EMPTY";
+
+export class PhraseRerollError extends Error {
+  readonly code: PhraseRerollErrorCode;
+  /** Set for `CELL_CLAIMED`: board positions the commit refused. */
+  readonly positions?: number[];
+
+  constructor(code: PhraseRerollErrorCode, positions?: number[]) {
+    super(code);
+    this.name = "PhraseRerollError";
+    this.code = code;
+    if (code === "CELL_CLAIMED") {
+      this.positions = positions ?? [];
+    }
+  }
+}
+
+const CLAIMED_POSITIONS_RE = /cell_claimed:(\d+(?:,\d+)*)/;
+
+/** Pure mapper from Postgres RAISE messages — unit-testable without a live DB. */
+export function commitPhraseRerollsErrorFromMessage(message: string): PhraseRerollError | null {
+  const claimed = CLAIMED_POSITIONS_RE.exec(message);
+  if (claimed?.[1]) {
+    const positions = claimed[1].split(",").map((part) => Number(part));
+    if (positions.every((position) => Number.isInteger(position))) {
+      return new PhraseRerollError("CELL_CLAIMED", positions);
+    }
+  }
+  if (message.includes("session_not_found")) return new PhraseRerollError("SESSION_NOT_FOUND");
+  if (message.includes("invalid_position")) return new PhraseRerollError("INVALID_POSITION");
+  if (message.includes("cell_not_found")) return new PhraseRerollError("CELL_NOT_FOUND");
+  if (message.includes("phrase_not_in_catalog")) return new PhraseRerollError("PHRASE_NOT_IN_CATALOG");
+  if (message.includes("duplicate_phrase")) return new PhraseRerollError("DUPLICATE_PHRASE");
+  return null;
+}
+
+export async function rerollPhrase(
+  supabase: AppSupabaseClient,
+  input: {
+    sessionId: string;
+    position: number;
+    overrides: { position: number; phrase: string }[];
+  },
+): Promise<{ phrase: string }> {
+  const {
+    data: { user },
+    error: userError,
+  } = await supabase.auth.getUser();
+  if (userError) throw userError;
+  if (!user) throw new PhraseRerollError("SESSION_NOT_FOUND");
+
+  const session = await getSessionWithCells(supabase, input.sessionId, user.id);
+  if (!session) {
+    throw new PhraseRerollError("SESSION_NOT_FOUND");
+  }
+  if (session.status !== "active") {
+    throw new PhraseRerollError("SESSION_NOT_FOUND");
+  }
+
+  const cellCount = session.size * session.size;
+  if (input.position < 0 || input.position >= cellCount) {
+    throw new PhraseRerollError("INVALID_POSITION");
+  }
+
+  const cellByPosition = new Map(session.cells.map((cell) => [cell.position, cell]));
+  const target = cellByPosition.get(input.position);
+  if (!target) {
+    throw new PhraseRerollError("CELL_NOT_FOUND");
+  }
+  if (target.claimed_by_player_id) {
+    throw new PhraseRerollError("CELL_CLAIMED", [input.position]);
+  }
+
+  const overrideByPosition = new Map<number, string>();
+  for (const override of input.overrides) {
+    if (override.position < 0 || override.position >= cellCount || overrideByPosition.has(override.position)) {
+      throw new PhraseRerollError("INVALID_POSITION");
+    }
+    if (!cellByPosition.has(override.position)) {
+      throw new PhraseRerollError("CELL_NOT_FOUND");
+    }
+    overrideByPosition.set(override.position, override.phrase);
+  }
+
+  const { data: phrases, error: phrasesError } = await supabase.from("phrases").select("text");
+  if (phrasesError) throw phrasesError;
+
+  const visiblePhrases = session.cells.map((cell) => overrideByPosition.get(cell.position) ?? cell.phrase);
+
+  try {
+    const phrase = pickCatalogPhrase({
+      catalog: phrases.map((row) => row.text),
+      visiblePhrases,
+    });
+    return { phrase };
+  } catch (error) {
+    if (error instanceof RerollPhraseError) {
+      throw new PhraseRerollError("POOL_EMPTY");
+    }
+    throw error;
+  }
+}
+
+export async function commitPhraseRerolls(
+  supabase: AppSupabaseClient,
+  input: {
+    sessionId: string;
+    changes: { position: number; phrase: string }[];
+  },
+): Promise<{ cells: SessionWithCells["cells"] }> {
+  const changes: Json = input.changes.map((change) => ({
+    position: change.position,
+    phrase: change.phrase,
+  }));
+
+  const { data, error } = await supabase.rpc("commit_phrase_rerolls", {
+    p_session_id: input.sessionId,
+    p_changes: changes,
+  });
+
+  if (error) {
+    const mapped = commitPhraseRerollsErrorFromMessage(error.message);
+    if (mapped) throw mapped;
+    throw error;
+  }
+
+  const rows = rpcRows(data);
+  if (rows.length === 0) {
+    throw new Error("commit_phrase_rerolls returned no row");
+  }
+
+  const positions = input.changes.map((change) => change.position);
+  const { data: cellRows, error: cellError } = await supabase
+    .from("board_cells")
+    .select(
+      `
+      *,
+      reward:rewards ( slug, label )
+    `,
+    )
+    .eq("session_id", input.sessionId)
+    .in("position", positions);
+
+  if (cellError) throw cellError;
+  if (cellRows.length !== new Set(positions).size) {
+    throw new PhraseRerollError("CELL_NOT_FOUND");
+  }
+
+  const rpcByPosition = new Map(rows.map((row) => [row.position, row]));
+
+  const cells = [...cellRows]
+    .sort((a, b) => a.position - b.position)
+    .map((cellRow) => {
+      const rpcRow = rpcByPosition.get(cellRow.position);
+      if (!rpcRow) {
+        throw new PhraseRerollError("CELL_NOT_FOUND");
+      }
+      return {
+        ...cellRow,
+        claimedByColor: rpcRow.claimed_by_color,
+        reward:
+          rpcRow.reward_slug != null && rpcRow.reward_label != null
+            ? { slug: rpcRow.reward_slug, label: rpcRow.reward_label }
+            : null,
+      };
+    });
+
+  return { cells };
 }

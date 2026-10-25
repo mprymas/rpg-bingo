@@ -4,6 +4,13 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import BoardWithLineSlots from "@/components/play/BoardWithLineSlots";
 import PlayerRosterList from "@/components/play/PlayerRosterList";
+import {
+  GM_BOARD_CANCEL_EDIT_EVENT,
+  GM_BOARD_COMMIT_EDIT_EVENT,
+  GM_BOARD_ENTER_EDIT_EVENT,
+  publishGmBoardEditState,
+  readGmBoardEnterEditDetail,
+} from "@/components/sessions/gm-board-edit";
 import { cn } from "@/lib/utils";
 import type { BoardLineSlot, SessionPlayerRosterEntry, SessionWithCells, UndoClaimSuccessResponse } from "@/types";
 
@@ -33,6 +40,11 @@ const PLAYER_FG: Record<number, string> = {
 
 export type GmBoardCell = SessionWithCells["cells"][number];
 
+interface PhraseOverride {
+  position: number;
+  phrase: string;
+}
+
 interface Props {
   sessionId: string;
   size: number;
@@ -44,14 +56,20 @@ interface Props {
   thresholdCount?: number | null;
   /** When not `"active"`, claimed cells stay non-interactive. */
   sessionStatus?: string;
-  /** Kitchen-sink fixtures: no polling; undo POST is a local no-op. */
+  /** Kitchen-sink fixtures: no polling; undo and reroll POSTs are local no-ops. */
   preview?: boolean;
   /** Kitchen-sink: seed confirm chrome on a claimed cell position. */
   initialConfirmPosition?: number | null;
   /** Kitchen-sink: seed busy spinner inside confirm chrome. */
   initialPending?: boolean;
-  /** Kitchen-sink: seed undo error banner. */
+  /** Kitchen-sink: seed undo or draw error banner. */
   initialError?: string | null;
+  /** Kitchen-sink: seed edit mode. Entry on the live page is the header pencil. */
+  initialEditing?: boolean;
+  /** Kitchen-sink: seed tab-local phrase overrides. */
+  initialOverrides?: PhraseOverride[];
+  /** Kitchen-sink: seed the claimed-commit rejection banner. */
+  initialRejectedPositions?: number[];
 }
 
 function isRewardRefValue(value: unknown): value is { slug: string; label: string } {
@@ -112,13 +130,48 @@ function isUndoClaimSuccess(value: unknown): value is UndoClaimSuccessResponse {
   return typeof cell.position === "number" && typeof cell.id === "string";
 }
 
+function isRerollSuccess(value: unknown): value is { phrase: string } {
+  if (!value || typeof value !== "object") return false;
+  const phrase = (value as { phrase?: unknown }).phrase;
+  return typeof phrase === "string" && phrase.length > 0;
+}
+
+function isCommitSuccess(value: unknown): value is { cells: GmBoardCell[] } {
+  if (!value || typeof value !== "object") return false;
+  const cells = (value as { cells?: unknown }).cells;
+  if (!Array.isArray(cells)) return false;
+  return cells.every((cell) => {
+    if (!cell || typeof cell !== "object") return false;
+    const record = cell as Record<string, unknown>;
+    return typeof record.position === "number" && typeof record.id === "string" && typeof record.phrase === "string";
+  });
+}
+
 function readJsonError(value: unknown): string | null {
   if (!value || typeof value !== "object" || !("error" in value)) return null;
   return typeof value.error === "string" ? value.error : null;
 }
 
+function readClaimedPositions(value: unknown): number[] | null {
+  if (!value || typeof value !== "object" || !("positions" in value)) return null;
+  const raw = value.positions;
+  if (!Array.isArray(raw) || raw.length === 0) return null;
+  const positions: number[] = [];
+  for (const position of raw) {
+    if (typeof position !== "number" || !Number.isInteger(position)) return null;
+    positions.push(position);
+  }
+  return positions;
+}
+
 function freeCellLocally(cell: GmBoardCell): GmBoardCell {
   return { ...cell, claimedByColor: null };
+}
+
+function overrideList(overrides: ReadonlyMap<number, string>): PhraseOverride[] {
+  return [...overrides.entries()]
+    .map(([position, phrase]) => ({ position, phrase }))
+    .sort((a, b) => a.position - b.position);
 }
 
 export default function GmBoard({
@@ -133,6 +186,9 @@ export default function GmBoard({
   initialConfirmPosition = null,
   initialPending = false,
   initialError = null,
+  initialEditing = false,
+  initialOverrides,
+  initialRejectedPositions = [],
 }: Props) {
   const [cells, setCells] = useState(initialCells);
   const [players, setPlayers] = useState(initialPlayers);
@@ -141,15 +197,74 @@ export default function GmBoard({
   const [confirmPosition, setConfirmPosition] = useState<number | null>(initialConfirmPosition);
   const [pending, setPending] = useState(initialPending);
   const [error, setError] = useState<string | null>(initialError);
+  const [editing, setEditing] = useState(initialEditing);
+  const [overrides, setOverrides] = useState(
+    () => new Map((initialOverrides ?? []).map((item) => [item.position, item.phrase] as const)),
+  );
+  const [rejectedPositions, setRejectedPositions] = useState<number[]>(initialRejectedPositions);
+  const [drawingPosition, setDrawingPosition] = useState<number | null>(null);
+  const [committing, setCommitting] = useState(false);
   const [refreshTick, setRefreshTick] = useState(0);
   const pollCancelledRef = useRef(false);
   const confirmPositionRef = useRef<number | null>(initialConfirmPosition);
+  const pendingRef = useRef(initialPending);
+  const rerollBusyRef = useRef(false);
+  const cancelEditRef = useRef<() => void>(() => undefined);
+  const commitDraftRef = useRef<() => void>(() => undefined);
 
   const undoEnabled = sessionStatus === "active";
+  const rerollBusy = drawingPosition !== null || committing;
+  const overrideCount = overrides.size;
+
+  useEffect(() => {
+    publishGmBoardEditState({
+      sessionId,
+      editing,
+      canCommit: overrideCount > 0,
+      busy: pending || rerollBusy,
+      committing,
+    });
+  }, [sessionId, editing, overrideCount, pending, rerollBusy, committing]);
 
   useEffect(() => {
     confirmPositionRef.current = confirmPosition;
-  }, [confirmPosition]);
+    pendingRef.current = pending;
+  }, [confirmPosition, pending]);
+
+  useEffect(() => {
+    function onEnterEdit(event: Event) {
+      const detail = readGmBoardEnterEditDetail(event);
+      if (detail?.sessionId !== sessionId) return;
+      if (sessionStatus !== "active") return;
+      if (pendingRef.current || rerollBusyRef.current) return;
+      setEditing(true);
+      setOverrides(new Map());
+      setRejectedPositions([]);
+      setError(null);
+      setConfirmPosition(null);
+    }
+
+    function onCancelEdit(event: Event) {
+      const detail = readGmBoardEnterEditDetail(event);
+      if (detail?.sessionId !== sessionId) return;
+      cancelEditRef.current();
+    }
+
+    function onCommitEdit(event: Event) {
+      const detail = readGmBoardEnterEditDetail(event);
+      if (detail?.sessionId !== sessionId) return;
+      commitDraftRef.current();
+    }
+
+    window.addEventListener(GM_BOARD_ENTER_EDIT_EVENT, onEnterEdit);
+    window.addEventListener(GM_BOARD_CANCEL_EDIT_EVENT, onCancelEdit);
+    window.addEventListener(GM_BOARD_COMMIT_EDIT_EVENT, onCommitEdit);
+    return () => {
+      window.removeEventListener(GM_BOARD_ENTER_EDIT_EVENT, onEnterEdit);
+      window.removeEventListener(GM_BOARD_CANCEL_EDIT_EVENT, onCancelEdit);
+      window.removeEventListener(GM_BOARD_COMMIT_EDIT_EVENT, onCommitEdit);
+    };
+  }, [sessionId, sessionStatus]);
 
   const refreshSnapshot = useEffectEvent(async () => {
     try {
@@ -197,7 +312,7 @@ export default function GmBoard({
   }, [preview, refreshTick]);
 
   function enterConfirm(position: number) {
-    if (!undoEnabled || pending) return;
+    if (!undoEnabled || pending || rerollBusyRef.current) return;
     setError(null);
     setConfirmPosition(position);
   }
@@ -207,8 +322,131 @@ export default function GmBoard({
     setConfirmPosition(null);
   }
 
+  function cancelEdit() {
+    if (pending || rerollBusyRef.current) return;
+    setEditing(false);
+    setOverrides(new Map());
+    setRejectedPositions([]);
+    setError(null);
+    setConfirmPosition(null);
+  }
+
+  function dropRejected() {
+    if (pending || rerollBusyRef.current) return;
+    setOverrides((current) => {
+      const next = new Map(current);
+      for (const position of rejectedPositions) {
+        next.delete(position);
+      }
+      return next;
+    });
+    setRejectedPositions([]);
+  }
+
+  async function drawPhrase(position: number) {
+    if (!undoEnabled || pending || rerollBusyRef.current) return;
+    rerollBusyRef.current = true;
+    setDrawingPosition(position);
+    setError(null);
+
+    try {
+      if (preview) return;
+
+      const response = await fetch(`/api/sessions/${encodeURIComponent(sessionId)}/reroll-phrase`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          position,
+          overrides: overrideList(overrides),
+        }),
+      });
+      const data: unknown = await response.json().catch(() => null);
+
+      if (!response.ok || !isRerollSuccess(data)) {
+        setError(readJsonError(data) ?? "Nie udało się wylosować hasła");
+        return;
+      }
+
+      setOverrides((current) => {
+        const next = new Map(current);
+        next.set(position, data.phrase);
+        return next;
+      });
+    } catch {
+      setError("Nie udało się wylosować hasła");
+    } finally {
+      rerollBusyRef.current = false;
+      setDrawingPosition(null);
+    }
+  }
+
+  async function commitDraft() {
+    const changes = overrideList(overrides);
+    if (!undoEnabled || pending || rerollBusyRef.current || changes.length === 0) return;
+    rerollBusyRef.current = true;
+    setCommitting(true);
+    setError(null);
+
+    try {
+      if (preview) {
+        setCells((prev) =>
+          prev.map((cell) => {
+            const phrase = overrides.get(cell.position);
+            return phrase !== undefined ? { ...cell, phrase } : cell;
+          }),
+        );
+        setOverrides(new Map());
+        setRejectedPositions([]);
+        setEditing(false);
+        setConfirmPosition(null);
+        return;
+      }
+
+      const response = await fetch(`/api/sessions/${encodeURIComponent(sessionId)}/commit-phrase-rerolls`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ changes }),
+      });
+      const data: unknown = await response.json().catch(() => null);
+
+      if (response.status === 409) {
+        const positions = readClaimedPositions(data);
+        if (positions) {
+          setRejectedPositions(positions);
+          setError(null);
+          return;
+        }
+      }
+
+      if (!response.ok || !isCommitSuccess(data)) {
+        setError(readJsonError(data) ?? "Nie udało się zatwierdzić haseł");
+        return;
+      }
+
+      const committed = new Map(data.cells.map((cell) => [cell.position, cell]));
+      setCells((prev) => prev.map((cell) => committed.get(cell.position) ?? cell));
+      setOverrides(new Map());
+      setRejectedPositions([]);
+      setEditing(false);
+      setConfirmPosition(null);
+      setRefreshTick((tick) => tick + 1);
+    } catch {
+      setError("Nie udało się zatwierdzić haseł");
+    } finally {
+      rerollBusyRef.current = false;
+      setCommitting(false);
+    }
+  }
+
+  useEffect(() => {
+    cancelEditRef.current = cancelEdit;
+    commitDraftRef.current = () => {
+      void commitDraft();
+    };
+  });
+
   async function confirmUndo(position: number) {
-    if (!undoEnabled || pending) return;
+    if (!undoEnabled || pending || rerollBusyRef.current) return;
 
     setPending(true);
     setError(null);
@@ -245,6 +483,20 @@ export default function GmBoard({
     }
   }
 
+  function activateCell(cell: GmBoardCell) {
+    if (pending || rerollBusyRef.current || confirmPosition === cell.position) return;
+    const claimed = cell.claimedByColor != null;
+    const hasOverride = editing && overrides.has(cell.position);
+    if (editing && claimed && hasOverride) return;
+    if (editing && !claimed && undoEnabled) {
+      void drawPhrase(cell.position);
+      return;
+    }
+    if (claimed && undoEnabled) {
+      enterConfirm(cell.position);
+    }
+  }
+
   const sorted = [...cells].sort((a, b) => a.position - b.position);
 
   return (
@@ -255,13 +507,40 @@ export default function GmBoard({
         </p>
       ) : null}
 
+      {editing && rejectedPositions.length > 0 ? (
+        <div
+          className="border-border bg-background flex flex-wrap items-center justify-between gap-2 rounded-lg border p-4"
+          role="alert"
+        >
+          <p className="text-destructive text-sm">Pole jest już zajęte: {rejectedPositions.join(", ")}</p>
+          <Button
+            type="button"
+            variant="outline"
+            className="cursor-pointer"
+            disabled={pending || rerollBusy}
+            onClick={dropRejected}
+          >
+            Usuń zajęte ze szkicu
+          </Button>
+        </div>
+      ) : null}
+
+      {editing ? (
+        <p className="text-muted-foreground text-center text-sm">Kliknięcie w wolne pole wylosuje nowe hasło.</p>
+      ) : null}
+
       <BoardWithLineSlots size={size} lineSlots={lineRewards}>
         {sorted.map((cell) => {
           const claimed = cell.claimedByColor != null;
           const color = cell.claimedByColor;
           const inConfirm = confirmPosition === cell.position;
-          const canUndo = claimed && undoEnabled;
-          const interactive = canUndo && !pending;
+          const draftPhrase = overrides.get(cell.position);
+          const hasOverride = editing && draftPhrase !== undefined;
+          const shownPhrase = hasOverride ? draftPhrase : cell.phrase;
+          const drawing = drawingPosition === cell.position;
+          const canDraw = editing && !claimed && undoEnabled;
+          const canUndo = claimed && undoEnabled && !(editing && hasOverride);
+          const interactive = !pending && !rerollBusy && !inConfirm && (canDraw || canUndo);
 
           return (
             <div
@@ -273,21 +552,19 @@ export default function GmBoard({
                 claimed && "player-board-cell-gloss",
                 claimed && color != null && PLAYER_BG[color],
                 claimed && color != null && PLAYER_FG[color],
-                interactive && !inConfirm && "cursor-pointer",
-                inConfirm && pending && "opacity-80",
+                interactive && "cursor-pointer",
+                ((inConfirm && pending) || drawing) && "opacity-80",
               )}
-              aria-label={claimed ? (cell.reward ? `Nagroda: ${cell.reward.label}` : "Pole zajęte") : cell.phrase}
-              role={interactive && !inConfirm ? "button" : undefined}
-              tabIndex={interactive && !inConfirm ? 0 : undefined}
+              aria-label={claimed ? (cell.reward ? `Nagroda: ${cell.reward.label}` : "Pole zajęte") : shownPhrase}
+              role={interactive ? "button" : undefined}
+              tabIndex={interactive ? 0 : undefined}
               onClick={() => {
-                if (!canUndo || pending || inConfirm) return;
-                enterConfirm(cell.position);
+                activateCell(cell);
               }}
               onKeyDown={(event) => {
-                if (!canUndo || pending || inConfirm) return;
                 if (event.key === "Enter" || event.key === " ") {
                   event.preventDefault();
-                  enterConfirm(cell.position);
+                  activateCell(cell);
                 }
               }}
             >
@@ -298,7 +575,7 @@ export default function GmBoard({
               ) : (
                 <>
                   <p className={cn("player-board-cell-phrase", cell.reward && "player-board-cell-phrase-with-reward")}>
-                    {cell.phrase}
+                    {shownPhrase}
                   </p>
                   {cell.reward ? (
                     <Badge
@@ -310,6 +587,15 @@ export default function GmBoard({
                   ) : null}
                 </>
               )}
+
+              {drawing ? (
+                <div className="bg-background/70 absolute inset-0 z-10 flex items-center justify-center">
+                  <span
+                    className="border-foreground/30 border-t-foreground size-5 animate-spin rounded-full border-2"
+                    aria-label="Losowanie hasła"
+                  />
+                </div>
+              ) : null}
 
               {inConfirm ? (
                 <div className="bg-background/70 absolute inset-0 z-10 flex items-center justify-center gap-1 p-1">

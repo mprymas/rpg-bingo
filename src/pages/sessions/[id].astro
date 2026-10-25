@@ -3,6 +3,7 @@ import Layout from "@/layouts/Layout.astro";
 import CloseRetryBanner from "@/components/sessions/CloseRetryBanner";
 import GmBoard from "@/components/sessions/GmBoard";
 import GmRegenerateControls from "@/components/sessions/GmRegenerateControls";
+import GmRerollEditButton from "@/components/sessions/GmRerollEditButton";
 import SessionJoinQr from "@/components/sessions/SessionJoinQr";
 import GmSuccessorNotice from "@/components/sessions/GmSuccessorNotice.astro";
 import { Badge } from "@/components/ui/badge";
@@ -108,7 +109,7 @@ const showCloseRetry = Boolean(session && closeFailedReason && UUID_RE.test(clos
       <div class="bg-background min-h-screen p-4 sm:p-8">
         <div class="mx-auto w-full max-w-2xl space-y-8 rounded-2xl border border-border bg-card p-6 text-foreground sm:p-8">
           <div class="flex flex-col gap-4">
-            <div class="grid grid-cols-[1fr_auto] items-center gap-x-3 gap-y-2">
+            <div class="grid grid-cols-[1fr_auto_auto] items-center gap-x-3 gap-y-2">
               <a
                 href="/dashboard"
                 class="justify-self-start text-sm text-primary outline-none hover:underline focus-visible:ring-2 focus-visible:ring-ring"
@@ -117,6 +118,11 @@ const showCloseRetry = Boolean(session && closeFailedReason && UUID_RE.test(clos
               </a>
               {boardComplete ? (
                 <GmRegenerateControls sessionId={session.id} sessionStatus={session.status} inline client:load />
+              ) : null}
+              {boardComplete ? (
+                <div class="col-start-3 row-start-1 justify-self-end self-center">
+                  <GmRerollEditButton sessionId={session.id} sessionStatus={session.status} client:load />
+                </div>
               ) : null}
             </div>
             <SessionJoinQr sessionCode={session.code} sessionStatus={session.status} client:load />
