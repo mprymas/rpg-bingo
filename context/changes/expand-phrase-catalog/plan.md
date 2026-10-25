@@ -166,12 +166,12 @@ No new migration. Existing `board_cells.phrase` values stay as stored. The hoste
 
 #### Automated
 
-- [x] 1.1 `supabase/seed.sql` contains the seven phrase literals verbatim and a rewards row with slug `talia-rozmaitosci`, label `Talia Rozmaitości`, and description `Nagroda z wylosowanej karty z Talii Rozmaitości`, inside the existing `ON CONFLICT` statements
-- [x] 1.2 `context/ideas/phrases.md` and `context/ideas/rewards.md` still have their headers, and the seven phrase bullets plus the `talia-rozmaitosci` bullet are gone
-- [x] 1.3 The diff has no changes under `src/` or `supabase/migrations/`
+- [x] 1.1 `supabase/seed.sql` contains the seven phrase literals verbatim and a rewards row with slug `talia-rozmaitosci`, label `Talia Rozmaitości`, and description `Nagroda z wylosowanej karty z Talii Rozmaitości`, inside the existing `ON CONFLICT` statements — 256b543
+- [x] 1.2 `context/ideas/phrases.md` and `context/ideas/rewards.md` still have their headers, and the seven phrase bullets plus the `talia-rozmaitosci` bullet are gone — 256b543
+- [x] 1.3 The diff has no changes under `src/` or `supabase/migrations/` — 256b543
 
 #### Manual
 
-- [x] 1.4 A human runs `npx supabase db query --linked -f supabase/seed.sql` on the hosted project after the seed file contains the new rows, and does not run `supabase db reset` against that project
-- [x] 1.5 Hosted `public.phrases` contains all seven verbatim texts and `public.rewards` contains slug `talia-rozmaitosci` with label `Talia Rozmaitości` and description `Nagroda z wylosowanej karty z Talii Rozmaitości`; if the hosted catalog was still 32 phrases and 6 rewards, the counts are 39 and 7
-- [x] 1.6 A signed-in create-session page lists `Talia Rozmaitości` after the six existing rewards
+- [x] 1.4 A human runs `npx supabase db query --linked -f supabase/seed.sql` on the hosted project after the seed file contains the new rows, and does not run `supabase db reset` against that project — 256b543
+- [x] 1.5 Hosted `public.phrases` contains all seven verbatim texts and `public.rewards` contains slug `talia-rozmaitosci` with label `Talia Rozmaitości` and description `Nagroda z wylosowanej karty z Talii Rozmaitości`; if the hosted catalog was still 32 phrases and 6 rewards, the counts are 39 and 7 — 256b543
+- [x] 1.6 A signed-in create-session page lists `Talia Rozmaitości` after the six existing rewards — 256b543
