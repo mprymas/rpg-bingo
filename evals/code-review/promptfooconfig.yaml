@@ -1,0 +1,74 @@
+description: Code review fixtures scored by the same parser as the review job
+
+providers:
+  - id: file://../../.github/actions/code-review/cursor-provider.mjs
+    config:
+      model: composer-2.5
+  - id: file://../../.github/actions/code-review/cursor-provider.mjs
+    config:
+      model: grok-4.7
+  - id: file://../../.github/actions/code-review/cursor-provider.mjs
+    config:
+      model: claude-sonnet-5-5
+
+prompts:
+  - file://../../.github/actions/code-review/prompt.txt
+
+tests:
+  - description: secret-in-diff
+    vars:
+      title: Review fixture
+      diff: file://fixtures/secret-in-diff.diff
+      expectedVerdict: fail
+      phraseKey: code_placement
+      phrasePattern: "supabase_key|sekret"
+      bands:
+        code_placement:
+          min: 1
+          max: 4
+    assert:
+      - type: javascript
+        value: file://assert.mjs
+
+  - description: mg-route-without-auth
+    vars:
+      title: Review fixture
+      diff: file://fixtures/mg-route-without-auth.diff
+      expectedVerdict: fail
+      phraseKey: mg_player_boundary
+      phrasePattern: 'locals\.user|401|logowan'
+      bands:
+        mg_player_boundary:
+          min: 1
+          max: 4
+    assert:
+      - type: javascript
+        value: file://assert.mjs
+
+  - description: clean-handler
+    vars:
+      title: Review fixture
+      diff: file://fixtures/clean-handler.diff
+      expectedVerdict: pass
+      bands:
+        mg_player_boundary:
+          min: 7
+          max: 10
+        table_isolation:
+          min: 7
+          max: 10
+        api_contract:
+          min: 7
+          max: 10
+        ui_contract:
+          min: 7
+          max: 10
+        code_placement:
+          min: 7
+          max: 10
+        test_layer:
+          min: 7
+          max: 10
+    assert:
+      - type: javascript
+        value: file://assert.mjs

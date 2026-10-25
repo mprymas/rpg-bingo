@@ -50,7 +50,7 @@ Logika progu jest w `.mjs` importowanym z `tests/unit`, bez SDK. SDK jest tylko 
 - **HEAD to sha głowy PR.** `actions/checkout@v4` na `pull_request` domyślnie bierze merge commit. Checkout z `ref: github.event.pull_request.head.sha` i `fetch-depth: 0`, potem `git diff origin/<base>...HEAD`, daje trzy kropki z wymagań względem głowy PR.
 - **Pętla etykiet.** Nałożenie `ai-cr:passed` albo `ai-cr:failed` tokenem `GITHUB_TOKEN` nie startuje tego workflowu ponownie. Warunek joba i tak brzmi: akcja inna niż `labeled`, albo nazwa etykiety to `ai-cr:review`.
 - **Dwa Node.** Job recenzji zostaje na `22.14.0` (`.nvmrc`, SDK `>= 22.13`). Promptfoo `>= 22.22.0` dotyczy tylko lokalnego evala w fazie 2. `.nvmrc` i `ci.yml` bez zmian.
-- **Identyfikatory modeli.** Kandydaci to dokładnie nazwy `composer-2.5`, `grok-4.7`, `sonnet-5.5`. Przed evalem `Cursor.models.list()` rozstrzyga każdą nazwę: dokładne dopasowanie, a gdy go nie ma — jedyny identyfikator zawierający tę nazwę. Zero albo więcej niż jedno trafienie przerywa eval i wypisuje listę. Brak zgadywania sufiksów `fast` / `high`.
+- **Identyfikatory modeli.** Kandydaci to dokładnie nazwy `composer-2.5`, `grok-4.7`, `claude-sonnet-5-5`. Przed evalem `Cursor.models.list()` rozstrzyga każdą nazwę: dokładne dopasowanie, a gdy go nie ma — jedyny identyfikator zawierający tę nazwę. Zero albo więcej niż jedno trafienie przerywa eval i wypisuje listę. Brak zgadywania sufiksów `fast` / `high`.
 - **Kolejność zapisu modelu.** Faza 1 zostawia pusty identyfikator. Puste pole jest awarią („brak identyfikatora modelu”) i nie woła SDK. Faza 2 wpisuje zwycięzcę. Faza 3 podłącza workflow dopiero wtedy.
 
 ## Phase 1: Akcja recenzji
@@ -116,7 +116,7 @@ Zapis: utworzyć brakującą etykietę (istniejącej nie przemalowywać). Kolory
 
 ### Overview
 
-Ten sam prompt i trzy fixture’owe diffa idą przez `composer-2.5`, `grok-4.7` i `sonnet-5.5`. Reguła wyboru wpisuje jeden identyfikator do `model-id.mjs`.
+Ten sam prompt i trzy fixture’owe diffa idą przez `composer-2.5`, `grok-4.7` i `claude-sonnet-5-5`. Reguła wyboru wpisuje jeden identyfikator do `model-id.mjs`.
 
 ### Changes Required:
 
@@ -126,7 +126,7 @@ Ten sam prompt i trzy fixture’owe diffa idą przez `composer-2.5`, `grok-4.7` 
 
 **Intent**: Krótki, porównywalny zestaw na domenie tego repo, graded tą samą funkcją co job.
 
-**Contract**: Trzy providery `file://` wskazują provider akcji. Każdy ma w configu jedną z nazw `composer-2.5`, `grok-4.7`, `sonnet-5.5`. Prompt to `file://` na `.github/actions/code-review/prompt.txt`. Każdy test podstawia ten sam `{{title}}` i `{{diff}}` wszystkim modelom.
+**Contract**: Trzy providery `file://` wskazują provider akcji. Każdy ma w configu jedną z nazw `composer-2.5`, `grok-4.7`, `claude-sonnet-5-5`. Prompt to `file://` na `.github/actions/code-review/prompt.txt`. Każdy test podstawia ten sam `{{title}}` i `{{diff}}` wszystkim modelom.
 
 Fixture `secret-in-diff`: patch dopisuje `SUPABASE_KEY` do pliku śledzonego w repo. Oczekiwany werdykt `fail`. Pasmo `code_placement` 1–4. Zdanie tego kryterium pasuje do `/supabase_key|sekret/i`.
 
@@ -144,7 +144,7 @@ Fixture `clean-handler`: handler z `prerender = false`, zodem, 401 i polskim kom
 
 **Contract**: Provider w `callApi` rozwiązuje nazwę z configu przez `Cursor.models.list()` według reguły z Critical Implementation Details, potem `Agent.prompt` z `tools: []` i lokalnym `cwd`. Nie czyta `REVIEW_MODEL_ID`.
 
-`selectWinner(rows)` dostaje `{ modelId, fixturesPassed }` dla trzech modeli, `fixturesPassed` od 0 do 3. Do puli wchodzą wyniki `>= 2`. Brak takiej puli zwraca `null` i `REVIEW_MODEL_ID` zostaje pusty. Przy remisie wygrywa rozwiązany identyfikator `composer-2.5`, potem `grok-4.7`, potem `sonnet-5.5`. Test jednostkowy pokrywa próg 2 z 3 i tę kolejność remisu. Po przebiegu evala faza wpisuje zwrócony identyfikator do `model-id.mjs`. `null` zostawia plik pusty i faza się nie domyka.
+`selectWinner(rows)` dostaje `{ modelId, fixturesPassed }` dla trzech modeli, `fixturesPassed` od 0 do 3. Do puli wchodzą wyniki `>= 2`. Brak takiej puli zwraca `null` i `REVIEW_MODEL_ID` zostaje pusty. Przy remisie wygrywa rozwiązany identyfikator `composer-2.5`, potem `grok-4.7`, potem `claude-sonnet-5-5`. Test jednostkowy pokrywa próg 2 z 3 i tę kolejność remisu. Po przebiegu evala faza wpisuje zwrócony identyfikator do `model-id.mjs`. `null` zostawia plik pusty i faza się nie domyka.
 
 ### Success Criteria:
 
@@ -224,7 +224,7 @@ Krok forka czyta tylko payload i przy forku ustawia output, po którym checkout,
 - Etykiety i kody wyjścia dla `pass`, `fail`, `infra`.
 - Komentarz: sześć polskich nazw, linia werdyktu, lista kryteriów poniżej 7, osobny tekst awarii i nieczytelnej odpowiedzi.
 - Fork i limit 200000 bajtów.
-- `selectWinner`: poniżej 2 z 3 zwraca `null`; remis idzie w `composer-2.5`, potem `grok-4.7`, potem `sonnet-5.5`.
+- `selectWinner`: poniżej 2 z 3 zwraca `null`; remis idzie w `composer-2.5`, potem `grok-4.7`, potem `claude-sonnet-5-5`.
 - Plik workflow ma uzgodniony kontrakt, a `ci.yml` nie zawiera `ai-cr`.
 
 ### Integration Tests:
@@ -269,18 +269,18 @@ Pierwszy przebieg z tego repozytorium zakłada brakujące etykiety i nie zmienia
 
 #### Automated
 
-- [x] 1.1 Unit tests pass for verdict, parse, label transitions, comment text, fork detection, and the 200000-byte diff cap (`npm run test:unit`)
-- [x] 1.2 Lint passes (`npm run lint`)
+- [x] 1.1 Unit tests pass for verdict, parse, label transitions, comment text, fork detection, and the 200000-byte diff cap (`npm run test:unit`) — 0c04275
+- [x] 1.2 Lint passes (`npm run lint`) — 0c04275
 
 ### Phase 2: Dobór modelu
 
 #### Automated
 
-- [ ] 2.1 Unit tests pass for winner selection, the 2-of-3 bar, the composer-2.5 tie-break, and the three model names plus three fixtures in the eval config (`npm run test:unit`)
+- [x] 2.1 Unit tests pass for winner selection, the 2-of-3 bar, the composer-2.5 tie-break, and the three model names plus three fixtures in the eval config (`npm run test:unit`)
 
 #### Manual
 
-- [ ] 2.2 Promptfoo eval on Node >= 22.22 with CURSOR_API_KEY writes the winning model id, or leaves it unset when no model passes at least 2 of 3 fixtures
+- [x] 2.2 Promptfoo eval on Node >= 22.22 with CURSOR_API_KEY writes the winning model id, or leaves it unset when no model passes at least 2 of 3 fixtures
 
 ### Phase 3: Cienki workflow
 

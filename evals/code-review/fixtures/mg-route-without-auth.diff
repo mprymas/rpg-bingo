@@ -1,0 +1,21 @@
+diff --git a/src/pages/api/sessions/[id]/pin.ts b/src/pages/api/sessions/[id]/pin.ts
+new file mode 100644
+index 0000000..a1b2c3d
+--- /dev/null
++++ b/src/pages/api/sessions/[id]/pin.ts
+@@ -0,0 +1,15 @@
++import type { APIRoute } from "astro";
++
++export const prerender = false;
++
++function json(body: unknown, status: number): Response {
++  return new Response(JSON.stringify(body), {
++    status,
++    headers: { "Content-Type": "application/json" },
++  });
++}
++
++export const POST: APIRoute = async (context) => {
++  const id = context.params.id ?? "";
++  return json({ id, pinned: true }, 200);
++};

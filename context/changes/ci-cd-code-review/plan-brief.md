@@ -5,7 +5,7 @@
 
 ## What & Why
 
-Osobny workflow ma oceniać diff pull requesta do `master` sześcioma kryteriami z wymagań i zostawiać komentarz oraz jedną etykietę. Lint, testy, build i smoke zostają w obecnym `ci.yml`. Model nie jest wybrany z góry: krótki eval promptfoo na tych samych diffach porównuje `composer-2.5`, `grok-4.7` i `sonnet-5.5`.
+Osobny workflow ma oceniać diff pull requesta do `master` sześcioma kryteriami z wymagań i zostawiać komentarz oraz jedną etykietę. Lint, testy, build i smoke zostają w obecnym `ci.yml`. Model nie jest wybrany z góry: krótki eval promptfoo na tych samych diffach porównuje `composer-2.5`, `grok-4.7` i `claude-sonnet-5-5`.
 
 ## Starting Point
 
@@ -27,7 +27,7 @@ Pull request z tego repozytorium dostaje przy każdym pushu nowy komentarz (sze�
 | Awaria a zły tekst | Awaria: kod 1, bez etykiet wyniku, `ai-cr:review` zostaje. Tekst bez sześciu liczb 1–10: kanał `fail` | Brak klucza nie wygląda jak zła jakość kodu | Plan |
 | Próg | Liczy skrypt, nie model | `pass` tylko przy sześciu liczbach całkowitych ≥ 7 | Research |
 | Runtime | Lokalny `Agent.prompt`, `tools: []`, diff w prompcie | Jednorazowe wywołanie ocenia przekazany diff | Research |
-| Model | Eval trzech nazw, próg 2 z 3 fixture’ów, remis: `composer-2.5`, potem `grok-4.7`, potem `sonnet-5.5` | Wynik testu wybiera model joba | Plan |
+| Model | Eval trzech nazw, próg 2 z 3 fixture’ów, remis: `composer-2.5`, potem `grok-4.7`, potem `claude-sonnet-5-5` | Wynik testu wybiera model joba | Plan |
 | Etykiety | Tworzone, gdy brak: passed `0e8a16`, failed `d73a4a`, review `fbca04` | „Zielona” i „czerwona” bez hexu w wymaganiach | Plan |
 | Eval | Lokalnie, Node `>= 22.22`, poza Actions | Promptfoo nie wejdzie na Node `22.14` joba ani do `ci.yml` | Plan |
 
@@ -55,7 +55,7 @@ Workflow liczy `git diff origin/<base>...HEAD` na sha głowy PR i woła composit
 ## Open Risks & Assumptions
 
 - Zachowanie runtime `Agent.prompt` jest wzięte z typów `1.0.40` i ze skillu SDK, bez odpalonego agenta w researchu.
-- Nazwy `grok-4.7` i `sonnet-5.5` mogą na koncie nazywać się inaczej. Wieloznaczna lista przerywa eval.
+- Nazwy `grok-4.7` i `claude-sonnet-5-5` mogą na koncie nazywać się inaczej. Wieloznaczna lista przerywa eval.
 - PR z tego samego repozytorium może zmienić plik akcji i wykonać go z sekretem. To model zaufanego współpracownika na `pull_request`.
 - Przebieg ubity przez `cancel-in-progress` może zdążyć dopisać komentarz.
 
