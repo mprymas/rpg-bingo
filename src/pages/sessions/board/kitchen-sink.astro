@@ -5,6 +5,7 @@ import CloseRetryBanner from "@/components/sessions/CloseRetryBanner";
 import GmSuccessorNotice from "@/components/sessions/GmSuccessorNotice.astro";
 import GmBoard from "@/components/sessions/GmBoard";
 import GmRegenerateControls from "@/components/sessions/GmRegenerateControls";
+import GmRerollEditButton from "@/components/sessions/GmRerollEditButton";
 import SessionJoinQr from "@/components/sessions/SessionJoinQr";
 import { Badge } from "@/components/ui/badge";
 import type { SessionPlayerRosterEntry, SessionRewardRules, SessionWithCells } from "@/types";
@@ -357,6 +358,11 @@ const fixtureRosterNoRules: SessionWithCells = {
 
 const loadErrorCopy = "Nie udało się wczytać sesji";
 const undoErrorCopy = "Nie udało się cofnąć oznaczenia";
+const poolEmptyCopy = "Brak innego hasła w katalogu";
+const rerollOverrides = [
+  { position: 0, phrase: "Oswój smoka" },
+  { position: 2, phrase: "Znajdź skarb" },
+];
 
 type BoardKind = "complete" | "incomplete" | "closed" | "focus" | "error" | "na" | "gm-board" | "qr";
 
@@ -369,6 +375,10 @@ interface GmBoardFixture {
   showCloseRetry?: boolean;
   /** Successor code for the closed session (production loads it via getSessionCodeForGm). */
   successorCode?: string;
+  /** Seed phrase-edit mode (header pencil does this on the live board). */
+  initialEditing?: boolean;
+  initialOverrides?: { position: number; phrase: string }[];
+  initialRejectedPositions?: number[];
 }
 
 const sections: {
@@ -490,6 +500,62 @@ const sections: {
     },
   },
   {
+    id: "reroll-header",
+    title: "reroll header",
+    description:
+      "Aktywny nagłówek — ikona ołówka po prawej stronie „Wygeneruj nową planszę”, bez widocznego tekstu (Wymień hasła).",
+    kind: "gm-board",
+    session: fixtureComplete,
+    gmBoard: { sessionStatus: "active" },
+  },
+  {
+    id: "reroll-edit",
+    title: "reroll edit",
+    description:
+      "GmBoard: tryb wymiany — dwa wolne pola ze szkicem, informacja nad planszą, w miejscu ołówka krzyżyk i tick.",
+    kind: "gm-board",
+    session: fixtureComplete,
+    gmBoard: {
+      sessionStatus: "active",
+      initialEditing: true,
+      initialOverrides: rerollOverrides,
+    },
+  },
+  {
+    id: "reroll-pool-empty",
+    title: "reroll pool empty",
+    description: "GmBoard: brak innego hasła w katalogu — szkic bez zmian i baner błędu.",
+    kind: "gm-board",
+    session: fixtureComplete,
+    gmBoard: {
+      sessionStatus: "active",
+      initialEditing: true,
+      initialOverrides: rerollOverrides,
+      initialError: poolEmptyCopy,
+    },
+  },
+  {
+    id: "reroll-claimed",
+    title: "reroll claimed",
+    description: "GmBoard: odrzucone zatwierdzenie — baner z pozycją i przycisk „Usuń zajęte ze szkicu”.",
+    kind: "gm-board",
+    session: fixtureComplete,
+    gmBoard: {
+      sessionStatus: "active",
+      initialEditing: true,
+      initialOverrides: rerollOverrides,
+      initialRejectedPositions: [0],
+    },
+  },
+  {
+    id: "reroll-closed",
+    title: "reroll closed",
+    description: "Zamknięta sesja — brak ikony ołówka obok regeneracji.",
+    kind: "gm-board",
+    session: fixtureClosed,
+    gmBoard: { sessionStatus: "closed" },
+  },
+  {
     id: "undo-closed",
     title: "undo closed",
     description: "GmBoard (closed): zajęte pola bez chrome undo — brak interakcji.",
@@ -583,6 +649,7 @@ const sections: {
         const expectedCells = session ? session.size * session.size : 0;
         const legend = session ? buildLegend(session) : [];
         const focusDemo = section.kind === "focus";
+        const islandSessionId = session ? `${session.id}-${section.id}` : "";
 
         return (
           <section id={section.id} class="space-y-4" aria-labelledby={`heading-${section.id}`}>
@@ -624,7 +691,12 @@ const sections: {
               session && (
                 <div class="mx-auto w-full max-w-2xl space-y-8 rounded-2xl border border-border bg-card p-6 text-foreground sm:p-8">
                   <div class="flex flex-col gap-4">
-                    <div class="grid grid-cols-[1fr_auto] items-center gap-x-3 gap-y-2">
+                    <div
+                      class:list={[
+                        "grid items-center gap-x-3 gap-y-2",
+                        section.kind === "gm-board" ? "grid-cols-[1fr_auto_auto]" : "grid-cols-[1fr_auto]",
+                      ]}
+                    >
                       <a
                         href="/dashboard"
                         class:list={[
@@ -637,13 +709,24 @@ const sections: {
                       </a>
                       {section.kind === "gm-board" ? (
                         <GmRegenerateControls
-                          sessionId={session.id}
+                          sessionId={islandSessionId}
                           sessionStatus={section.gmBoard?.sessionStatus}
                           initialConfirmOpen={section.gmBoard?.regenerateConfirmOpen}
                           inline
                           preview
                           client:load
                         />
+                      ) : null}
+                      {section.kind === "gm-board" ? (
+                        <div class="col-start-3 row-start-1 justify-self-end self-center">
+                          <GmRerollEditButton
+                            sessionId={islandSessionId}
+                            sessionStatus={section.gmBoard?.sessionStatus}
+                            initialEditing={section.gmBoard?.initialEditing}
+                            initialCanCommit={(section.gmBoard?.initialOverrides?.length ?? 0) > 0}
+                            client:load
+                          />
+                        </div>
                       ) : null}
                     </div>
                     {section.kind === "qr" ? (
@@ -692,7 +775,7 @@ const sections: {
                         />
                       ) : null}
                       <GmBoard
-                        sessionId={session.id}
+                        sessionId={islandSessionId}
                         size={session.size}
                         initialCells={session.cells}
                         initialPlayers={session.players}
@@ -702,6 +785,9 @@ const sections: {
                         initialConfirmPosition={section.gmBoard?.initialConfirmPosition}
                         initialPending={section.gmBoard?.initialPending}
                         initialError={section.gmBoard?.initialError}
+                        initialEditing={section.gmBoard?.initialEditing}
+                        initialOverrides={section.gmBoard?.initialOverrides}
+                        initialRejectedPositions={section.gmBoard?.initialRejectedPositions}
                         preview
                         client:load
                       />

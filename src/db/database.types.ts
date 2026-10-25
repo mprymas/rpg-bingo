@@ -352,6 +352,17 @@ export type Database = {
           nick: string
         }[]
       }
+      commit_phrase_rerolls: {
+        Args: { p_changes: Json; p_session_id: string }
+        Returns: {
+          claimed_by_color: number | null
+          has_reward: boolean
+          phrase: string
+          position: number
+          reward_label: string | null
+          reward_slug: string | null
+        }[]
+      }
       undo_board_cell: {
         Args: { p_position: number; p_session_id: string }
         Returns: {

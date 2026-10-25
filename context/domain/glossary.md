@@ -33,6 +33,7 @@ Używaj tych słów w kodzie, testach, commitach i rozmowie. Kolumna „name in 
 | baza predefiniowanych haseł | Katalog haseł dostarczony z góry, tylko do odczytu dla MG. | `phraseCatalog` | `phrases`, biblioteka społeczności, kategoria |
 | cofnięcie | MG zwalnia pole na aktywnej sesji; slot nagrody zostaje. | `undo` | rollback sesji, unclaim gracza |
 | regeneracja | Nowa sesja z nowym kodem; stara wskazuje następcę i przechodzi w zamkniętą. | `regenerateBoard` | `replaceSessionId` (to id źródła, nie operacja), edycja planszy w miejscu |
+| wymiana hasła | MG w trybie edycji losuje nowe hasło na wolnym polu; nagroda zostaje. Inni widzą to po zatwierdzeniu szkicu. | `rerollPhrase` | regeneracja, `regenerateBoard`, edycja nagrody |
 | successor | Sesja, która zastąpiła zamkniętą. Jej kod to `successorCode`. | `successor` | `replaced_by_session_id`, parent, fork |
 | active | Sesja, do której można dołączyć i zajmować pola. | `active` | open, live, running |
 | closed | Sesja tylko do odczytu. | `closed` | deleted, archived, finished jako trzeci status |

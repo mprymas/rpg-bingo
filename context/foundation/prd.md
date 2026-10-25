@@ -91,6 +91,8 @@ Trzecia rola: **administrator systemu**, który utrzymuje bazę predefiniowanych
   > Socrates: Brak kontrargumentu; stoi jak jest.
 - FR-012: MG może cofnąć błędne oznaczenie pola; cofnięcie zwalnia pole i unieważnia powiązaną nagrodę. Priority: must-have
   > Socrates: Kontrargument rozważony: "cofnięcie musi też cofnąć nagrodę i ewentualną linię drużynową — ukryta złożoność." Rozstrzygnięcie: FR doprecyzowany o zwolnienie pola i unieważnienie nagrody.
+- FR-018: MG może wejść w tryb edycji planszy i wymienić hasło na wolnym polu. Dla wybranego pola system losuje nowe hasło, a nagroda tego pola zostaje bez zmian. To samo pole można wymienić wielokrotnie. Wylosowane hasło nie może być już obecne na planszy; gdy w puli nie ma takiego hasła, wymiana się nie udaje. Pole zajęte nie podlega wymianie. MG może wymienić wiele pól w jednym szkicu. Pozostali widzą zmianę dopiero po zatwierdzeniu przyciskiem. Priority: nice-to-have
+  > Socrates: Kontrargument rozważony: "to ta sama operacja co regeneracja planszy (FR-007), tylko z droższym UI." Rozstrzygnięcie: zostaje nice-to-have; regeneracja tworzy nową sesję i nowy kod, a tu MG poprawia hasła w miejscu, bez ruszania nagród i bez ponownego dołączania graczy.
 - FR-013: Gracze i MG widzą aktualną planszę bez zbędnych opóźnień. Priority: nice-to-have
   > Socrates: Kontrargument rozważony: "'bez zbędnych opóźnień' jest niemierzalne." Rozstrzygnięcie: zostaje jak jest.
 
@@ -122,6 +124,8 @@ Wejścia, które podaje MG: rozmiar planszy (domyślnie 5x5), własne hasła dop
 
 Reguła towarzysząca — zajmowanie pól: pole należy do pierwszego gracza, który je oznaczył, i tylko jemu przypisana zostaje nagroda z tego pola; kolejne kliknięcia innych graczy nie zmieniają stanu. Cofnięcie oznaczenia przez MG zwalnia pole i unieważnia powiązaną nagrodę (FR-012). W MVP nagrody pochodzą z ustalonej listy wprowadzonej przez administratora (np. inspiracja, przedmiot, zadanie poboczne); własne nagrody MG to FR-015 (nice-to-have).
 
+Wymiana hasła (FR-018, nice-to-have): w trybie edycji MG wskazuje wolne pole, a system losuje inne hasło spoza tych już na planszy; nagroda pola zostaje. Szkic widzi tylko MG. Jedno zatwierdzenie przyciskiem publikuje cały szkic — dopiero wtedy plansza widoczna dla pozostałych przyjmuje nowe hasła. Pole zajęte nie podlega wymianie.
+
 ## Access Control
 
 Model wieloużytkownikowy z trzema rolami.
@@ -129,7 +133,7 @@ Model wieloużytkownikowy z trzema rolami.
 | Rola | Wejście do aplikacji | Może |
 | --- | --- | --- |
 | Administrator | konto z rolą admin (właściciel instancji) | utrzymywać bazę predefiniowanych haseł (ekran administracyjny poza MVP — FR-016 nice-to-have; w MVP baza jest dostarczona z góry, bez ekranu edycji); wszystko, co MG |
-| Mistrz Gry | konto, logowanie; rejestracja otwarta (każdy może założyć konto) | tworzyć sesje i plansze; dodawać własne hasła do swoich gier; korzystać z bazy predefiniowanej bez prawa jej edycji; cofać błędne oznaczenie pola; przyznawać i widzieć bonusy |
+| Mistrz Gry | konto, logowanie; rejestracja otwarta (każdy może założyć konto) | tworzyć sesje i plansze; dodawać własne hasła do swoich gier; korzystać z bazy predefiniowanej bez prawa jej edycji; cofać błędne oznaczenie pola; przyznawać i widzieć bonusy; wymieniać hasło na wolnym polu i zatwierdzać szkic tej zmiany (FR-018, nice-to-have) |
 | Gracz | bez konta; kod sesji + wpisany nick; tożsamość żyje tylko w obrębie sesji | widzieć wspólną planszę; oznaczać pole po słownym potwierdzeniu MG; widzieć swoje bonusy |
 
 - Potwierdzenie zdobycia pola odbywa się słownie przy stole; w aplikacji oznaczenie wykonuje gracz. MG może cofnąć błędne oznaczenie.
