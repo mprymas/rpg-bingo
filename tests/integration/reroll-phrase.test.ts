@@ -200,14 +200,23 @@ describe.skipIf(!hasBaseUrl() || !resolveTestCredentials())("phrase reroll draw 
   });
 
   it("rejects a normalized duplicate and writes nothing", async () => {
-    const { id } = await createActiveSession(gm, emptySessionBody);
+    const catalog = "Oswój zwierzę";
+    const spaced = "Oswój  zwierzę";
+    const { id } = await createActiveSession(gm, {
+      size: 3,
+      customPhrases: [{ text: spaced, guaranteed: true }],
+      rewards: [],
+    });
     const before = await fetchGmCells(gm, id);
-    const visible = cellAt(before, 0);
-    const other = cellAt(before, 1);
+    const home = before.find((cell) => cell.phrase === spaced);
+    const other = before.find((cell) => cell.phrase !== spaced);
+    expect(home).toBeDefined();
+    expect(other).toBeDefined();
+    if (!other) throw new Error("expected another cell");
 
     const commit = await gm.request(`/api/sessions/${id}/commit-phrase-rerolls`, {
       method: "POST",
-      json: { changes: [{ position: other.position, phrase: visible.phrase }] },
+      json: { changes: [{ position: other.position, phrase: catalog }] },
     });
     expect(commit.status).toBe(409);
 
