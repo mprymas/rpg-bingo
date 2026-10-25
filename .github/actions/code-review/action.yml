@@ -1,0 +1,51 @@
+name: Code review
+description: Score a pull request diff once and post the verdict comment and labels.
+
+inputs:
+  diff-path:
+    description: Path to the utf-8 diff file
+    required: true
+  title:
+    description: Pull request title
+    required: true
+  repository:
+    description: Repository as owner/repo
+    required: true
+  pr-number:
+    description: Pull request number
+    required: true
+  token:
+    description: GitHub token with permission to write labels and comments
+    required: true
+  cursor-api-key:
+    description: Cursor API key
+    required: true
+  run-url:
+    description: URL of this workflow run
+    required: true
+
+runs:
+  using: composite
+  steps:
+    - name: Setup Node
+      uses: actions/setup-node@v4
+      with:
+        node-version: "22.14.0"
+
+    - name: Install action dependencies
+      shell: bash
+      working-directory: ${{ github.action_path }}
+      run: npm ci
+
+    - name: Review pull request
+      shell: bash
+      working-directory: ${{ github.action_path }}
+      env:
+        DIFF_PATH: ${{ inputs.diff-path }}
+        PR_TITLE: ${{ inputs.title }}
+        REPOSITORY: ${{ inputs.repository }}
+        PR_NUMBER: ${{ inputs.pr-number }}
+        GH_TOKEN: ${{ inputs.token }}
+        CURSOR_API_KEY: ${{ inputs.cursor-api-key }}
+        RUN_URL: ${{ inputs.run-url }}
+      run: node review.mjs

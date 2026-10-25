@@ -1,0 +1,49 @@
+Oceniasz diff jednego pull requesta w repozytorium RPG Bingo. Nie zmieniasz plików. Oceniasz wyłącznie skutek zmian w tym diffie, nie cały stan repozytorium. Lint, astro check, testy, build, smoke, integracja i e2e blokują pull request osobno — nie są Twoją oceną.
+
+Każde z sześciu kryteriów dostaje score: liczbę całkowitą od 1 (najgorzej) do 10 (najlepiej). Do każdego dopisujesz sentence: jedno krótkie zdanie po polsku.
+
+1. Granica MG i gracza. Strony MG pod `/dashboard` i `/sessions` są na `PROTECTED_ROUTES`. `/api/**` nie jest na tej liście: każdy endpoint MG sam sprawdza `locals.user` i oddaje 401. Wejście gracza (`/play`, `/api/play/**`) zostaje publiczne i opiera się na kodzie sesji oraz `claim_token`.
+Ocena 1: nowa powierzchnia MG bez sprawdzenia użytkownika albo endpoint gracza, który wymaga sesji Supabase.
+Ocena 10: każda nowa strona MG jest za prefiksem albo jawnym sprawdzeniem, każde nowe API MG powtarza 401, a trasy gracza nie ciągną ciasteczka MG.
+
+2. Izolacja stołu. Nowa albo zmieniona ścieżka odczytu i zapisu trzyma reguły stołu. Oceniaj skutek, nie kształt zapytania ani polityki.
+Drugi MG nie czyta ani nie zmienia cudzej sesji; z zewnątrz wygląda to jak brak sesji, nie jak odmowa uprawnień.
+Osoba bez ważnego kodu nie widzi planszy.
+Gracz poznaje etykietę nagrody dopiero po zajęciu pola, MG widzi ją od początku.
+Pole należy do pierwszego gracza, który je zajął; kolejne kliknięcie go nie przenosi.
+Aplikacja nie zapisuje katalogu haseł i nagród.
+Ocena 1: diff pozwala zobaczyć cudzą sesję, zająć zajęte pole, pokazać graczowi nagrodę przed czasem albo dopisać wiersz do katalogu.
+Ocena 10: każda nowa ścieżka zachowuje te skutki. Polityka, funkcja SQL albo odczyt w serwisie są obojętne.
+
+3. Kontrakt API i status błędu. Endpoint ma `export const prerender = false`, metodę wielkimi literami i walidację wejścia przez zod. Znany błąd domenowy mapuje się na status i polski komunikat. Nieoczekiwany wyjątek idzie przez `reportError`. Strona SSR, która rysuje oznaczony błąd ładowania danych, ustawia status inny niż 2xx.
+Ocena 1: błąd połknięty jako HTTP 200, wejście bez schematu albo brak `prerender = false`.
+Ocena 10: każdy nowy handler ma schemat, mapę błędów i raportowanie; twarda porażka odczytu nie wygląda jak sukces.
+
+4. Kontrakt UI. Widok używa klas ról (`bg-background`, `text-destructive`, …) i `cn()`. Bez heksów, klas palety i wartości arbitralnych. Astro zostaje przy układzie, React tylko tam, gdzie jest interakcja, bez dyrektywy "use client". Przycisk ma `cursor-pointer`, a submit formularza nawigacji pokazuje loader. Jeśli czyszczony widok dostaje nowe stany, plik wchodzi do `SCOPED_FILES` w `scripts/check-ui-literals.mjs`.
+Ocena 1: nowy ekran z własną paletą, sklejonymi klasami albo przyciskiem bez wskaźnika.
+Ocena 10: piksele idą z tokenów, a interakcja jest wyspą Reacta w miejscu, które już tak działa.
+
+5. Miejsce kodu i sekrety. Typy w `src/types.ts`, logika w `src/lib/` lub `src/lib/services/`, schematy w `src/lib/schemas/`, hooki w `src/components/hooks/`. Sekrety zostają w `.env` / `.dev.vars`, nie w diffie. Nazwa workera `rpg-bingo` i `session: false` bez zmian.
+Ocena 1: token, hasło albo `SUPABASE_KEY` w commicie, albo logika planszy wlana w komponent strony.
+Ocena 10: nowy kod leży obok istniejącego rodzeństwa i diff nie dotyka sekretów ani tożsamości workera.
+
+6. Test zachowania na właściwej warstwie. Czysta reguła dostaje test jednostkowy. Nowa lub zmieniona trasa HTTP, odmowa niezalogowanemu albo reguła stołu — test integracyjny. Playwright tylko wtedy, gdy bez przeglądarki nie da się tego zobaczyć. Test sprawdza skutek dla gracza albo MG, nie implementację.
+Ocena 1: zmiana joinu, claimu, izolacji stołu albo auth bez żadnego testu, albo test, który sprawdza, czy w pliku istnieje dane wywołanie metody albo konkretny warunek w zapytaniu.
+Ocena 10: test leży w tym samym diffie, na najniższej warstwie, która tę regułę naprawdę wykonuje, i pada, gdy skutek dla gracza albo MG jest zły.
+
+Tytuł pull requesta:
+{{title}}
+
+Diff:
+{{diff}}
+
+Zwróć wyłącznie jeden obiekt JSON. Bez markdownu, bez ogrodzenia ``` i bez drugiego obiektu. Nie dopisuj słowa werdyktu. score to liczba całkowita od 1 do 10, nie napis i nie ułamek. sentence to jedno krótkie zdanie po polsku. Klucze są dokładnie te:
+
+{
+  "mg_player_boundary": { "score": 8, "sentence": "..." },
+  "table_isolation": { "score": 8, "sentence": "..." },
+  "api_contract": { "score": 8, "sentence": "..." },
+  "ui_contract": { "score": 8, "sentence": "..." },
+  "code_placement": { "score": 8, "sentence": "..." },
+  "test_layer": { "score": 8, "sentence": "..." }
+}
