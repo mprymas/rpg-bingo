@@ -253,16 +253,16 @@ No new column and no backfill. Existing boards keep their phrases until a GM com
 
 #### Automated
 
-- [x] 1.1 `npm run test:unit` passes, including catalog-only draw, a displaced catalog phrase becoming eligible, a non-catalog custom never drawn, an empty pool, and `normalizePhrase` collisions
-- [x] 1.2 `npm run lint` passes
-- [x] 1.3 `npx astro check` passes
-- [x] 1.4 `npm run test:integration` covers draw and commit: `reward_id` unchanged, non-catalog phrase rejected, duplicate rejected, a claimed cell rejects the whole set with no phrase change, non-owner and closed session rejected, player snapshot unchanged until commit
+- [x] 1.1 `npm run test:unit` passes, including catalog-only draw, a displaced catalog phrase becoming eligible, a non-catalog custom never drawn, an empty pool, and `normalizePhrase` collisions — 3cf5c89
+- [x] 1.2 `npm run lint` passes — 3cf5c89
+- [x] 1.3 `npx astro check` passes — 3cf5c89
+- [x] 1.4 `npm run test:integration` covers draw and commit: `reward_id` unchanged, non-catalog phrase rejected, duplicate rejected, a claimed cell rejects the whole set with no phrase change, non-owner and closed session rejected, player snapshot unchanged until commit — 3cf5c89
 
 #### Manual
 
-- [x] 1.5 GM rerolls two free cells on an active session; a joined player keeps the old phrases until Zatwierdź, then sees the new ones within 10 seconds with the same reward presence
-- [x] 1.6 Anuluj drops the whole draft; clicking an already rerolled free cell draws again and does not restore its published phrase
-- [x] 1.7 A claim on a drafted cell before Zatwierdź publishes nothing; GM can drop only that claimed cell from the draft and publish the other
-- [x] 1.8 When no catalog phrase sits outside the visible draft, the click reports failure and leaves the draft unchanged
-- [x] 1.9 A closed session shows no edit control; kitchen-sink fixtures cover edit, empty pool, rejected commit, and closed
-- [x] 1.10 The edit entry control is an icon-only pencil immediately to the right of **Wygeneruj nową planszę**, with no visible text; a closed session does not show it
+- [x] 1.5 GM rerolls two free cells on an active session; a joined player keeps the old phrases until Zatwierdź, then sees the new ones within 10 seconds with the same reward presence — 3cf5c89
+- [x] 1.6 Anuluj drops the whole draft; clicking an already rerolled free cell draws again and does not restore its published phrase — 3cf5c89
+- [x] 1.7 A claim on a drafted cell before Zatwierdź publishes nothing; GM can drop only that claimed cell from the draft and publish the other — 3cf5c89
+- [x] 1.8 When no catalog phrase sits outside the visible draft, the click reports failure and leaves the draft unchanged — 3cf5c89
+- [x] 1.9 A closed session shows no edit control; kitchen-sink fixtures cover edit, empty pool, rejected commit, and closed — 3cf5c89
+- [x] 1.10 The edit entry control is an icon-only pencil immediately to the right of **Wygeneruj nową planszę**, with no visible text; a closed session does not show it — 3cf5c89
