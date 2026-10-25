@@ -276,22 +276,22 @@ Pierwszy przebieg z tego repozytorium zakłada brakujące etykiety i nie zmienia
 
 #### Automated
 
-- [x] 2.1 Unit tests pass for winner selection, the 2-of-3 bar, the composer-2.5 tie-break, and the three model names plus three fixtures in the eval config (`npm run test:unit`)
+- [x] 2.1 Unit tests pass for winner selection, the 2-of-3 bar, the composer-2.5 tie-break, and the three model names plus three fixtures in the eval config (`npm run test:unit`) — 92b8def
 
 #### Manual
 
-- [x] 2.2 Promptfoo eval on Node >= 22.22 with CURSOR_API_KEY writes the winning model id, or leaves it unset when no model passes at least 2 of 3 fixtures
+- [x] 2.2 Promptfoo eval on Node >= 22.22 with CURSOR_API_KEY writes the winning model id, or leaves it unset when no model passes at least 2 of 3 fixtures — 92b8def
 
 ### Phase 3: Cienki workflow
 
 #### Automated
 
-- [ ] 3.1 Unit test passes for the workflow contract and for ci.yml staying free of ai-cr (`npm run test:unit`)
-- [ ] 3.2 Lint passes (`npm run lint`)
+- [x] 3.1 Unit test passes for the workflow contract and for ci.yml staying free of ai-cr (`npm run test:unit`)
+- [x] 3.2 Lint passes (`npm run lint`)
 
 #### Manual
 
-- [ ] 3.3 Repository secret CURSOR_API_KEY exists
+- [x] 3.3 Repository secret CURSOR_API_KEY exists
 - [ ] 3.4 A same-repo pull request gets a new comment on each push and exactly one result label, with a green job for both pass and fail
 - [ ] 3.5 Adding ai-cr:review starts a run, and a verdict run removes ai-cr:review
 - [ ] 3.6 A run that cannot reach a verdict exits non-zero, comments that it did not, clears ai-cr:passed and ai-cr:failed, and leaves ai-cr:review
