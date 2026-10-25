@@ -28,6 +28,7 @@ pnpm-debug.log*
 .idea/
 .10x*
 10x*
+.cursor/config-templates/m*l*
 .cursor/prompts/m*l*
 .cursor/prompts/skill-explainer.md
 
@@ -38,3 +39,6 @@ playwright-report/
 blob-report/
 playwright/.cache/
 .playwright-cli/
+.cursor/skills/pack-init/SKILL.md
+.cursor/skills/setup-cicd/SKILL.md
+.cursor/skills/tf-registry/SKILL.md

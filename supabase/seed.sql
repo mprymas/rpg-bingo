@@ -33,7 +33,14 @@ INSERT INTO public.phrases (text) VALUES
   ('Pokonaj przeciwnika w pojedynku 1 na 1'),
   ('Pchnij przeciwnika w niebezpieczeństwo'),
   ('Wypij więcej alkoholu niż ktokolwiek inny'),
-  ('Użyj improwizowanej broni')
+  ('Użyj improwizowanej broni'),
+  ('Zrań sojusznika obszarowym zaklęciem'),
+  ('Strać przytomność w walce'),
+  ('Użyj przedmiotu z ładunkami min. 3 razy'),
+  ('Wydaj 1k+ złota na głupoty'),
+  ('Wykonaj 3 reakcje w jednej walce'),
+  ('Pierwszy w inicjatywie 2x'),
+  ('Ostatni w inicjatywie 2x')
 ON CONFLICT (text) DO NOTHING;
 
 INSERT INTO public.rewards (slug, label, description) VALUES
@@ -66,6 +73,11 @@ INSERT INTO public.rewards (slug, label, description) VALUES
     'experience',
     'Doświadczenie',
     'Dodatkowe punkty doświadczenia dla zdobywcy pola.'
+  ),
+  (
+    'talia-rozmaitosci',
+    'Talia Rozmaitości',
+    'Nagroda z wylosowanej karty z Talii Rozmaitości'
   )
 ON CONFLICT (slug) DO UPDATE SET
   label = EXCLUDED.label,
