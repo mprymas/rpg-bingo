@@ -1,4 +1,5 @@
 import { defineMiddleware } from "astro:middleware";
+import { isAuthSessionMissingError } from "@/lib/auth-session-missing";
 import { reportError } from "@/lib/report-error";
 import { createClient } from "@/lib/supabase";
 
@@ -12,7 +13,7 @@ export const onRequest = defineMiddleware(async (context, next) => {
       data: { user },
       error,
     } = await supabase.auth.getUser();
-    if (error) {
+    if (error && !isAuthSessionMissingError(error)) {
       reportError(error, { route: context.url.pathname });
     }
     context.locals.user = user ?? null;
